@@ -27,7 +27,7 @@ Marela gestiona ganaderías de vacuno de cría: animales, comida, fincas y finan
 | Datos del servidor | TanStack Query + cliente tipado generado del contrato (`src/api/`) |
 | Formularios | Controlados y propios. La API valida con Zod y sus errores se muestran por campo con `erroresPorCampo()` |
 | Animación | Transiciones y animaciones CSS con los tokens de movimiento |
-| Iconos y avisos | `lucide-react` y los avisos propios (`useAvisos()`) |
+| Iconos y avisos | `lucide-react` y los avisos propios (`useAvisos()`). Los iconos que Lucide no tiene (como `Vaca`, el de Animales) están en `src/componentes/iconos.ts`, dibujados con `createLucideIcon` y su mismo estilo |
 
 No añadas dependencias de interfaz sin acordarlo antes con el usuario.
 

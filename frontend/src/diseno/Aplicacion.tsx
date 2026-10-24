@@ -1,5 +1,4 @@
 import {
-  Beef,
   Building2,
   ChevronsUpDown,
   CircleUserRound,
@@ -20,6 +19,7 @@ import { Boton, BotonIcono } from '../componentes/Boton'
 import { clases } from '../componentes/clases'
 import { Cargando, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { HojaInferior } from '../componentes/HojaInferior'
+import { Vaca } from '../componentes/iconos'
 import {
   type DetalleExplotacion,
   guardarUltimaExplotacion,
@@ -33,8 +33,8 @@ import { ListaExplotaciones } from '../explotaciones/PaginaElegirExplotacion'
 import { ActualizacionPwa } from '../pwa/ActualizacionPwa'
 import estilos from './Aplicacion.module.css'
 
-const secciones: { ruta: string; texto: string; icono: typeof Beef; modulo: Modulo }[] = [
-  { ruta: 'animales', texto: 'Animales', icono: Beef, modulo: 'animales' },
+const secciones: { ruta: string; texto: string; icono: typeof Vaca; modulo: Modulo }[] = [
+  { ruta: 'animales', texto: 'Animales', icono: Vaca, modulo: 'animales' },
   { ruta: 'comida', texto: 'Comida', icono: Wheat, modulo: 'comida' },
   { ruta: 'fincas', texto: 'Fincas', icono: Tractor, modulo: 'fincas' },
   { ruta: 'finanzas', texto: 'Finanzas', icono: Euro, modulo: 'finanzas' },
