@@ -230,7 +230,7 @@ El administrador gestiona a su equipo. Depende de #8 y #10.
 
 **Criterios de aceptación**
 - [ ] Lista de miembros con nombre, usuario, rol y estado
-- [ ] Alta de un usuario nuevo con nombre de usuario, nombre, email opcional y contraseña temporal que se muestra una sola vez
+- [ ] Alta de un usuario nuevo con nombre de usuario, nombre, email y contraseña temporal que se muestra una sola vez
 - [ ] Añadir a un usuario de otra explotación por su nombre de usuario, con el rol que corresponda
 - [ ] Cambiar el rol, desactivar (revoca sus sesiones) y reactivar
 - [ ] Restablecer la contraseña de un miembro (nueva contraseña temporal)

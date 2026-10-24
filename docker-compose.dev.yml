@@ -38,6 +38,9 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-marela}:${POSTGRES_PASSWORD:-marela}@db:5432/${POSTGRES_DB:-marela}
       ENTORNO: desarrollo
+      # Solo para desarrollo; en el servidor cada entorno tiene la suya en .env
+      BETTER_AUTH_SECRET: desarrollo-sin-valor-real-0123456789abcdef
+      URL_PUBLICA: http://localhost:5173
       # Base de datos de los tests (npm test), en el mismo PostgreSQL
       TEST_DATABASE_URL: postgres://${POSTGRES_USER:-marela}:${POSTGRES_PASSWORD:-marela}@db:5432/${POSTGRES_DB:-marela}_test
       TZ: ${TZ:-Europe/Madrid}

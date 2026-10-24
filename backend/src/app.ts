@@ -1,8 +1,9 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { Scalar } from '@scalar/hono-api-reference'
+import { auth, RUTAS_AUTH } from './auth.js'
 import { config } from './config.js'
 import { comprobarBaseDeDatos } from './db/cliente.js'
-import { manejarError, rutaNoEncontrada, validacionFallida } from './errores.js'
+import { manejarError, rutaNoEncontrada, soloMismoOrigen, validacionFallida } from './errores.js'
 import { registrarPeticiones } from './peticiones.js'
 import { rutasSalud } from './rutas/salud.js'
 
@@ -37,6 +38,13 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.notFound(rutaNoEncontrada)
 
   app.route('/', rutasSalud(d.comprobarBaseDeDatos))
+
+  // Autenticación (Better Auth): solo las rutas de RUTAS_AUTH; el resto, 404
+  app.post('/auth/*', soloMismoOrigen(config.urlPublica))
+  app.on(['GET', 'POST'], '/auth/*', (c) => {
+    if (!RUTAS_AUTH.includes(c.req.path.slice('/api/auth'.length))) return rutaNoEncontrada(c)
+    return auth.handler(c.req.raw)
+  })
 
   if (d.documentacion) {
     app.doc31('/openapi.json', infoOpenApi)

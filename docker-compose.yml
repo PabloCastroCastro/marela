@@ -40,6 +40,8 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-marela}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-marela}
       ENTORNO: ${ENTORNO:-produccion}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Falta BETTER_AUTH_SECRET en .env}
+      URL_PUBLICA: ${URL_PUBLICA:?Falta URL_PUBLICA en .env}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       TZ: ${TZ:-Europe/Madrid}
     volumes:
