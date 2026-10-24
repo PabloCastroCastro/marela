@@ -5,7 +5,7 @@ description: Guía de diseño del frontend de Marela (PWA en React + CSS Modules
 
 # Diseño del frontend de Marela
 
-Marela gestiona ganaderías de vacuno de cría: animales, comida, fincas y finanzas. Se usa sobre todo **en el móvil, en la cuadra o en la finca**: con una mano, a pleno sol y con poca cobertura. En el ordenador se usa para consultar, filtrar y llevar las finanzas. El estilo es minimalista y cálido: **marrón café** como color de marca sobre grises cálidos.
+Marela gestiona ganaderías de vacuno de cría: animales, comida, fincas y finanzas. Se usa sobre todo **en el móvil, en la cuadra o en la finca**: con una mano, a pleno sol y con poca cobertura. En el ordenador se usa para consultar, filtrar y llevar las finanzas. El estilo es minimalista y natural: **verde oliva** como color de marca, con un acento ciruela, sobre grises con un toque verdoso.
 
 **Normas de referencia.** En caso de duda, mandan en este orden:
 
@@ -52,23 +52,27 @@ Para clases condicionales, usa `[estilos.a, condicion && estilos.b].filter(Boole
 
 ## 2. Paleta de colores
 
-### 2.1 Escalas base
+Paleta de [coolors.co/558b6e-88a09e-704c5e-b88c9e-f1c8db](https://coolors.co/558b6e-88a09e-704c5e-b88c9e-f1c8db), con el **verde oliva #9DAD6F** como color de marca.
+
+### 2.1 Colores base
 
 Son la referencia para elegir o ampliar tokens. Los componentes nunca usan estos valores directamente.
 
-**Marrón de marca (café)**
+| Color | Valor | Papel |
+|---|---|---|
+| Verde oliva | #9DAD6F | Marca: relleno de botones y de la pestaña activa, logo, PWA |
+| Oliva oscuro | #66753F | Textos, enlaces e iconos en el color de la marca (#9DAD6F no llega a 4,5:1 sobre blanco) |
+| Verde | #558B6E | De la paleta, sin uso propio por ahora |
+| Ciruela | #704C5E | Acento: detalles puntuales, nunca acciones |
+| Malva | #B88C9E | De la paleta, sin uso propio por ahora |
+| Rosa | #F1C8DB | Fondo suave del acento |
+| Gris salvia | #88A09E | Tono de los grises neutros |
 
-| 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| #FAF6F2 | #F2E8DF | #E4D0BE | #D1B194 | #B98D69 | #9C6B47 | #835636 | #6B4429 | #57371F | #432A18 | #2A190D |
+**Grises neutros** (con el tono de #88A09E):
 
-**Grises cálidos (stone)**
-
-| 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 950 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| #FAFAF9 | #F5F5F4 | #E7E5E4 | #D6D3D1 | #A8A29E | #78716C | #57534E | #44403C | #292524 | #1C1917 | #0C0A09 |
-
-No se mezclan con grises fríos (slate, gris azulado): chocan con el café.
+| Fondo | Superficie | Borde | Borde fuerte | Texto suave | Texto |
+|---|---|---|---|---|---|
+| #FFFFFF | #F6F8F8 | #DDE4E3 | #73878A | #5C6E6B | #18211F |
 
 **Semánticos**
 
@@ -87,22 +91,29 @@ Los componentes **solo usan tokens** de `src/estilos/tokens.css`. En un `.module
 
 | Token | Uso | Claro | Oscuro |
 |---|---|---|---|
-| `--color-primario` | Botón principal, elemento activo, enlaces, foco | #835636 | #B98D69 |
-| `--color-primario-intenso` | Hover y pulsado del principal | #6B4429 | #D1B194 |
-| `--color-sobre-primario` | Texto sobre el primario | #FFFFFF | #2A190D |
-| `--color-primario-suave` | Chip seleccionado, fila activa del menú, fondos de acento | #F2E8DF | #432A18 |
-| `--color-sobre-primario-suave` | Texto sobre el primario suave | #835636 | #E4D0BE |
-| `--color-indicador` | Píldora de la pestaña activa (solo con icono encima) | #E4D0BE | #432A18 |
-| `--color-fondo` | Fondo de la aplicación | #FFFFFF | #0C0A09 |
-| `--color-superficie` | Cabecera, barras, zonas agrupadas | #FAFAF9 | #1C1917 |
-| `--color-superficie-elevada` | Diálogos, menús, hojas, avisos | #FFFFFF | #292524 |
-| `--color-texto` | Texto principal | #1C1917 | #F5F5F4 |
-| `--color-texto-suave` | Texto secundario | #78716C | #A8A29E |
-| `--color-borde` | Separadores y bordes decorativos | #E7E5E4 | #292524 |
-| `--color-borde-fuerte` | Borde de campos, casillas, opciones y chips | #78716C | #A8A29E |
+| `--color-marca` | Logo e identidad | #9DAD6F | #9DAD6F |
+| `--color-primario-relleno` | Fondo del botón principal y de la píldora de la pestaña activa | #9DAD6F | #9DAD6F |
+| `--color-primario-intenso` | Hover y pulsado del relleno | #8E9F5E | #B0BF82 |
+| `--color-sobre-primario` | Texto e iconos sobre el relleno: **oscuro** | #18211F | #0D1211 |
+| `--color-primario` | Textos, enlaces, iconos y bordes en el color de la marca; foco | #66753F | #B5C38A |
+| `--color-primario-suave` | Chip seleccionado, fila activa del menú, fondos de acento | #EEF1E3 | #262C17 |
+| `--color-sobre-primario-suave` | Texto sobre el primario suave | #4F5C30 | #D3DBB8 |
+| `--color-acento` | Detalles puntuales en ciruela | #704C5E | #D9A9BF |
+| `--color-sobre-acento` | Texto sobre el acento | #FFFFFF | #0D1211 |
+| `--color-acento-suave` | Fondo suave del acento (p. ej. icono de los estados vacíos) | #F1C8DB | #3D2531 |
+| `--color-sobre-acento-suave` | Texto o icono sobre el acento suave | #704C5E | #F1C8DB |
+| `--color-fondo` | Fondo de la aplicación | #FFFFFF | #0D1211 |
+| `--color-superficie` | Cabecera, barras, zonas agrupadas | #F6F8F8 | #151C1B |
+| `--color-superficie-elevada` | Diálogos, menús, hojas, avisos | #FFFFFF | #212A28 |
+| `--color-texto` | Texto principal | #18211F | #EDF2F1 |
+| `--color-texto-suave` | Texto secundario | #5C6E6B | #9DB0AE |
+| `--color-borde` | Separadores y bordes decorativos | #DDE4E3 | #26302E |
+| `--color-borde-fuerte` | Borde de campos, casillas, opciones y chips | #73878A | #8FA3A0 |
 | `--color-velo` | Fondo detrás de diálogos y hojas | | |
 | `--color-exito` / `-aviso` / `-peligro` / `-informacion` (+ `-suave`) | Estados | ver 2.1 | ver 2.1 |
 | `--color-peligro-relleno` + `--color-sobre-peligro` | Botón de peligro | #DC2626 / #FFFFFF | #EF4444 / #0C0A09 |
+
+**Relleno o texto:** el oliva de la marca es claro. Como fondo lleva siempre texto **oscuro** (`--color-sobre-primario`). Como color de texto o icono sobre el fondo se usa `--color-primario`: más oscuro en claro y más claro en oscuro.
 
 **Tema:** claro y oscuro según el sistema (`prefers-color-scheme`), redefiniendo los tokens en `tokens.css`.
 
@@ -114,36 +125,38 @@ Los componentes **solo usan tokens** de `src/estilos/tokens.css`. En un `.module
 - **Controles e iconos que transmiten información:** bordes e iconos al menos **3:1**. Por eso los campos usan `--color-borde-fuerte` y no `--color-borde`.
 - **Combinaciones comprobadas:**
 
-  | Combinación | Contraste |
-  |---|---|
-  | Blanco sobre primario claro (#835636) | 6,3:1 |
-  | Primario sobre primario suave, en claro | 5,2:1 |
-  | Primario sobre la superficie, en claro | 6,0:1 |
-  | Texto suave sobre el fondo, en claro | 4,8:1 |
-  | Texto suave sobre la superficie, en claro | 4,6:1 |
-  | Texto sobre primario, en oscuro | 5,7:1 |
-  | Primario oscuro sobre el fondo oscuro | 6,7:1 |
-  | Texto sobre primario suave, en oscuro | 8,9:1 |
-  | Textos semánticos sobre su fondo suave | ≥ 4,8:1 |
+  | Combinación | Claro | Oscuro |
+  |---|---|---|
+  | Texto oscuro sobre el relleno #9DAD6F | 6,8:1 | 7,8:1 |
+  | Texto oscuro sobre el relleno intenso | 5,7:1 | 9,6:1 |
+  | Primario sobre el fondo | 5,0:1 | 10,0:1 |
+  | Primario sobre la superficie | 4,7:1 | 9,2:1 |
+  | Sobre primario suave, sobre primario suave | 6,3:1 | 10,0:1 |
+  | Texto suave sobre el fondo | 5,4:1 | 8,3:1 |
+  | Texto suave sobre la superficie | 5,1:1 | 7,6:1 |
+  | Borde fuerte sobre el fondo | 3,8:1 | 7,1:1 |
+  | Ciruela sobre el fondo | 7,3:1 | 9,3:1 |
+  | Ciruela sobre el rosa (acento suave) | 4,9:1 | 9,3:1 |
+  | Textos semánticos sobre su fondo suave | ≥ 4,8:1 | ≥ 4,8:1 |
 
 - **Prohibido:**
-  - Texto blanco sobre café 400 o más claro.
-  - Texto suave sobre primario suave (4:1).
-  - Texto sobre `--color-indicador` en claro (primario: 4,2:1). El indicador solo lleva iconos; la etiqueta va fuera.
+  - Texto blanco sobre el oliva #9DAD6F (2,4:1): sobre el relleno, el texto es oscuro.
+  - #9DAD6F como color de texto o de icono sobre fondos claros (2,4:1): usa `--color-primario`.
+  - `--color-primario` sobre `--color-primario-suave` en claro (4,2:1): usa `--color-sobre-primario-suave`.
+  - Texto suave sobre primario suave en textos importantes (4,6:1, justo en el límite).
   - #DC2626 como texto sobre su fondo suave (4,4:1); usa `--color-peligro`.
 - **Señales:** el color nunca es la única señal. Los estados llevan también icono o texto.
 - **Comprobación:** para combinaciones nuevas, calcula el contraste (fórmula de luminancia relativa de WCAG) antes de usarlas.
 
 ### 2.4 Uso del color
 
-- **Regla 60-30-10:** 60 % neutros de fondo, 30 % superficies y texto, 10 % marrón. La cabecera y las barras son neutras, no café.
+- **Regla 60-30-10:** 60 % neutros de fondo, 30 % superficies y texto, 10 % oliva. La cabecera y las barras son neutras.
 - **Una sola acción primaria visible por pantalla.** El resto, `secundario` o `texto`.
-- **Rojo y verde:**
+- **Acento ciruela:** solo para detalles (iconos de los estados vacíos, ilustraciones, destacar un dato). Nunca para botones ni acciones, para no competir con el primario.
+- **Rojo y verde de estado:**
   - El rojo, solo para errores y acciones destructivas.
-  - El verde, solo para éxito y siempre con icono de check.
-- **Cuidado con el ámbar:**
-  - El aviso (#B45309) está cerca del café: siempre con icono de aviso o texto explícito, nunca como único indicador.
-  - Para categorías neutras (tipo de animal, almacén) usa gris o azul, no ámbar.
+  - El verde de éxito, solo para éxito y siempre con icono de check, para no confundirlo con el oliva de la marca.
+- **Ámbar:** el aviso (#B45309) va siempre con icono de aviso o texto explícito, nunca como único indicador.
 - **Estados del ganado:** van con icono y texto, además del color. Por ejemplo, "En supresión hasta 12/11", "Vendido" o "Baja".
 
 ---
@@ -206,7 +219,7 @@ La estructura la da `src/diseno/Aplicacion.tsx`:
 - **Barra inferior:**
   - Fondo `--color-superficie`, borde superior `--color-borde`, y alto `--altura-navegacion` más la zona segura.
   - Cada pestaña lleva un icono de 24 px dentro de una píldora de 64 × 32 px y debajo una etiqueta Label.
-  - Activa: píldora `--color-indicador`, icono y etiqueta en `--color-primario`, peso 600 y `aria-current="page"` (lo pone `NavLink`).
+  - Activa: píldora `--color-primario-relleno` con el icono en `--color-sobre-primario`, etiqueta en `--color-primario`, peso 600 y `aria-current="page"` (lo pone `NavLink`).
   - Inactivas: `--color-texto-suave`.
 - **Menú lateral:** la fila activa con `--color-primario-suave` y texto `--color-sobre-primario-suave`.
 - **Cabecera:** neutra (`--color-superficie`), con la marca o el título de la pantalla y como mucho 2 acciones de icono; el resto, en un menú "⋯". En el móvil, el selector de explotación va aquí.
@@ -320,7 +333,7 @@ Anima solo `opacity` y `transform`.
 
 ## 9. Sin conexión (PWA)
 
-**Manifest:** `name` y `short_name` "Marela", `display: "standalone"`, `start_url: "/"`, `theme_color: "#835636"` y `background_color: "#FFFFFF"`. Iconos de 192 px, 512 px y 512 px `maskable`, generados con `npm run iconos` desde `public/logo.svg`.
+**Manifest:** `name` y `short_name` "Marela", `display: "standalone"`, `start_url: "/"`, `theme_color: "#9DAD6F"` y `background_color: "#FFFFFF"`. Iconos de 192 px, 512 px y 512 px `maskable`, generados con `npm run iconos` desde `public/logo.svg`.
 
 **Service worker** (`vite-plugin-pwa`, actualización con aviso):
 - **Hoy:** solo se precachea la aplicación (HTML, JS, CSS e iconos). **La API no se cachea.**
@@ -363,7 +376,7 @@ Anima solo `opacity` y `transform`.
 - [ ] El HTML es semántico (`button`, `nav`, `main`, `h1`–`h3` en orden), con un `h1` por página y `aria-label` en los botones de solo icono.
 - [ ] Todos los campos tienen `label`, y los errores van asociados con `aria-describedby`. Los mensajes que cambian solos llevan `role="status"` o `aria-live`.
 - [ ] Funciona con el texto ampliado al 200 % sin cortarse.
-- [ ] Ningún estado se comunica solo con color (atención al ámbar junto al café).
+- [ ] Ningún estado se comunica solo con color (atención al ámbar de los avisos).
 - [ ] Están los 4 estados de datos: cargando, vacío, error y con datos.
 - [ ] El empleado no ve lo que no le corresponde (Finanzas, gestión de usuarios).
 - [ ] Está probado a 360 px, 768 px y 1280 px, en claro y oscuro (`docker compose -f docker-compose.dev.yml up`, en `http://localhost:5173`).

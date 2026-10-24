@@ -67,7 +67,7 @@
 }
 
 .primario {
-  background: var(--color-primario);
+  background: var(--color-primario-relleno);
   color: var(--color-sobre-primario);
 }
 

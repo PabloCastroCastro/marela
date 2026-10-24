@@ -103,7 +103,7 @@
   min-height: var(--altura-control);
   padding: 0 var(--espacio-5);
   border-radius: var(--radio-s);
-  background: var(--color-primario);
+  background: var(--color-primario-relleno);
   color: var(--color-sobre-primario);
   font-weight: var(--peso-medio);
   text-decoration: none;
@@ -165,7 +165,7 @@
   text-decoration: none;
 }
 
-/* Píldora del icono: en la pestaña activa se rellena con el indicador */
+/* Píldora del icono: en la pestaña activa se rellena con el color de la marca */
 .icono {
   display: grid;
   place-items: center;
@@ -180,8 +180,10 @@
   font-weight: var(--peso-fuerte);
 }
 
+/* Píldora del icono activo con el color de la marca y el icono oscuro encima (6,8:1) */
 .activo .icono {
-  background: var(--color-indicador);
+  background: var(--color-primario-relleno);
+  color: var(--color-sobre-primario);
 }
 
 .activo svg {
@@ -252,6 +254,7 @@
   .activo,
   .activo .icono {
     background: var(--color-primario-suave);
+    color: inherit;
   }
 
   .activo {

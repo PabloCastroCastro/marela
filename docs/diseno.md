@@ -266,7 +266,7 @@ CONTRIBUTING.md
 
 - Sin librería de componentes: componentes propios con CSS Modules (botón, campo, selector, hoja inferior, confirmación, avisos, estado vacío, cargando...).
 - Tokens de diseño en `tokens.css`: colores, tipografía del sistema, espaciado, radios y sombras. Nunca se usan colores sueltos.
-- Color principal: marrón café, sobre grises cálidos.
+- Color principal: verde oliva (#9DAD6F), con acento ciruela (#704C5E) y grises con un toque verdoso, de la paleta https://coolors.co/558b6e-88a09e-704c5e-b88c9e-f1c8db.
 - Normas de referencia, por orden: WCAG 2.2 nivel AA (obligatoria), Material Design 3 y Apple Human Interface Guidelines. La guía completa está en la skill `diseno-frontend` (`.claude/skills/diseno-frontend/SKILL.md`).
 - Modo claro y oscuro, según el sistema.
 - Zonas táctiles de al menos 44 px; buen contraste para usar el móvil al aire libre.

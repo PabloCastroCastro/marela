@@ -46,7 +46,7 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 ## Diseño
 
 - **Guía de diseño** en la skill [`diseno-frontend`](../.claude/skills/diseno-frontend/SKILL.md): normas (WCAG 2.2 AA, Material 3 y Apple HIG), paleta, componentes, plantillas de pantalla, animaciones y lista de accesibilidad.
-- **Tokens** en `src/estilos/tokens.css`: colores (marrón café sobre grises cálidos), tipografía, espaciado, radios, elevación, medidas y movimiento. Los componentes usan solo estas variables, nunca colores sueltos.
+- **Tokens** en `src/estilos/tokens.css`: colores (verde oliva con acento ciruela, sobre grises con un toque verdoso), tipografía, espaciado, radios, elevación, medidas y movimiento. Los componentes usan solo estas variables, nunca colores sueltos.
 - **Modo claro y oscuro** automático según el sistema (`prefers-color-scheme`).
 - **CSS Modules** por componente, sin librerías de estilos.
 - **Navegación adaptable**: en el móvil, cabecera y navegación inferior con las cuatro secciones, respetando el área segura (`safe-area-inset`); desde 64rem de ancho, menú lateral y contenido más ancho para tablas y filtros.
@@ -112,7 +112,7 @@ El proyecto usa **TypeScript 5.9**: el generador (`openapi-typescript`) necesita
 
 Con `vite-plugin-pwa`:
 
-- **Manifest**: nombre, color `#835636`, pantalla completa e iconos (normales, *maskable* para Android y `apple-touch-icon` para iOS).
+- **Manifest**: nombre, color `#9dad6f`, pantalla completa e iconos (normales, *maskable* para Android y `apple-touch-icon` para iOS).
 - **Service worker** generado al compilar: guarda la aplicación para abrirla al instante. **La API no se cachea**. El trabajo sin conexión (Animales y Fincas) se añadirá en su propia issue.
 - **Versiones nuevas**: no se activan solas; aparece el aviso "Hay una versión nueva de Marela" con el botón *Actualizar*.
 - En desarrollo no hay service worker.
