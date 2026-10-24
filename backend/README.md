@@ -51,6 +51,7 @@ src/
   usuarios.ts     alta, desactivación y reactivación de usuarios
   permisos.ts     autorización por explotación y rol
   explotaciones.ts  alta, edición y desactivación de explotaciones; punto de extensión al crear
+  miembros.ts     equipo de una explotación: altas, roles, desactivación y contraseñas
   config.ts       configuración validada
   errores.ts      formato de error común y ErrorApi
   peticiones.ts   log de cada petición
@@ -59,7 +60,7 @@ src/
   db/explotacion.ts  enExplotacion(): acceso a los datos de una explotación
   db/migrar.ts    migraciones al arrancar
   db/seed.ts      datos de ejemplo
-  rutas/          un archivo por módulo (salud, explotaciones, plataforma)
+  rutas/          un archivo por módulo (salud, explotaciones, miembros, plataforma)
   scripts/        exportación del contrato OpenAPI y crear-propietario
 ```
 
@@ -150,6 +151,17 @@ Rutas:
 
 Una explotación desactivada no aparece en la lista de sus miembros, y sus rutas responden 403 `explotacion_desactivada`.
 
+## Equipo
+
+Rutas del administrador de la explotación (`permitir('administracion')`), en `src/rutas/miembros.ts`:
+
+- **`GET /api/explotaciones/{id}/miembros`:** el equipo, activo y desactivado.
+- **`POST /api/explotaciones/{id}/miembros`:** añade a una persona nueva (`{ tipo: 'nuevo', usuario, nombre, email, rol }`), cuya contraseña temporal se devuelve solo esta vez, o a alguien que ya usa Marela (`{ tipo: 'existente', usuario, rol }`).
+- **`PATCH /api/explotaciones/{id}/miembros/{miembroId}`:** `{ rol }` o `{ activo }`.
+  - Un miembro desactivado no puede entrar en la explotación (403 `miembro_desactivado`) y deja de verla en su lista. Si no tiene ninguna otra explotación, se cierran también sus sesiones.
+  - La explotación nunca se queda sin un administrador activo (409 `ultimo_administrador`). Los cambios bloquean los miembros de la explotación para que dos a la vez no la dejen sin ninguno.
+- **`POST /api/explotaciones/{id}/miembros/{miembroId}/restablecer-contrasena`:** contraseña temporal nueva y cierre de sus sesiones. Solo a quien pertenece únicamente a esta explotación (si no, 409 `otras_explotaciones`): así ningún administrador puede entrar como alguien que tiene acceso a explotaciones ajenas. Tampoco a uno mismo (409 `es_usted`).
+
 ## Plataforma
 
 Rutas del propietario de la plataforma (`soloPropietario()`), en `src/rutas/plataforma.ts`:
@@ -157,6 +169,7 @@ Rutas del propietario de la plataforma (`soloPropietario()`), en `src/rutas/plat
 - **`GET /api/plataforma/explotaciones`:** todas las explotaciones, activas y desactivadas, con su número de miembros.
 - **`POST /api/plataforma/explotaciones`:** crea una explotación con su primer administrador, en una sola transacción. El administrador es un usuario nuevo (`{ tipo: 'nuevo', usuario, nombre, email }`), cuya contraseña temporal se devuelve solo esta vez, o uno que ya existe (`{ tipo: 'existente', usuario }`).
 - **`PATCH /api/plataforma/explotaciones/{explotacionId}`:** `{ activa }` la desactiva o la reactiva. No se borra ningún dato.
+- **`POST /api/plataforma/usuarios/restablecer-contrasena`:** `{ usuario }` da una contraseña temporal nueva a cualquier usuario, para quien trabaja en varias explotaciones.
 
 El propietario no ve los datos de una explotación si no es miembro de ella.
 
@@ -177,6 +190,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/api.test.ts`: salud, documentación y rutas inexistentes (con la base de datos sustituida).
 - `test/config.test.ts`: validación de la configuración.
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
+- `test/miembros.test.ts`: altas nuevas y existentes, roles, desactivación con y sin otras explotaciones, último administrador y restablecimiento de contraseñas (también por el propietario).
 - `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
 - `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
 - `test/separacion.test.ts`: separación por explotación, auditoría y reglas del esquema, contra PostgreSQL.

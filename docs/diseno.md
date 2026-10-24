@@ -17,6 +17,8 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - El propietario puede desactivar una explotación: desaparece para sus miembros, que no pueden entrar en ella, pero no se borra ningún dato y se puede reactivar.
 - El administrador edita los datos de su explotación.
 - El administrador de explotación crea, desactiva y cambia el rol de sus empleados.
+- Desactivar a alguien es solo para esa explotación: deja de poder entrar en ella, pero conserva sus otras explotaciones y lo que haya registrado. Una explotación siempre tiene al menos un administrador activo.
+- El administrador puede dar una contraseña temporal nueva solo a quien pertenece únicamente a su explotación. Para quien está en varias, lo hace el propietario de la plataforma, para que ningún administrador pueda entrar en explotaciones ajenas.
 - Un usuario puede pertenecer a varias explotaciones, con un rol distinto en cada una.
 - El empleado accede a Animales, Comida y Fincas, pero no a Finanzas.
 - El administrador accede a todo en su explotación.

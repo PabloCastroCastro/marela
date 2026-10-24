@@ -9,6 +9,7 @@ import {
   PaginaElegirExplotacion,
   RedireccionInicial,
 } from './explotaciones/PaginaElegirExplotacion'
+import { PaginaEquipo } from './explotaciones/PaginaEquipo'
 import { PaginaInicio } from './paginas/PaginaInicio'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada'
 import { PaginaSeccion } from './paginas/PaginaSeccion'
@@ -80,6 +81,14 @@ export const rutas: RouteObject[] = [
             element: (
               <SoloModulo modulo="administracion">
                 <PaginaDatosExplotacion />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'equipo',
+            element: (
+              <SoloModulo modulo="administracion">
+                <PaginaEquipo />
               </SoloModulo>
             ),
           },

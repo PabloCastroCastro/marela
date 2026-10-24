@@ -64,6 +64,8 @@ export const member = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     role: text('role').notNull().default('empleado'),
+    // Un miembro desactivado no puede entrar en la explotación; sus datos y su historial se conservan
+    activo: boolean('activo').notNull().default(true),
     createdAt: creadoEn(),
   },
   (t) => [

@@ -49,7 +49,7 @@ const listar = createRoute({
   method: 'get',
   path: '/explotaciones',
   tags: ['Explotaciones'],
-  summary: 'Explotaciones activas a las que pertenece el usuario, con su rol',
+  summary: 'Explotaciones activas a las que el usuario tiene acceso, con su rol',
   security: [{ sesion: [] }],
   middleware: [requiereSesion()] as const,
   responses: {
@@ -65,7 +65,7 @@ const listar = createRoute({
 const respuestasExplotacion = {
   401: error('Sin sesión'),
   403: error(
-    'Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso)',
+    'Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación o miembro desactivados (explotacion_desactivada, miembro_desactivado) o sin permiso (sin_permiso)',
   ),
   404: error('No existe o el usuario no pertenece a ella (explotacion_no_encontrada)'),
 }
@@ -124,7 +124,13 @@ export const rutasExplotaciones = () =>
         })
         .from(member)
         .innerJoin(organization, eq(organization.id, member.organizationId))
-        .where(and(eq(member.userId, c.var.usuario.id), eq(organization.activa, true)))
+        .where(
+          and(
+            eq(member.userId, c.var.usuario.id),
+            eq(member.activo, true),
+            eq(organization.activa, true),
+          ),
+        )
         .orderBy(asc(organization.name))
       return c.json(
         filas.map((f) => ({ ...f, rol: Rol.parse(f.rol) })),

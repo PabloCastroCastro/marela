@@ -13,6 +13,21 @@ export type ExplotacionSimulada = {
   municipio?: string
   provincia?: string
   activa?: boolean
+  // El usuario es miembro, pero el administrador lo ha desactivado
+  miembroDesactivado?: boolean
+}
+
+// Equipo de A Veiga, que gestiona Ana
+export type MiembroSimulado = {
+  id: string
+  usuarioId: string
+  usuario: string
+  nombre: string
+  email: string
+  rol: Rol
+  activo: boolean
+  // Tiene acceso a otras explotaciones: su administrador no puede restablecerle la contraseña
+  otras?: boolean
 }
 
 // Lo que ve el propietario en la gestión de la plataforma
@@ -40,6 +55,7 @@ export type EstadoSimulado = {
   conSesion: boolean
   explotaciones: ExplotacionSimulada[]
   plataforma: ExplotacionDePlataforma[]
+  miembros: MiembroSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -77,6 +93,36 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
     conSesion: false,
     explotaciones: [{ ...A_VEIGA }, { ...O_SOUTO }],
     plataforma: [],
+    miembros: [
+      {
+        id: 'm1',
+        usuarioId: 'u1',
+        usuario: 'ana',
+        nombre: 'Ana Varela',
+        email: 'ana@marela.test',
+        rol: 'administrador',
+        activo: true,
+      },
+      {
+        id: 'm2',
+        usuarioId: 'u2',
+        usuario: 'maria',
+        nombre: 'María Souto',
+        email: 'maria@marela.test',
+        rol: 'empleado',
+        activo: true,
+      },
+      {
+        id: 'm3',
+        usuarioId: 'u3',
+        usuario: 'xose',
+        nombre: 'Xosé Lema',
+        email: 'xose@marela.test',
+        rol: 'empleado',
+        activo: true,
+        otras: true,
+      },
+    ],
     ...cambios,
   }
 }
@@ -86,6 +132,7 @@ const errorApi = (status: number, codigo: string, detalles?: unknown) =>
   json({ error: { codigo, mensaje: codigo, detalles } }, status)
 
 const DETALLE = /^\/api\/explotaciones\/([^/]+)$/
+const EQUIPO = /^\/api\/explotaciones\/([^/]+)\/miembros(?:\/([^/]+))?(?:\/([^/]+))?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -140,6 +187,7 @@ export function simularApi(estado: EstadoSimulado) {
       const e = estado.explotaciones.find((x) => x.id === detalle[1])
       if (!e) return errorApi(404, 'explotacion_no_encontrada')
       if (e.activa === false) return errorApi(403, 'explotacion_desactivada')
+      if (e.miembroDesactivado) return errorApi(403, 'miembro_desactivado')
       if (metodo === 'PATCH') {
         if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
         Object.assign(e, cuerpo)
@@ -155,8 +203,72 @@ export function simularApi(estado: EstadoSimulado) {
       })
     }
 
+    const equipo = ruta.match(EQUIPO)
+    if (equipo) {
+      const [, , miembroId, accion] = equipo
+      const sinMiembro = ({ otras: _o, ...m }: MiembroSimulado) => m
+      if (!miembroId && metodo === 'GET') return json(estado.miembros.map(sinMiembro))
+      if (!miembroId && metodo === 'POST') {
+        if (cuerpo.tipo === 'existente' && cuerpo.usuario !== 'dani') {
+          return errorApi(404, 'usuario_no_encontrado', [
+            { campo: 'usuario', mensaje: 'No hay ningún usuario activo con este nombre' },
+          ])
+        }
+        const nuevo: MiembroSimulado = {
+          id: `m${estado.miembros.length + 1}`,
+          usuarioId: `u${estado.miembros.length + 1}`,
+          usuario: String(cuerpo.usuario).toLowerCase(),
+          nombre: cuerpo.tipo === 'nuevo' ? cuerpo.nombre : 'Dani Rey',
+          email: cuerpo.tipo === 'nuevo' ? cuerpo.email : 'dani@marela.test',
+          rol: cuerpo.rol,
+          activo: true,
+        }
+        estado.miembros.push(nuevo)
+        return json(
+          {
+            miembro: sinMiembro(nuevo),
+            ...(cuerpo.tipo === 'nuevo' ? { contrasenaTemporal: 'Temporal6789' } : {}),
+          },
+          201,
+        )
+      }
+      const m = estado.miembros.find((x) => x.id === miembroId)
+      if (!m) return errorApi(404, 'miembro_no_encontrado')
+      if (accion === 'restablecer-contrasena') {
+        if (m.otras) return errorApi(409, 'otras_explotaciones')
+        return json({ miembro: sinMiembro(m), contrasenaTemporal: 'Nueva2345678' })
+      }
+      if (metodo === 'PATCH') {
+        const despues = { ...m, ...cuerpo }
+        const quedan = estado.miembros
+          .map((x) => (x.id === m.id ? despues : x))
+          .filter((x) => x.rol === 'administrador' && x.activo)
+        if (quedan.length === 0) {
+          return json(
+            {
+              error: {
+                codigo: 'ultimo_administrador',
+                mensaje: 'La explotación tiene que tener al menos un administrador activo',
+              },
+            },
+            409,
+          )
+        }
+        Object.assign(m, cuerpo)
+        return json(sinMiembro(m))
+      }
+    }
+
     if (ruta.startsWith('/api/plataforma/')) {
       if (!estado.usuario.propietario) return errorApi(403, 'sin_permiso')
+      if (ruta === '/api/plataforma/usuarios/restablecer-contrasena') {
+        if (cuerpo.usuario !== 'xose') {
+          return errorApi(404, 'usuario_no_encontrado', [
+            { campo: 'usuario', mensaje: 'No hay ningún usuario con este nombre' },
+          ])
+        }
+        return json({ usuario: 'xose', nombre: 'Xosé Lema', contrasenaTemporal: 'Propia234567' })
+      }
       if (ruta === '/api/plataforma/explotaciones' && metodo === 'GET') {
         return json(estado.plataforma)
       }

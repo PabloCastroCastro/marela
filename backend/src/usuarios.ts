@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto'
-import { eq, or } from 'drizzle-orm'
+import { and, eq, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { auth, LONGITUD_MINIMA_CONTRASENA } from './auth.js'
 import { type Db, db } from './db/cliente.js'
@@ -114,4 +114,29 @@ export async function desactivarUsuario(usuarioId: string) {
 
 export async function reactivarUsuario(usuarioId: string) {
   await db.update(user).set({ activo: true }).where(eq(user.id, usuarioId))
+}
+
+// Nueva contraseña temporal para un usuario: la anterior deja de servir, se cierran sus sesiones y
+// tendrá que cambiarla al entrar. Devuelve la contraseña: solo se muestra esta vez.
+export async function restablecerContrasena(usuarioId: string, ejecutor: Db | Transaccion = db) {
+  const contrasenaTemporal = generarContrasenaTemporal()
+  const hash = await (await auth.$context).password.hash(contrasenaTemporal)
+  await ejecutor.transaction(async (tx) => {
+    const cuentas = await tx
+      .update(account)
+      .set({ password: hash })
+      .where(and(eq(account.userId, usuarioId), eq(account.providerId, 'credential')))
+      .returning({ id: account.id })
+    if (cuentas.length === 0) {
+      await tx.insert(account).values({
+        accountId: usuarioId,
+        providerId: 'credential',
+        userId: usuarioId,
+        password: hash,
+      })
+    }
+    await tx.update(user).set({ debeCambiarContrasena: true }).where(eq(user.id, usuarioId))
+    await tx.delete(session).where(eq(session.userId, usuarioId))
+  })
+  return contrasenaTemporal
 }

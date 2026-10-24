@@ -1,0 +1,61 @@
+.equipo {
+  display: grid;
+  gap: var(--espacio-5);
+}
+
+.titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.grupo {
+  display: grid;
+  gap: var(--espacio-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo legend {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.grupo:disabled {
+  opacity: 0.38;
+}
+
+.ayuda {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.datos {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.acciones {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.peligro {
+  color: var(--color-peligro);
+}
+
+.error {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}

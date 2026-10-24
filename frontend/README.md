@@ -63,8 +63,8 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 | `/cambiar-contrasena` | Cambio de contraseña; obligatorio, sin poder ir a otra pantalla, mientras sea temporal |
 | `/` | Abre la única explotación o la última usada en este dispositivo; si no, a elegir |
 | `/explotaciones` | Elegir explotación (con una sola, entra directamente) |
-| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales`, `comida`, `fincas`, `finanzas` y `datos` (los de la explotación, para el administrador) |
-| `/plataforma` | Gestión de las explotaciones por el propietario de la plataforma: lista, alta con su primer administrador, y desactivar o reactivar |
+| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales`, `comida`, `fincas`, `finanzas`, y para el administrador `datos` (los de la explotación) y `equipo` (personas, roles, desactivación y contraseñas) |
+| `/plataforma` | Gestión por el propietario de la plataforma: lista de explotaciones, alta con su primer administrador, desactivar o reactivar, y restablecer la contraseña de cualquier usuario |
 
 - **Rutas protegidas:** todas menos `/entrar` exigen sesión (`RutaProtegida`). Sin ella llevan al inicio de sesión y, al entrar, se vuelve a donde se estaba. Si una consulta responde 401 (sesión caducada), la sesión se da por cerrada y pasa lo mismo.
 - **Sesión:** se consulta con `useSesion()` (`src/auth/sesion.ts`), que llama a las rutas de Better Auth (`/api/auth/...`). No están en el contrato OpenAPI, así que sus errores se traducen ahí.

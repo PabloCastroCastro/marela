@@ -208,6 +208,145 @@
           "Zaragoza"
         ]
       },
+      "Miembro": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identificador del miembro (no del usuario)"
+          },
+          "usuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "usuario": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "rol": {
+            "type": "string",
+            "enum": [
+              "administrador",
+              "empleado"
+            ]
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "usuarioId",
+          "usuario",
+          "nombre",
+          "email",
+          "rol",
+          "activo"
+        ]
+      },
+      "MiembroConContrasena": {
+        "type": "object",
+        "properties": {
+          "miembro": {
+            "$ref": "#/components/schemas/Miembro"
+          },
+          "contrasenaTemporal": {
+            "type": "string",
+            "description": "Solo para usuarios nuevos o al restablecerla. No se puede volver a consultar."
+          }
+        },
+        "required": [
+          "miembro"
+        ]
+      },
+      "NuevoMiembro": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "enum": [
+                  "nuevo"
+                ]
+              },
+              "usuario": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "rol": {
+                "type": "string",
+                "enum": [
+                  "administrador",
+                  "empleado"
+                ]
+              }
+            },
+            "required": [
+              "tipo",
+              "usuario",
+              "nombre",
+              "email",
+              "rol"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "enum": [
+                  "existente"
+                ]
+              },
+              "usuario": {
+                "type": "string"
+              },
+              "rol": {
+                "type": "string",
+                "enum": [
+                  "administrador",
+                  "empleado"
+                ]
+              }
+            },
+            "required": [
+              "tipo",
+              "usuario",
+              "rol"
+            ]
+          }
+        ]
+      },
+      "CambioMiembro": {
+        "type": "object",
+        "properties": {
+          "rol": {
+            "type": "string",
+            "enum": [
+              "administrador",
+              "empleado"
+            ]
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
       "ExplotacionPlataforma": {
         "type": "object",
         "properties": {
@@ -371,6 +510,25 @@
             ]
           }
         ]
+      },
+      "ContrasenaRestablecida": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "contrasenaTemporal": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "usuario",
+          "nombre",
+          "contrasenaTemporal"
+        ]
       }
     },
     "parameters": {}
@@ -422,7 +580,7 @@
         "tags": [
           "Explotaciones"
         ],
-        "summary": "Explotaciones activas a las que pertenece el usuario, con su rol",
+        "summary": "Explotaciones activas a las que el usuario tiene acceso, con su rol",
         "security": [
           {
             "sesion": []
@@ -508,7 +666,7 @@
             }
           },
           "403": {
-            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso)",
+            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación o miembro desactivados (explotacion_desactivada, miembro_desactivado) o sin permiso (sin_permiso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -617,7 +775,7 @@
             }
           },
           "403": {
-            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso)",
+            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación o miembro desactivados (explotacion_desactivada, miembro_desactivado) o sin permiso (sin_permiso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -638,6 +796,357 @@
           },
           "409": {
             "description": "El código REGA ya es de otra explotación (rega_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/miembros": {
+      "get": {
+        "tags": [
+          "Equipo"
+        ],
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "summary": "Miembros de la explotación, activos y desactivados",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Miembro"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es administrador de la explotación (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o no se pertenece a ella",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Equipo"
+        ],
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "summary": "Añadir a una persona nueva o a un usuario que ya existe",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevoMiembro"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Añadido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MiembroConContrasena"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es administrador de la explotación (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El usuario existente no existe o está desactivado (usuario_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Usuario o email en uso, o ya es miembro (usuario_en_uso, email_en_uso, ya_es_miembro)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/miembros/{miembroId}": {
+      "patch": {
+        "tags": [
+          "Equipo"
+        ],
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "summary": "Cambiar el rol de un miembro, o desactivarlo o reactivarlo",
+        "description": "Un miembro desactivado no puede entrar en la explotación. La explotación nunca se queda sin un administrador activo.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "miembroId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioMiembro"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El miembro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Miembro"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es administrador de la explotación (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el miembro (miembro_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Dejaría la explotación sin administradores activos (ultimo_administrador)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/miembros/{miembroId}/restablecer-contrasena": {
+      "post": {
+        "tags": [
+          "Equipo"
+        ],
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "summary": "Dar una contraseña temporal nueva a un miembro",
+        "description": "Solo si el miembro pertenece únicamente a esta explotación; si no, lo hace el propietario de la plataforma. Se cierran sus sesiones.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "miembroId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La contraseña temporal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MiembroConContrasena"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es administrador de la explotación (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el miembro (miembro_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Tiene acceso a otras explotaciones o es uno mismo (otras_explotaciones, es_usted)",
             "content": {
               "application/json": {
                 "schema": {
@@ -770,6 +1279,100 @@
           },
           "409": {
             "description": "REGA, usuario o email ya en uso (rega_en_uso, usuario_en_uso, email_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plataforma/usuarios/restablecer-contrasena": {
+      "post": {
+        "tags": [
+          "Plataforma"
+        ],
+        "summary": "Dar una contraseña temporal nueva a cualquier usuario",
+        "description": "Para quien tiene acceso a varias explotaciones, cuyo administrador no puede hacerlo. Se cierran sus sesiones.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "usuario": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "usuario"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La contraseña temporal; no se puede volver a consultar",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContrasenaRestablecida"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es el propietario de la plataforma (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe el usuario (usuario_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Es uno mismo (es_usted)",
             "content": {
               "application/json": {
                 "schema": {

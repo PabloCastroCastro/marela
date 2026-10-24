@@ -1,0 +1,29 @@
+.contrasenaTemporal {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.caja {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-s);
+  background: var(--color-superficie);
+}
+
+.caja code {
+  font-size: var(--texto-lg);
+  letter-spacing: 0.05em;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  color: var(--color-aviso);
+  font-weight: var(--peso-medio);
+}
