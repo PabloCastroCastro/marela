@@ -1,11 +1,31 @@
 import { vi } from 'vitest'
 
-// API simulada para los tests de pantallas: sesión de Better Auth y explotaciones del usuario, con un
-// estado que las pruebas preparan y que cambia como lo haría el backend.
+// API simulada para los tests de pantallas: sesión de Better Auth, explotaciones del usuario y gestión
+// de la plataforma, con un estado que las pruebas preparan y que cambia como lo haría el backend.
 
 type Rol = 'administrador' | 'empleado'
 
-export type ExplotacionSimulada = { id: string; nombre: string; rega: string; rol: Rol }
+export type ExplotacionSimulada = {
+  id: string
+  nombre: string
+  rega: string
+  rol: Rol
+  municipio?: string
+  provincia?: string
+  activa?: boolean
+}
+
+// Lo que ve el propietario en la gestión de la plataforma
+export type ExplotacionDePlataforma = {
+  id: string
+  nombre: string
+  rega: string
+  municipio: string | null
+  provincia: string | null
+  activa: boolean
+  miembros: number
+  creadaEn: string
+}
 
 export type EstadoSimulado = {
   usuario: {
@@ -19,6 +39,7 @@ export type EstadoSimulado = {
   contrasena: string
   conSesion: boolean
   explotaciones: ExplotacionSimulada[]
+  plataforma: ExplotacionDePlataforma[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -31,6 +52,8 @@ export const A_VEIGA: ExplotacionSimulada = {
   nombre: 'A Veiga',
   rega: 'ES150780000001',
   rol: 'administrador',
+  municipio: 'Lalín',
+  provincia: 'Pontevedra',
 }
 
 export const O_SOUTO: ExplotacionSimulada = {
@@ -52,14 +75,18 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
     },
     contrasena: 'contraseña-correcta',
     conSesion: false,
-    explotaciones: [A_VEIGA, O_SOUTO],
+    explotaciones: [{ ...A_VEIGA }, { ...O_SOUTO }],
+    plataforma: [],
     ...cambios,
   }
 }
 
 const json = (cuerpo: unknown, status = 200) => Response.json(cuerpo, { status })
-const errorApi = (status: number, codigo: string) =>
-  json({ error: { codigo, mensaje: codigo } }, status)
+const errorApi = (status: number, codigo: string, detalles?: unknown) =>
+  json({ error: { codigo, mensaje: codigo, detalles } }, status)
+
+const DETALLE = /^\/api\/explotaciones\/([^/]+)$/
+const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
 export function simularApi(estado: EstadoSimulado) {
@@ -69,7 +96,9 @@ export function simularApi(estado: EstadoSimulado) {
         ? entrada
         : new Request(new URL(String(entrada), 'http://localhost'), opciones)
     const ruta = new URL(peticion.url).pathname
-    const cuerpo = peticion.method === 'POST' ? await peticion.json().catch(() => ({})) : {}
+    const metodo = peticion.method
+    const cuerpo =
+      metodo === 'POST' || metodo === 'PATCH' ? await peticion.json().catch(() => ({})) : {}
 
     if (ruta === '/api/auth/get-session') {
       return json(estado.conSesion ? { user: estado.usuario, session: {} } : null)
@@ -98,12 +127,76 @@ export function simularApi(estado: EstadoSimulado) {
     if (ruta === '/api/health') return json({ estado: 'ok', api: 'ok', baseDeDatos: 'ok' })
 
     if (!estado.conSesion) return errorApi(401, 'no_autenticado')
-    if (ruta === '/api/explotaciones') return json(estado.explotaciones)
-    const detalle = ruta.match(/^\/api\/explotaciones\/([^/]+)$/)
+
+    if (ruta === '/api/explotaciones') {
+      return json(
+        estado.explotaciones
+          .filter((e) => e.activa !== false)
+          .map(({ id, nombre, rega, rol }) => ({ id, nombre, rega, rol })),
+      )
+    }
+    const detalle = ruta.match(DETALLE)
     if (detalle) {
       const e = estado.explotaciones.find((x) => x.id === detalle[1])
       if (!e) return errorApi(404, 'explotacion_no_encontrada')
-      return json({ ...e, modulos: MODULOS[e.rol] })
+      if (e.activa === false) return errorApi(403, 'explotacion_desactivada')
+      if (metodo === 'PATCH') {
+        if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+        Object.assign(e, cuerpo)
+      }
+      return json({
+        id: e.id,
+        nombre: e.nombre,
+        rega: e.rega,
+        rol: e.rol,
+        municipio: e.municipio ?? null,
+        provincia: e.provincia ?? null,
+        modulos: MODULOS[e.rol],
+      })
+    }
+
+    if (ruta.startsWith('/api/plataforma/')) {
+      if (!estado.usuario.propietario) return errorApi(403, 'sin_permiso')
+      if (ruta === '/api/plataforma/explotaciones' && metodo === 'GET') {
+        return json(estado.plataforma)
+      }
+      if (ruta === '/api/plataforma/explotaciones' && metodo === 'POST') {
+        if (estado.plataforma.some((e) => e.rega === cuerpo.rega)) {
+          return errorApi(409, 'rega_en_uso', [
+            { campo: 'rega', mensaje: 'Ya hay una explotación con este código REGA' },
+          ])
+        }
+        const nueva: ExplotacionDePlataforma = {
+          id: `00000000-0000-7000-8009-${String(estado.plataforma.length + 1).padStart(12, '0')}`,
+          nombre: cuerpo.nombre,
+          rega: cuerpo.rega,
+          municipio: cuerpo.municipio,
+          provincia: cuerpo.provincia,
+          activa: true,
+          miembros: 1,
+          creadaEn: '2026-10-24T10:00:00.000Z',
+        }
+        estado.plataforma.push(nueva)
+        const nuevo = cuerpo.administrador.tipo === 'nuevo'
+        return json(
+          {
+            explotacion: nueva,
+            administrador: {
+              id: 'admin-1',
+              usuario: String(cuerpo.administrador.usuario).toLowerCase(),
+              nombre: nuevo ? cuerpo.administrador.nombre : 'Usuario existente',
+            },
+            ...(nuevo ? { contrasenaTemporal: 'Temporal2345' } : {}),
+          },
+          201,
+        )
+      }
+      const una = ruta.match(EN_PLATAFORMA)
+      const e = estado.plataforma.find((x) => x.id === una?.[1])
+      if (e && metodo === 'PATCH') {
+        e.activa = cuerpo.activa
+        return json(e)
+      }
     }
     return errorApi(404, 'no_encontrado')
   })

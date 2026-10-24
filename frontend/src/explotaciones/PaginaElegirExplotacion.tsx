@@ -14,11 +14,15 @@ import estilos from './Explotaciones.module.css'
 
 const ROLES = { administrador: 'Administrador', empleado: 'Empleado' } as const
 
-// "/": abre la última explotación usada, o la única; con varias y ninguna recordada, a elegir
+// "/": abre la última explotación usada, o la única; con varias y ninguna recordada, a elegir. El
+// propietario que no pertenece a ninguna va a la gestión de la plataforma.
 export function RedireccionInicial() {
   const explotaciones = useExplotaciones()
+  const sesion = useSesion()
   if (explotaciones.isPending) return <Cargando />
   const lista = explotaciones.data ?? []
+  if (lista.length === 0 && sesion.data?.usuario.propietario)
+    return <Navigate to="/plataforma" replace />
   const ultima = leerUltimaExplotacion()
   const elegida = lista.length === 1 ? lista[0] : lista.find((e) => e.id === ultima)
   return <Navigate to={elegida ? rutaExplotacion(elegida.id) : '/explotaciones'} replace />
@@ -54,7 +58,7 @@ export function PaginaElegirExplotacion() {
             titulo="Aún no perteneces a ninguna explotación"
             descripcion={
               sesion.data?.usuario.propietario
-                ? 'Como propietario de la plataforma, podrás crear explotaciones desde aquí en cuanto esté disponible.'
+                ? 'Como propietario de la plataforma, crea una explotación y hazte miembro de ella para trabajar en ella.'
                 : 'Pide al administrador de tu explotación que te añada.'
             }
           />
@@ -63,6 +67,11 @@ export function PaginaElegirExplotacion() {
             <h1>¿Con qué explotación vas a trabajar?</h1>
             <ListaExplotaciones explotaciones={lista} />
           </>
+        )}
+        {sesion.data?.usuario.propietario && (
+          <Link to="/plataforma" className={estilos.plataforma}>
+            Gestionar las explotaciones de la plataforma
+          </Link>
         )}
         <Boton variante="texto" anchoCompleto onClick={cerrarSesion}>
           Cerrar sesión

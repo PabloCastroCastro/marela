@@ -111,6 +111,18 @@
           {
             "type": "object",
             "properties": {
+              "municipio": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "provincia": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "modulos": {
                 "type": "array",
                 "items": {
@@ -132,7 +144,230 @@
               }
             },
             "required": [
+              "municipio",
+              "provincia",
               "modulos"
+            ]
+          }
+        ]
+      },
+      "Provincia": {
+        "type": "string",
+        "enum": [
+          "A Coruña",
+          "Álava",
+          "Albacete",
+          "Alicante",
+          "Almería",
+          "Asturias",
+          "Ávila",
+          "Badajoz",
+          "Barcelona",
+          "Bizkaia",
+          "Burgos",
+          "Cáceres",
+          "Cádiz",
+          "Cantabria",
+          "Castellón",
+          "Ceuta",
+          "Ciudad Real",
+          "Córdoba",
+          "Cuenca",
+          "Gipuzkoa",
+          "Girona",
+          "Granada",
+          "Guadalajara",
+          "Huelva",
+          "Huesca",
+          "Illes Balears",
+          "Jaén",
+          "La Rioja",
+          "Las Palmas",
+          "León",
+          "Lleida",
+          "Lugo",
+          "Madrid",
+          "Málaga",
+          "Melilla",
+          "Murcia",
+          "Navarra",
+          "Ourense",
+          "Palencia",
+          "Pontevedra",
+          "Salamanca",
+          "Santa Cruz de Tenerife",
+          "Segovia",
+          "Sevilla",
+          "Soria",
+          "Tarragona",
+          "Teruel",
+          "Toledo",
+          "Valencia",
+          "Valladolid",
+          "Zamora",
+          "Zaragoza"
+        ]
+      },
+      "ExplotacionPlataforma": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "rega": {
+            "type": "string"
+          },
+          "municipio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provincia": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "activa": {
+            "type": "boolean"
+          },
+          "miembros": {
+            "type": "integer"
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "rega",
+          "municipio",
+          "provincia",
+          "activa",
+          "miembros",
+          "creadaEn"
+        ]
+      },
+      "ExplotacionCreada": {
+        "type": "object",
+        "properties": {
+          "explotacion": {
+            "$ref": "#/components/schemas/ExplotacionPlataforma"
+          },
+          "administrador": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "usuario": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "usuario",
+              "nombre"
+            ]
+          },
+          "contrasenaTemporal": {
+            "type": "string",
+            "description": "Solo si el administrador es un usuario nuevo. No se puede volver a consultar."
+          }
+        },
+        "required": [
+          "explotacion",
+          "administrador"
+        ]
+      },
+      "NuevaExplotacion": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "example": "A Veiga"
+          },
+          "rega": {
+            "type": "string",
+            "pattern": "^ES\\d{12}$",
+            "example": "ES150780000001"
+          },
+          "municipio": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Lalín"
+          },
+          "provincia": {
+            "$ref": "#/components/schemas/Provincia"
+          },
+          "administrador": {
+            "$ref": "#/components/schemas/PrimerAdministrador"
+          }
+        },
+        "required": [
+          "nombre",
+          "rega",
+          "municipio",
+          "provincia",
+          "administrador"
+        ]
+      },
+      "PrimerAdministrador": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "enum": [
+                  "nuevo"
+                ]
+              },
+              "usuario": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tipo",
+              "usuario",
+              "nombre",
+              "email"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tipo": {
+                "type": "string",
+                "enum": [
+                  "existente"
+                ]
+              },
+              "usuario": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tipo",
+              "usuario"
             ]
           }
         ]
@@ -187,7 +422,7 @@
         "tags": [
           "Explotaciones"
         ],
-        "summary": "Explotaciones a las que pertenece el usuario, con su rol",
+        "summary": "Explotaciones activas a las que pertenece el usuario, con su rol",
         "security": [
           {
             "sesion": []
@@ -273,7 +508,7 @@
             }
           },
           "403": {
-            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio)",
+            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -284,6 +519,352 @@
           },
           "404": {
             "description": "No existe o el usuario no pertenece a ella (explotacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Explotaciones"
+        ],
+        "summary": "Editar los datos de la explotación (administrador)",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "A Veiga"
+                  },
+                  "rega": {
+                    "type": "string",
+                    "pattern": "^ES\\d{12}$",
+                    "example": "ES150780000001"
+                  },
+                  "municipio": {
+                    "type": "string",
+                    "minLength": 1,
+                    "example": "Lalín"
+                  },
+                  "provincia": {
+                    "$ref": "#/components/schemas/Provincia"
+                  }
+                },
+                "required": [
+                  "nombre",
+                  "rega",
+                  "municipio",
+                  "provincia"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La explotación actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleExplotacion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe o el usuario no pertenece a ella (explotacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El código REGA ya es de otra explotación (rega_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plataforma/explotaciones": {
+      "get": {
+        "tags": [
+          "Plataforma"
+        ],
+        "summary": "Todas las explotaciones, activas y desactivadas",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenadas por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExplotacionPlataforma"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es el propietario de la plataforma (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Plataforma"
+        ],
+        "summary": "Crear una explotación con su primer administrador",
+        "description": "El administrador puede ser un usuario nuevo, que recibe una contraseña temporal, o uno existente, por su nombre de usuario.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaExplotacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplotacionCreada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es el propietario de la plataforma (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El usuario existente no existe o está desactivado (usuario_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REGA, usuario o email ya en uso (rega_en_uso, usuario_en_uso, email_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plataforma/explotaciones/{explotacionId}": {
+      "patch": {
+        "tags": [
+          "Plataforma"
+        ],
+        "summary": "Desactivar o reactivar una explotación",
+        "description": "Una explotación desactivada desaparece para sus miembros, que no pueden entrar en ella. No se borra ningún dato.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "activa": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "activa"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplotacionPlataforma"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No es el propietario de la plataforma (sin_permiso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación (explotacion_no_encontrada)",
             "content": {
               "application/json": {
                 "schema": {

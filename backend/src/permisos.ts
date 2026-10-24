@@ -40,7 +40,13 @@ export type EnvSesion = { Variables: VariablesSesion }
 
 export type EnvExplotacion = {
   Variables: VariablesSesion & {
-    explotacion: { id: string; nombre: string; rega: string }
+    explotacion: {
+      id: string
+      nombre: string
+      rega: string
+      municipio: string | null
+      provincia: string | null
+    }
     rol: RolExplotacion
   }
 }
@@ -82,7 +88,7 @@ export const soloPropietario = (): MiddlewareHandler<EnvSesion> => async (c, nex
 
 // Rutas /explotaciones/{explotacionId}/...: exige pertenecer a la explotación y, si se indica un
 // módulo, que el rol tenga acceso a él. 404 si no existe o no se pertenece a ella (no se revela si
-// existe), 403 si el rol no alcanza. El propietario de la plataforma no tiene acceso a los datos de
+// existe), 403 si está desactivada o si el rol no alcanza. El propietario de la plataforma no tiene acceso a los datos de
 // una explotación si no es miembro.
 export const permitir =
   (modulo?: Modulo, parametro = 'explotacionId'): MiddlewareHandler<EnvExplotacion> =>
@@ -97,19 +103,31 @@ export const permitir =
         id: organization.id,
         nombre: organization.name,
         rega: organization.rega,
+        municipio: organization.municipio,
+        provincia: organization.provincia,
+        activa: organization.activa,
         rol: member.role,
       })
       .from(member)
       .innerJoin(organization, eq(organization.id, member.organizationId))
       .where(and(eq(member.organizationId, explotacionId), eq(member.userId, usuario.id)))
     if (!fila) throw noEncontrada
+    if (!fila.activa) {
+      throw new ErrorApi(403, 'explotacion_desactivada', 'Esta explotación está desactivada')
+    }
 
     const rol = fila.rol as RolExplotacion
     if (modulo && !puedeAcceder(rol, modulo)) {
       throw new ErrorApi(403, 'sin_permiso', 'Tu rol en esta explotación no da acceso a esto')
     }
 
-    c.set('explotacion', { id: fila.id, nombre: fila.nombre, rega: fila.rega })
+    c.set('explotacion', {
+      id: fila.id,
+      nombre: fila.nombre,
+      rega: fila.rega,
+      municipio: fila.municipio,
+      provincia: fila.provincia,
+    })
     c.set('rol', rol)
     await next()
   }

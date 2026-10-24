@@ -50,6 +50,7 @@ src/
   auth.ts         Better Auth: inicio de sesión, sesiones y rutas publicadas
   usuarios.ts     alta, desactivación y reactivación de usuarios
   permisos.ts     autorización por explotación y rol
+  explotaciones.ts  alta, edición y desactivación de explotaciones; punto de extensión al crear
   config.ts       configuración validada
   errores.ts      formato de error común y ErrorApi
   peticiones.ts   log de cada petición
@@ -58,7 +59,7 @@ src/
   db/explotacion.ts  enExplotacion(): acceso a los datos de una explotación
   db/migrar.ts    migraciones al arrancar
   db/seed.ts      datos de ejemplo
-  rutas/          un archivo por módulo (salud, explotaciones)
+  rutas/          un archivo por módulo (salud, explotaciones, plataforma)
   scripts/        exportación del contrato OpenAPI y crear-propietario
 ```
 
@@ -145,6 +146,27 @@ Rutas:
 
 - **`GET /api/explotaciones`:** las explotaciones del usuario, con su rol, para elegir con cuál trabajar.
 - **`GET /api/explotaciones/{explotacionId}`:** los datos de una explotación, el rol del usuario y los módulos a los que tiene acceso, para mostrar u ocultar secciones.
+- **`PATCH /api/explotaciones/{explotacionId}`:** el administrador edita el nombre, el REGA, el municipio y la provincia.
+
+Una explotación desactivada no aparece en la lista de sus miembros, y sus rutas responden 403 `explotacion_desactivada`.
+
+## Plataforma
+
+Rutas del propietario de la plataforma (`soloPropietario()`), en `src/rutas/plataforma.ts`:
+
+- **`GET /api/plataforma/explotaciones`:** todas las explotaciones, activas y desactivadas, con su número de miembros.
+- **`POST /api/plataforma/explotaciones`:** crea una explotación con su primer administrador, en una sola transacción. El administrador es un usuario nuevo (`{ tipo: 'nuevo', usuario, nombre, email }`), cuya contraseña temporal se devuelve solo esta vez, o uno que ya existe (`{ tipo: 'existente', usuario }`).
+- **`PATCH /api/plataforma/explotaciones/{explotacionId}`:** `{ activa }` la desactiva o la reactiva. No se borra ningún dato.
+
+El propietario no ve los datos de una explotación si no es miembro de ella.
+
+**Punto de extensión:** lo que haya que preparar en cada explotación nueva (por ejemplo, los almacenes de comida por defecto del ciclo 5) se registra en `alCrearExplotacion` (`src/explotaciones.ts`). Se ejecuta en la misma transacción que el alta, así que si falla no se crea nada:
+
+```ts
+alCrearExplotacion.push(async (tx, explotacionId, creadorId) => {
+  await enExplotacion(...) // o inserciones con tx
+})
+```
 
 ## Tests
 
@@ -155,6 +177,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/api.test.ts`: salud, documentación y rutas inexistentes (con la base de datos sustituida).
 - `test/config.test.ts`: validación de la configuración.
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
+- `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
 - `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
 - `test/separacion.test.ts`: separación por explotación, auditoría y reglas del esquema, contra PostgreSQL.
 

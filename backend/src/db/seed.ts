@@ -38,8 +38,8 @@ const usuarios = [
 ]
 
 const explotaciones = [
-  { n: 1, nombre: 'A Veiga', rega: 'ES150780000001' },
-  { n: 2, nombre: 'O Souto', rega: 'ES270280000002' },
+  { n: 1, nombre: 'A Veiga', rega: 'ES150780000001', municipio: 'Lalín', provincia: 'Pontevedra' },
+  { n: 2, nombre: 'O Souto', rega: 'ES270280000002', municipio: 'Vilalba', provincia: 'Lugo' },
 ]
 
 // Ana es administradora de A Veiga y empleada de O Souto
@@ -92,6 +92,8 @@ await db.transaction(async (tx) => {
         name: e.nombre,
         slug: e.rega.toLowerCase(),
         rega: e.rega,
+        municipio: e.municipio,
+        provincia: e.provincia,
       })),
     )
     .onConflictDoNothing()
