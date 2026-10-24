@@ -1,0 +1,83 @@
+/* Móvil: abajo, encima de la navegación inferior y del área segura */
+.avisos {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--altura-navegacion) + env(safe-area-inset-bottom, 0px) + var(--espacio-3));
+  z-index: 50;
+  display: grid;
+  gap: var(--espacio-2);
+  justify-items: center;
+  padding: 0 var(--espacio-3);
+  pointer-events: none;
+}
+
+.tarjeta {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  width: 100%;
+  max-width: var(--ancho-contenido);
+  min-height: var(--altura-control);
+  padding: var(--espacio-1) var(--espacio-1) var(--espacio-1) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  background: var(--color-superficie-elevada);
+  color: var(--color-texto);
+  box-shadow: var(--sombra-3);
+  pointer-events: auto;
+  animation: aparecer var(--duracion-entrada) var(--curva-entrada);
+}
+
+.icono {
+  display: grid;
+}
+
+.exito .icono {
+  color: var(--color-exito);
+}
+
+.error .icono {
+  color: var(--color-peligro);
+}
+
+.aviso .icono {
+  color: var(--color-aviso);
+}
+
+.info .icono {
+  color: var(--color-informacion);
+}
+
+.mensaje {
+  flex: 1;
+  font-size: var(--texto-sm);
+}
+
+.accion {
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-3);
+  border: 0;
+  border-radius: var(--radio-s);
+  background: transparent;
+  color: var(--color-primario);
+  font-weight: var(--peso-fuerte);
+  cursor: pointer;
+}
+
+/* Pantalla ancha: abajo a la derecha */
+@media (min-width: 64rem) {
+  .avisos {
+    inset-inline: auto var(--espacio-5);
+    bottom: var(--espacio-5);
+    justify-items: end;
+    width: min(26rem, calc(100% - 2 * var(--espacio-5)));
+    padding: 0;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(var(--espacio-2));
+  }
+}

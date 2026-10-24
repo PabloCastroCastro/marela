@@ -1,0 +1,47 @@
+.confirmacion {
+  width: calc(100% - 2 * var(--espacio-4));
+  max-width: 26rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-l);
+  background: var(--color-superficie-elevada);
+  color: var(--color-texto);
+  box-shadow: var(--sombra-3);
+}
+
+.confirmacion::backdrop {
+  background: var(--color-velo);
+}
+
+.confirmacion[open] {
+  animation: aparecer var(--duracion-larga) var(--curva);
+}
+
+.panel {
+  display: grid;
+  gap: var(--espacio-3);
+  padding: var(--espacio-5);
+}
+
+.panel h2 {
+  font-size: var(--texto-lg);
+}
+
+.mensaje {
+  color: var(--color-texto-suave);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-2);
+  margin-top: var(--espacio-2);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}

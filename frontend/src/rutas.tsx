@@ -15,6 +15,17 @@ export const rutas = [
       { path: 'comida', element: <PaginaSeccion titulo="Comida" /> },
       { path: 'fincas', element: <PaginaSeccion titulo="Fincas" /> },
       { path: 'finanzas', element: <PaginaSeccion titulo="Finanzas" /> },
+      // Catálogo de componentes: solo en desarrollo, no existe en la versión compilada
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'componentes',
+              lazy: async () => ({
+                Component: (await import('./paginas/PaginaComponentes')).PaginaComponentes,
+              }),
+            },
+          ]
+        : []),
       { path: '*', element: <PaginaNoEncontrada /> },
     ],
   },

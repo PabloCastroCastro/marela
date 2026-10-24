@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { ErrorApi } from './api/cliente'
+import { ProveedorAvisos } from './componentes/Avisos'
+import { ProveedorConfirmacion } from './componentes/Confirmacion'
 
 export function crearClienteConsultas() {
   return new QueryClient({
@@ -17,5 +19,11 @@ export function crearClienteConsultas() {
 
 // Contextos comunes de la aplicación (también los usan los tests)
 export function Proveedores({ children, cliente }: { children: ReactNode; cliente: QueryClient }) {
-  return <QueryClientProvider client={cliente}>{children}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={cliente}>
+      <ProveedorAvisos>
+        <ProveedorConfirmacion>{children}</ProveedorConfirmacion>
+      </ProveedorAvisos>
+    </QueryClientProvider>
+  )
 }
