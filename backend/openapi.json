@@ -6,6 +6,13 @@
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
+    "securitySchemes": {
+      "sesion": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Secure-marela.session_token"
+      }
+    },
     "schemas": {
       "Salud": {
         "type": "object",
@@ -63,6 +70,72 @@
         "required": [
           "error"
         ]
+      },
+      "ExplotacionDelUsuario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "rega": {
+            "type": "string",
+            "example": "ES150780000001"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/RolExplotacion"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "rega",
+          "rol"
+        ]
+      },
+      "RolExplotacion": {
+        "type": "string",
+        "enum": [
+          "administrador",
+          "empleado"
+        ]
+      },
+      "DetalleExplotacion": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ExplotacionDelUsuario"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "modulos": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "animales",
+                    "comida",
+                    "fincas",
+                    "finanzas",
+                    "administracion"
+                  ]
+                },
+                "description": "Partes de la explotación a las que da acceso el rol",
+                "example": [
+                  "animales",
+                  "comida",
+                  "fincas"
+                ]
+              }
+            },
+            "required": [
+              "modulos"
+            ]
+          }
+        ]
       }
     },
     "parameters": {}
@@ -102,6 +175,119 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Salud"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones": {
+      "get": {
+        "tags": [
+          "Explotaciones"
+        ],
+        "summary": "Explotaciones a las que pertenece el usuario, con su rol",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenadas por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExplotacionDelUsuario"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}": {
+      "get": {
+        "tags": [
+          "Explotaciones"
+        ],
+        "summary": "Datos de una explotación y permisos del usuario en ella",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleExplotacion"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Contraseña temporal sin cambiar (cambio_contrasena_obligatorio)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe o el usuario no pertenece a ella (explotacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

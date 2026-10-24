@@ -63,10 +63,10 @@ Más reglas:
 
 ## Consultar los datos
 
-Las consultas a tablas de una explotación pasan siempre por `enExplotacion`:
+Las consultas a tablas de una explotación pasan siempre por `enExplotacion`. En una ruta protegida con `permitir(modulo)` (`src/permisos.ts`) se usa `enLaExplotacion(c, fn)`, que toma la explotación y el usuario de la petición:
 
 ```ts
-const lista = await enExplotacion({ explotacionId, usuarioId }, (tx) =>
+const lista = await enLaExplotacion(c, (tx) =>
   tx.select().from(animales).where(eq(animales.estado, 'activo')),
 )
 ```
