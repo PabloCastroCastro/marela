@@ -59,7 +59,7 @@ Los trabajos llaman a estos scripts de npm. Los marcados como opcionales solo se
 | `lint` (Biome; la CI usa `biome ci`) | backend, frontend | Sí |
 | `typecheck`, `build` | backend, frontend | Sí |
 | `test` | backend, frontend | No |
-| `db:check`: falla si hay cambios de esquema sin migración | backend | No (llega con el esquema inicial) |
+| `db:check`: falla si hay cambios de esquema sin migración | backend | No |
 | `openapi:check`: falla si `openapi.json` está desactualizado | backend | No |
 | `api:check`: falla si el cliente generado no coincide con `backend/openapi.json` | frontend | No |
 

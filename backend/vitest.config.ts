@@ -1,15 +1,18 @@
 import { defineConfig } from 'vitest/config'
+import { urlDeTest } from './test/bd.js'
 
 export default defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
-    // Configuración válida para cargar la app; los tests actuales no se conectan a la base de datos
+    globalSetup: ['test/preparar-bd.ts'],
+    // Configuración válida para cargar la app; la base de datos es siempre la de test
     env: {
       ENTORNO: 'pruebas',
       TZ: 'Europe/Madrid',
-      DATABASE_URL:
-        process.env.TEST_DATABASE_URL ?? 'postgres://marela:marela@localhost:5432/marela_test',
+      DATABASE_URL: urlDeTest(),
       LOG_LEVEL: 'silent',
     },
+    // Los archivos comparten la base de datos: se ejecutan de uno en uno
+    fileParallelism: false,
   },
 })

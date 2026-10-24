@@ -71,6 +71,12 @@ docker compose -f docker-compose.dev.yml up --build
 | Documentación de la API | http://localhost:3000/api/docs |
 | PostgreSQL | `localhost:5432`, usuario, contraseña y base de datos `marela` |
 
+Para cargar los datos de ejemplo (dos explotaciones con sus usuarios, listados en el [README del backend](backend/README.md#datos-de-ejemplo)):
+
+```
+docker compose -f docker-compose.dev.yml exec backend npm run db:seed
+```
+
 El código de `backend/` y `frontend/` se monta en los contenedores, así que los cambios se aplican al guardar. **En Windows**, con el repositorio en `C:\`, los cambios no llegan como eventos a los contenedores y la recarga no se produce: pon `RECARGA_POLLING=true` en un `.env` (copia de `.env.example`). Si clonas el repositorio dentro de WSL no hace falta.
 
 Si cambian las dependencias de un proyecto, reconstruye y renueva sus `node_modules`:
