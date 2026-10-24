@@ -1,10 +1,12 @@
 import {
   Beef,
+  Building2,
   ChevronsUpDown,
   CircleUserRound,
   Euro,
   KeyRound,
   LogOut,
+  Settings,
   Tractor,
   Wheat,
 } from 'lucide-react'
@@ -26,7 +28,7 @@ import {
   useExplotacion,
   useExplotaciones,
 } from '../explotaciones/datos'
-import { ProveedorExplotacion } from '../explotaciones/ExplotacionActual'
+import { ProveedorExplotacion, useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { ListaExplotaciones } from '../explotaciones/PaginaElegirExplotacion'
 import { ActualizacionPwa } from '../pwa/ActualizacionPwa'
 import estilos from './Aplicacion.module.css'
@@ -52,13 +54,22 @@ export function Aplicacion() {
 
   if (explotacion.isPending) return <Cargando />
   if (explotacion.isError) {
-    const noEncontrada = explotacion.error instanceof ErrorApi && explotacion.error.estado === 404
+    const error = explotacion.error instanceof ErrorApi ? explotacion.error : null
+    const desactivada = error?.codigo === 'explotacion_desactivada'
     return (
       <main className={estilos.sinExplotacion}>
-        {noEncontrada ? (
+        {error?.estado === 404 || desactivada ? (
           <EstadoVacio
-            titulo="No tienes acceso a esta explotación"
-            descripcion="No existe o no perteneces a ella."
+            titulo={
+              desactivada
+                ? 'Esta explotación está desactivada'
+                : 'No tienes acceso a esta explotación'
+            }
+            descripcion={
+              desactivada
+                ? 'No se puede entrar en ella mientras esté desactivada. Sus datos se conservan.'
+                : 'No existe o no perteneces a ella.'
+            }
             accion={
               <Link to="/explotaciones" className={estilos.enlaceBoton}>
                 Ver mis explotaciones
@@ -175,9 +186,14 @@ function SelectorExplotacion({ explotacion }: { explotacion: DetalleExplotacion 
 
 function HojaCuenta({ abierta, alCerrar }: { abierta: boolean; alCerrar: () => void }) {
   const sesion = useSesion()
+  const explotacion = useExplotacionActual()
   const navegar = useNavigate()
   const cerrarSesion = useCerrarSesion()
   const usuario = sesion.data?.usuario
+  const ir = (ruta: string) => {
+    alCerrar()
+    navegar(ruta)
+  }
 
   return (
     <HojaInferior abierta={abierta} alCerrar={alCerrar} titulo="Tu cuenta">
@@ -189,14 +205,31 @@ function HojaCuenta({ abierta, alCerrar }: { abierta: boolean; alCerrar: () => v
           </span>
         </div>
       )}
+      {explotacion.modulos.includes('administracion') && (
+        <Boton
+          variante="secundario"
+          anchoCompleto
+          icono={<Settings aria-hidden size={20} />}
+          onClick={() => ir(`${rutaExplotacion(explotacion.id)}/datos`)}
+        >
+          Datos de la explotación
+        </Boton>
+      )}
+      {usuario?.propietario && (
+        <Boton
+          variante="secundario"
+          anchoCompleto
+          icono={<Building2 aria-hidden size={20} />}
+          onClick={() => ir('/plataforma')}
+        >
+          Gestionar las explotaciones
+        </Boton>
+      )}
       <Boton
         variante="secundario"
         anchoCompleto
         icono={<KeyRound aria-hidden size={20} />}
-        onClick={() => {
-          alCerrar()
-          navegar(RUTA_CAMBIAR_CONTRASENA)
-        }}
+        onClick={() => ir(RUTA_CAMBIAR_CONTRASENA)}
       >
         Cambiar la contraseña
       </Boton>

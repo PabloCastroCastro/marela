@@ -13,7 +13,9 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 ## Usuarios y accesos
 
 - Tres niveles: propietario de la plataforma, administrador de explotación y empleado.
-- El propietario crea las explotaciones y su primer administrador. No hay registro libre.
+- El propietario crea las explotaciones (nombre, código REGA, municipio y provincia) y su primer administrador, que puede ser un usuario nuevo con contraseña temporal o uno que ya existe. No hay registro libre.
+- El propietario puede desactivar una explotación: desaparece para sus miembros, que no pueden entrar en ella, pero no se borra ningún dato y se puede reactivar.
+- El administrador edita los datos de su explotación.
 - El administrador de explotación crea, desactiva y cambia el rol de sus empleados.
 - Un usuario puede pertenecer a varias explotaciones, con un rol distinto en cada una.
 - El empleado accede a Animales, Comida y Fincas, pero no a Finanzas.

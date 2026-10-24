@@ -120,6 +120,8 @@ describe('GET /api/explotaciones/{id}', () => {
       id: a.id,
       nombre: a.name,
       rega: a.rega,
+      municipio: null,
+      provincia: null,
       rol: 'administrador',
       modulos: ['animales', 'comida', 'fincas', 'finanzas', 'administracion'],
     })

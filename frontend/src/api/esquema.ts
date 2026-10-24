@@ -68,7 +68,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Explotaciones a las que pertenece el usuario, con su rol */
+        /** Explotaciones activas a las que pertenece el usuario, con su rol */
         get: {
             parameters: {
                 query?: never;
@@ -152,7 +152,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio) */
+                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -177,7 +177,295 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Editar los datos de la explotación (administrador) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example A Veiga */
+                        nombre: string;
+                        /** @example ES150780000001 */
+                        rega: string;
+                        /** @example Lalín */
+                        municipio: string;
+                        provincia: components["schemas"]["Provincia"];
+                    };
+                };
+            };
+            responses: {
+                /** @description La explotación actualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DetalleExplotacion"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe o el usuario no pertenece a ella (explotacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El código REGA ya es de otra explotación (rega_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/plataforma/explotaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todas las explotaciones, activas y desactivadas */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenadas por nombre */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExplotacionPlataforma"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es el propietario de la plataforma (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Crear una explotación con su primer administrador
+         * @description El administrador puede ser un usuario nuevo, que recibe una contraseña temporal, o uno existente, por su nombre de usuario.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NuevaExplotacion"];
+                };
+            };
+            responses: {
+                /** @description Creada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExplotacionCreada"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es el propietario de la plataforma (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El usuario existente no existe o está desactivado (usuario_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description REGA, usuario o email ya en uso (rega_en_uso, usuario_en_uso, email_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/plataforma/explotaciones/{explotacionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Desactivar o reactivar una explotación
+         * @description Una explotación desactivada desaparece para sus miembros, que no pueden entrar en ella. No se borra ningún dato.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        activa: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description La explotación */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExplotacionPlataforma"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es el propietario de la plataforma (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación (explotacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
 }
@@ -215,6 +503,8 @@ export interface components {
         /** @enum {string} */
         RolExplotacion: "administrador" | "empleado";
         DetalleExplotacion: components["schemas"]["ExplotacionDelUsuario"] & {
+            municipio: string | null;
+            provincia: string | null;
             /**
              * @description Partes de la explotación a las que da acceso el rol
              * @example [
@@ -224,6 +514,52 @@ export interface components {
              *     ]
              */
             modulos: ("animales" | "comida" | "fincas" | "finanzas" | "administracion")[];
+        };
+        /** @enum {string} */
+        Provincia: "A Coruña" | "Álava" | "Albacete" | "Alicante" | "Almería" | "Asturias" | "Ávila" | "Badajoz" | "Barcelona" | "Bizkaia" | "Burgos" | "Cáceres" | "Cádiz" | "Cantabria" | "Castellón" | "Ceuta" | "Ciudad Real" | "Córdoba" | "Cuenca" | "Gipuzkoa" | "Girona" | "Granada" | "Guadalajara" | "Huelva" | "Huesca" | "Illes Balears" | "Jaén" | "La Rioja" | "Las Palmas" | "León" | "Lleida" | "Lugo" | "Madrid" | "Málaga" | "Melilla" | "Murcia" | "Navarra" | "Ourense" | "Palencia" | "Pontevedra" | "Salamanca" | "Santa Cruz de Tenerife" | "Segovia" | "Sevilla" | "Soria" | "Tarragona" | "Teruel" | "Toledo" | "Valencia" | "Valladolid" | "Zamora" | "Zaragoza";
+        ExplotacionPlataforma: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            rega: string;
+            municipio: string | null;
+            provincia: string | null;
+            activa: boolean;
+            miembros: number;
+            /** Format: date-time */
+            creadaEn: string;
+        };
+        ExplotacionCreada: {
+            explotacion: components["schemas"]["ExplotacionPlataforma"];
+            administrador: {
+                /** Format: uuid */
+                id: string;
+                usuario: string;
+                nombre: string;
+            };
+            /** @description Solo si el administrador es un usuario nuevo. No se puede volver a consultar. */
+            contrasenaTemporal?: string;
+        };
+        NuevaExplotacion: {
+            /** @example A Veiga */
+            nombre: string;
+            /** @example ES150780000001 */
+            rega: string;
+            /** @example Lalín */
+            municipio: string;
+            provincia: components["schemas"]["Provincia"];
+            administrador: components["schemas"]["PrimerAdministrador"];
+        };
+        PrimerAdministrador: {
+            /** @enum {string} */
+            tipo: "nuevo";
+            usuario: string;
+            nombre: string;
+            email: string;
+        } | {
+            /** @enum {string} */
+            tipo: "existente";
+            usuario: string;
         };
     };
     responses: never;

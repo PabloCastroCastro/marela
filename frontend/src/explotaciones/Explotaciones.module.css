@@ -79,3 +79,31 @@
   flex: none;
   color: var(--color-texto-suave);
 }
+
+.datosExplotacion {
+  display: grid;
+  gap: var(--espacio-5);
+  max-width: var(--ancho-contenido);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.error {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.plataforma {
+  justify-self: center;
+}

@@ -2,7 +2,8 @@ import { randomInt } from 'node:crypto'
 import { eq, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { auth, LONGITUD_MINIMA_CONTRASENA } from './auth.js'
-import { db } from './db/cliente.js'
+import { type Db, db } from './db/cliente.js'
+import type { Transaccion } from './db/explotacion.js'
 import { account, session, user } from './db/schema/index.js'
 
 // Alta, desactivación y reactivación de usuarios. Las usan el comando crear-propietario y la gestión
@@ -24,8 +25,13 @@ export const DatosUsuario = z.object({
 
 export type DatosUsuario = z.input<typeof DatosUsuario>
 
+// Error de los datos de un usuario: el campo que falla, para mostrarlo junto a él
 export class ErrorUsuario extends Error {
-  constructor(mensaje: string) {
+  constructor(
+    mensaje: string,
+    public readonly codigo = 'usuario_no_valido',
+    public readonly campo?: 'usuario' | 'nombre' | 'email',
+  ) {
     super(mensaje)
     this.name = 'ErrorUsuario'
   }
@@ -41,25 +47,37 @@ export function generarContrasenaTemporal(longitud = 12) {
   ).join('')
 }
 
-// Crea un usuario con una contraseña temporal y la devuelve: solo se muestra esta vez
-export async function crearUsuario(entrada: DatosUsuario) {
+// Crea un usuario con una contraseña temporal y la devuelve: solo se muestra esta vez. Con una
+// transacción, el usuario se crea dentro de ella (p. ej. junto con su explotación).
+export async function crearUsuario(entrada: DatosUsuario, ejecutor: Db | Transaccion = db) {
   const r = DatosUsuario.safeParse(entrada)
-  if (!r.success) throw new ErrorUsuario(r.error.issues.map((i) => i.message).join('. '))
+  if (!r.success) {
+    const [primero] = r.error.issues
+    throw new ErrorUsuario(
+      r.error.issues.map((i) => i.message).join('. '),
+      'usuario_no_valido',
+      primero?.path[0] as ErrorUsuario['campo'],
+    )
+  }
   const datos = r.data
 
   const contrasenaTemporal = generarContrasenaTemporal()
   // El mismo algoritmo y parámetros con los que Better Auth comprobará la contraseña al iniciar sesión
   const hash = await (await auth.$context).password.hash(contrasenaTemporal)
 
-  const usuario = await db.transaction(async (tx) => {
+  const usuario = await ejecutor.transaction(async (tx) => {
     const existentes = await tx
       .select({ username: user.username, email: user.email })
       .from(user)
       .where(or(eq(user.username, datos.usuario), eq(user.email, datos.email)))
     if (existentes.some((e) => e.username === datos.usuario))
-      throw new ErrorUsuario(`Ya existe el usuario ${datos.usuario}`)
+      throw new ErrorUsuario(`Ya existe el usuario ${datos.usuario}`, 'usuario_en_uso', 'usuario')
     if (existentes.length > 0)
-      throw new ErrorUsuario(`Ya hay un usuario con el email ${datos.email}`)
+      throw new ErrorUsuario(
+        `Ya hay un usuario con el email ${datos.email}`,
+        'email_en_uso',
+        'email',
+      )
 
     const [creado] = await tx
       .insert(user)

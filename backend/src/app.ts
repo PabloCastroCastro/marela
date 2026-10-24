@@ -6,6 +6,7 @@ import { comprobarBaseDeDatos } from './db/cliente.js'
 import { manejarError, rutaNoEncontrada, soloMismoOrigen, validacionFallida } from './errores.js'
 import { registrarPeticiones } from './peticiones.js'
 import { rutasExplotaciones } from './rutas/explotaciones.js'
+import { rutasPlataforma } from './rutas/plataforma.js'
 import { rutasSalud } from './rutas/salud.js'
 
 export const infoOpenApi = {
@@ -48,8 +49,11 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   })
 
   // Las rutas que modifican datos solo se aceptan desde la propia aplicación (protección CSRF)
-  app.on(['POST', 'PUT', 'PATCH', 'DELETE'], '/explotaciones/*', soloMismoOrigen(config.urlPublica))
+  for (const ruta of ['/explotaciones/*', '/plataforma/*']) {
+    app.on(['POST', 'PUT', 'PATCH', 'DELETE'], ruta, soloMismoOrigen(config.urlPublica))
+  }
   app.route('/', rutasExplotaciones())
+  app.route('/', rutasPlataforma())
 
   // Sesión en la cookie de Better Auth (con el prefijo __Secure- salvo en desarrollo)
   app.openAPIRegistry.registerComponent('securitySchemes', 'sesion', {
