@@ -37,6 +37,12 @@ export const organization = pgTable(
     metadata: text('metadata'),
     // Código del Registro General de Explotaciones Ganaderas: ES y 12 dígitos
     rega: text('rega').notNull().unique(),
+    // Obligatorios al crear una explotación desde la API (GH-11)
+    municipio: text('municipio'),
+    provincia: text('provincia'),
+    // Una explotación desactivada desaparece para sus miembros, que no pueden entrar en ella; sus datos
+    // se conservan y el propietario puede reactivarla
+    activa: boolean('activa').notNull().default(true),
     createdAt: creadoEn(),
   },
   (t) => [check('organization_rega_formato', sql`${t.rega} ~ '^ES[0-9]{12}$'`)],

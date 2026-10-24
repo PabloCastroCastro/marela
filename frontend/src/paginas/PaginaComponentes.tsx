@@ -1,4 +1,4 @@
-import { Beef, Plus, Save, Syringe, Trash2, TriangleAlert } from 'lucide-react'
+import { Plus, Save, Syringe, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -8,6 +8,7 @@ import { Cargando, Esqueleto, EstadoError, EstadoVacio } from '../componentes/Es
 import { Chips, Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { BarraFiltros, Buscador } from '../componentes/Filtros'
 import { HojaInferior } from '../componentes/HojaInferior'
+import { Vaca } from '../componentes/iconos'
 import { Tabla } from '../componentes/Tabla'
 import { fecha, kilos } from '../formato'
 import estilos from './PaginaComponentes.module.css'
@@ -207,7 +208,7 @@ export function PaginaComponentes() {
         <h2>Insignias y tarjeta</h2>
         <div className={estilos.fila}>
           <Insignia>Vendido</Insignia>
-          <Insignia tipo="exito" icono={<Beef aria-hidden />}>
+          <Insignia tipo="exito" icono={<Vaca aria-hidden />}>
             Gestante
           </Insignia>
           <Insignia tipo="aviso" icono={<TriangleAlert aria-hidden />}>
@@ -278,7 +279,7 @@ export function PaginaComponentes() {
         <div className={estilos.rejilla}>
           <Tarjeta>
             <EstadoVacio
-              icono={<Beef size={32} />}
+              icono={<Vaca size={32} />}
               titulo="Aún no hay animales"
               descripcion="Da de alta el primero para empezar su ficha."
               accion={<Boton icono={<Plus aria-hidden size={20} />}>Añadir animal</Boton>}

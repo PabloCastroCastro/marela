@@ -1,8 +1,9 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { db } from '../db/cliente.js'
 import { member, organization, ROLES_EXPLOTACION } from '../db/schema/index.js'
 import { EsquemaError, validacionFallida } from '../errores.js'
+import { actualizarExplotacion, DatosExplotacion } from '../explotaciones.js'
 import {
   type EnvExplotacion,
   type EnvSesion,
@@ -12,7 +13,8 @@ import {
   requiereSesion,
 } from '../permisos.js'
 
-// Explotaciones del usuario: la lista para elegir con cuál trabajar, y los datos y permisos de una
+// Explotaciones del usuario: la lista para elegir con cuál trabajar, y los datos y permisos de una.
+// El administrador edita los datos de la suya.
 
 const Rol = z.enum(ROLES_EXPLOTACION).openapi('RolExplotacion')
 
@@ -26,6 +28,8 @@ const ExplotacionDelUsuario = z
   .openapi('ExplotacionDelUsuario')
 
 const DetalleExplotacion = ExplotacionDelUsuario.extend({
+  municipio: z.string().nullable(),
+  provincia: z.string().nullable(),
   modulos: z.array(z.enum(MODULOS)).openapi({
     description: 'Partes de la explotación a las que da acceso el rol',
     example: ['animales', 'comida', 'fincas'],
@@ -45,7 +49,7 @@ const listar = createRoute({
   method: 'get',
   path: '/explotaciones',
   tags: ['Explotaciones'],
-  summary: 'Explotaciones a las que pertenece el usuario, con su rol',
+  summary: 'Explotaciones activas a las que pertenece el usuario, con su rol',
   security: [{ sesion: [] }],
   middleware: [requiereSesion()] as const,
   responses: {
@@ -57,6 +61,14 @@ const listar = createRoute({
     403: error('Contraseña temporal sin cambiar (cambio_contrasena_obligatorio)'),
   },
 })
+
+const respuestasExplotacion = {
+  401: error('Sin sesión'),
+  403: error(
+    'Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso)',
+  ),
+  404: error('No existe o el usuario no pertenece a ella (explotacion_no_encontrada)'),
+}
 
 const detalle = createRoute({
   method: 'get',
@@ -71,11 +83,34 @@ const detalle = createRoute({
       description: 'La explotación',
       content: { 'application/json': { schema: DetalleExplotacion } },
     },
-    401: error('Sin sesión'),
-    403: error('Contraseña temporal sin cambiar (cambio_contrasena_obligatorio)'),
-    404: error('No existe o el usuario no pertenece a ella (explotacion_no_encontrada)'),
+    ...respuestasExplotacion,
   },
 })
+
+const editar = createRoute({
+  method: 'patch',
+  path: '/explotaciones/{explotacionId}',
+  tags: ['Explotaciones'],
+  summary: 'Editar los datos de la explotación (administrador)',
+  security: [{ sesion: [] }],
+  middleware: [permitir('administracion')] as const,
+  request: {
+    params: ParametrosExplotacion,
+    body: { content: { 'application/json': { schema: DatosExplotacion } }, required: true },
+  },
+  responses: {
+    200: {
+      description: 'La explotación actualizada',
+      content: { 'application/json': { schema: DetalleExplotacion } },
+    },
+    400: error('Datos no válidos (validacion)'),
+    ...respuestasExplotacion,
+    409: error('El código REGA ya es de otra explotación (rega_en_uso)'),
+  },
+})
+
+const modulosDe = (rol: (typeof ROLES_EXPLOTACION)[number]) =>
+  MODULOS.filter((m) => puedeAcceder(rol, m))
 
 export const rutasExplotaciones = () =>
   new OpenAPIHono<EnvSesion>({ defaultHook: validacionFallida })
@@ -89,7 +124,7 @@ export const rutasExplotaciones = () =>
         })
         .from(member)
         .innerJoin(organization, eq(organization.id, member.organizationId))
-        .where(eq(member.userId, c.var.usuario.id))
+        .where(and(eq(member.userId, c.var.usuario.id), eq(organization.activa, true)))
         .orderBy(asc(organization.name))
       return c.json(
         filas.map((f) => ({ ...f, rol: Rol.parse(f.rol) })),
@@ -98,14 +133,23 @@ export const rutasExplotaciones = () =>
     })
     .route(
       '/',
-      new OpenAPIHono<EnvExplotacion>({ defaultHook: validacionFallida }).openapi(detalle, (c) =>
-        c.json(
-          {
-            ...c.var.explotacion,
-            rol: c.var.rol,
-            modulos: MODULOS.filter((m) => puedeAcceder(c.var.rol, m)),
-          },
-          200,
-        ),
-      ),
+      new OpenAPIHono<EnvExplotacion>({ defaultHook: validacionFallida })
+        .openapi(detalle, (c) =>
+          c.json({ ...c.var.explotacion, rol: c.var.rol, modulos: modulosDe(c.var.rol) }, 200),
+        )
+        .openapi(editar, async (c) => {
+          const e = await actualizarExplotacion(c.var.explotacion.id, c.req.valid('json'))
+          return c.json(
+            {
+              id: e.id,
+              nombre: e.name,
+              rega: e.rega,
+              municipio: e.municipio,
+              provincia: e.provincia,
+              rol: c.var.rol,
+              modulos: modulosDe(c.var.rol),
+            },
+            200,
+          )
+        }),
     )

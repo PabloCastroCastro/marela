@@ -1,0 +1,106 @@
+.pagina {
+  min-height: 100dvh;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--altura-cabecera) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) var(--espacio-4) 0;
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+}
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--altura-tactil);
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.contenido {
+  display: grid;
+  gap: var(--espacio-5);
+  max-width: var(--ancho-contenido-amplio);
+  margin: 0 auto;
+  padding: var(--espacio-5) var(--espacio-4)
+    calc(var(--espacio-7) + env(safe-area-inset-bottom, 0px));
+}
+
+.titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.estado {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.grupo {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo legend {
+  margin-bottom: var(--espacio-2);
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-fuerte);
+}
+
+.error {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}
+
+.resumen {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.contrasena {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-s);
+  background: var(--color-superficie);
+}
+
+.contrasena code {
+  font-size: var(--texto-lg);
+  letter-spacing: 0.05em;
+}
+
+.aviso {
+  color: var(--color-aviso);
+  font-weight: var(--peso-medio);
+}
+
+@media (min-width: 64rem) {
+  .contenido {
+    padding-inline: var(--espacio-6);
+  }
+}
