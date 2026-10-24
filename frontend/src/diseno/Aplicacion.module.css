@@ -33,6 +33,100 @@
   border-radius: var(--radio-s);
 }
 
+/* En el móvil la cabecera lleva el logo, el selector de explotación y la cuenta */
+.nombreMarca {
+  display: none;
+}
+
+.selectorMovil {
+  flex: 1;
+  min-width: 0;
+}
+
+.selectorAncho {
+  display: none;
+}
+
+.cuenta {
+  margin-left: auto;
+  margin-right: calc(-1 * var(--espacio-2));
+  color: var(--color-texto);
+}
+
+.selector {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  max-width: 100%;
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-2);
+  border: 0;
+  border-radius: var(--radio-s);
+  background: transparent;
+  color: var(--color-texto);
+  font: inherit;
+  font-weight: var(--peso-medio);
+  text-align: start;
+}
+
+.selectorBoton {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .selectorBoton:hover {
+    background: var(--color-primario-suave);
+  }
+}
+
+.selectorBoton svg {
+  flex: none;
+  color: var(--color-texto-suave);
+}
+
+.nombreExplotacion {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sinExplotacion {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--espacio-4);
+}
+
+.enlaceBoton {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--altura-control);
+  padding: 0 var(--espacio-5);
+  border-radius: var(--radio-s);
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.usuario {
+  display: grid;
+  gap: var(--espacio-1);
+}
+
+.nombreUsuario {
+  font-weight: var(--peso-fuerte);
+}
+
+.datosUsuario {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.salir {
+  color: var(--color-peligro);
+}
+
 .contenido {
   width: 100%;
   max-width: var(--ancho-contenido);
@@ -104,6 +198,26 @@
 
   .cabecera {
     grid-column: 1 / -1;
+  }
+
+  .nombreMarca {
+    display: inline;
+  }
+
+  .selectorMovil {
+    display: none;
+  }
+
+  .selectorAncho {
+    display: block;
+    margin-bottom: var(--espacio-3);
+    padding-bottom: var(--espacio-3);
+    border-bottom: 1px solid var(--color-borde);
+  }
+
+  .selectorAncho .selector {
+    width: 100%;
+    padding: 0 var(--espacio-3);
   }
 
   .navegacion {

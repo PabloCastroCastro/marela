@@ -13,9 +13,11 @@ Es un proyecto independiente: tiene sus propias dependencias y no importa códig
 src/
   main.tsx          punto de entrada
   rutas.tsx         rutas (React Router)
-  proveedores.tsx   TanStack Query
+  proveedores.tsx   TanStack Query, avisos y confirmación
+  auth/             sesión, inicio de sesión, cambio de contraseña y rutas protegidas
+  explotaciones/    explotaciones del usuario, elección y explotación activa
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
-  diseno/           estructura común: cabecera y navegación adaptable
+  diseno/           estructura de una explotación: cabecera, selector, cuenta y navegación adaptable
   componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)
   paginas/          inicio, secciones (provisionales), catálogo de componentes y página no encontrada
   formato.ts        fechas, números, kilos y euros en español
@@ -51,6 +53,24 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 - Objetivos táctiles de al menos 44 px.
 - **Accesibilidad**: foco visible con teclado, enlace para saltar al contenido y `prefers-reduced-motion`.
 - Iconos de [Lucide](https://lucide.dev) (`lucide-react`).
+
+## Sesión y explotaciones
+
+| Ruta | Pantalla |
+|---|---|
+| `/entrar` | Inicio de sesión con usuario o email (sin sesión) |
+| `/cambiar-contrasena` | Cambio de contraseña; obligatorio, sin poder ir a otra pantalla, mientras sea temporal |
+| `/` | Abre la única explotación o la última usada en este dispositivo; si no, a elegir |
+| `/explotaciones` | Elegir explotación (con una sola, entra directamente) |
+| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales`, `comida`, `fincas` y `finanzas` |
+
+- **Rutas protegidas:** todas menos `/entrar` exigen sesión (`RutaProtegida`). Sin ella llevan al inicio de sesión y, al entrar, se vuelve a donde se estaba. Si una consulta responde 401 (sesión caducada), la sesión se da por cerrada y pasa lo mismo.
+- **Sesión:** se consulta con `useSesion()` (`src/auth/sesion.ts`), que llama a las rutas de Better Auth (`/api/auth/...`). No están en el contrato OpenAPI, así que sus errores se traducen ahí.
+- **Explotación activa:** va en la URL. `useExplotacionActual()` da su nombre, el rol y los módulos a los que da acceso. Se recuerda la última usada en `localStorage`.
+- **Rol:** la navegación muestra solo las secciones de los módulos del rol (el empleado no ve Finanzas), y `<SoloModulo>` bloquea la sección si se entra por la dirección. El backend lo comprueba igualmente.
+- **Selector y cuenta:** el selector de explotación está en la cabecera en el móvil y en el menú lateral en pantalla ancha. La cuenta (cambiar contraseña y cerrar sesión) se abre desde el icono de la cabecera.
+
+Las pantallas se prueban con una API simulada (`test/simulacion.ts`) que reproduce la sesión y las explotaciones.
 
 ## Componentes
 

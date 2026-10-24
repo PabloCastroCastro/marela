@@ -71,7 +71,7 @@ docker compose -f docker-compose.dev.yml up --build
 | Documentación de la API | http://localhost:3000/api/docs |
 | PostgreSQL | `localhost:5432`, usuario, contraseña y base de datos `marela` |
 
-Para cargar los datos de ejemplo (dos explotaciones con sus usuarios, listados en el [README del backend](backend/README.md#datos-de-ejemplo)):
+Para cargar los datos de ejemplo (dos explotaciones con sus usuarios, listados en el [README del backend](backend/README.md#datos-de-ejemplo)) y poder iniciar sesión, por ejemplo con `ana` y `marela-dev`:
 
 ```
 docker compose -f docker-compose.dev.yml exec backend npm run db:seed

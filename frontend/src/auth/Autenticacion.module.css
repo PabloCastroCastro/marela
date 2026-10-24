@@ -1,0 +1,64 @@
+/* Pantallas sin la estructura de la aplicación: formulario centrado, de 400 px como máximo */
+.pantalla {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: calc(var(--espacio-5) + env(safe-area-inset-top, 0px)) var(--espacio-4)
+    calc(var(--espacio-5) + env(safe-area-inset-bottom, 0px));
+}
+
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+  width: 100%;
+  max-width: 400px;
+}
+
+.marca {
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-2);
+  text-align: center;
+}
+
+.marca img {
+  border-radius: var(--radio-l);
+}
+
+.marca h1 {
+  font-size: var(--texto-xl);
+}
+
+.marca p {
+  color: var(--color-texto-suave);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}
+
+.error svg {
+  flex: none;
+}
+
+.contrasena {
+  display: grid;
+}
+
+.ver {
+  justify-self: end;
+}
+
+.nota {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+  text-align: center;
+}
