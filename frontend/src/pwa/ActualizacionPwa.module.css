@@ -1,0 +1,34 @@
+.aviso {
+  position: fixed;
+  inset-inline: var(--espacio-4);
+  bottom: calc(var(--altura-navegacion) + env(safe-area-inset-bottom, 0px) + var(--espacio-3));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  max-width: var(--ancho-contenido);
+  margin: 0 auto;
+  padding: var(--espacio-2) var(--espacio-2) var(--espacio-2) var(--espacio-4);
+  border-radius: var(--radio-m);
+  background: var(--color-texto);
+  color: var(--color-fondo);
+  box-shadow: var(--sombra-2);
+}
+
+.boton {
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-4);
+  border: 0;
+  border-radius: var(--radio-s);
+  background: var(--color-secundario);
+  color: var(--color-sobre-secundario);
+  font-weight: var(--peso-fuerte);
+  cursor: pointer;
+}
+
+@media (min-width: 64rem) {
+  .aviso {
+    bottom: var(--espacio-4);
+  }
+}
