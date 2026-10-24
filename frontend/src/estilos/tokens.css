@@ -5,24 +5,35 @@
 :root {
   color-scheme: light dark;
 
-  /* Marca: marrón café (escala café 600 / 700 / 200 / 100) */
-  --color-primario: #835636;
-  --color-primario-intenso: #6b4429;
-  --color-sobre-primario: #ffffff;
-  --color-primario-suave: #f2e8df;
-  --color-sobre-primario-suave: #835636;
-  --color-indicador: #e4d0be;
+  /*
+    Marca: verde oliva #9dad6f. Es claro, así que se usa de relleno (botones, pestaña activa) con
+    texto oscuro encima (6,8:1). Para textos, enlaces e iconos sobre el fondo, un oliva más oscuro
+    (con blanco, #9dad6f solo llegaría a 2,4:1).
+  */
+  --color-marca: #9dad6f;
+  --color-primario-relleno: #9dad6f;
+  --color-primario-intenso: #8e9f5e;
+  --color-sobre-primario: #18211f;
+  --color-primario: #66753f;
+  --color-primario-suave: #eef1e3;
+  --color-sobre-primario-suave: #4f5c30;
 
-  /* Neutros: grises cálidos (stone), nunca grises fríos */
+  /* Acento: ciruela, con el rosa de la paleta como fondo suave. Para detalles, nunca para acciones */
+  --color-acento: #704c5e;
+  --color-sobre-acento: #ffffff;
+  --color-acento-suave: #f1c8db;
+  --color-sobre-acento-suave: #704c5e;
+
+  /* Neutros: grises con el tono verdoso de #88a09e */
   --color-fondo: #ffffff;
-  --color-superficie: #fafaf9;
+  --color-superficie: #f6f8f8;
   --color-superficie-elevada: #ffffff;
-  --color-texto: #1c1917;
-  --color-texto-suave: #78716c;
-  --color-borde: #e7e5e4;
+  --color-texto: #18211f;
+  --color-texto-suave: #5c6e6b;
+  --color-borde: #dde4e3;
   /* Borde de campos, casillas y chips: 3:1 sobre el fondo */
-  --color-borde-fuerte: #78716c;
-  --color-velo: rgb(12 10 9 / 50%);
+  --color-borde-fuerte: #73878a;
+  --color-velo: rgb(13 18 17 / 50%);
 
   /* Estados: texto o icono, y su fondo suave */
   --color-exito: #15803d;
@@ -66,9 +77,9 @@
   --radio-completo: 999px;
 
   /* Elevación de Material 3: 1 barras, 2 menús, 3 diálogos, hojas y avisos */
-  --sombra-1: 0 1px 2px rgb(28 25 23 / 8%);
-  --sombra-2: 0 4px 12px rgb(28 25 23 / 12%);
-  --sombra-3: 0 12px 32px rgb(28 25 23 / 18%);
+  --sombra-1: 0 1px 2px rgb(24 33 31 / 8%);
+  --sombra-2: 0 4px 12px rgb(24 33 31 / 12%);
+  --sombra-3: 0 12px 32px rgb(24 33 31 / 18%);
 
   /* Medidas: objetivos táctiles de al menos 44px y controles principales de 48px */
   --altura-tactil: 44px;
@@ -96,20 +107,26 @@
 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema="claro"]) {
-    --color-primario: #b98d69;
-    --color-primario-intenso: #d1b194;
-    --color-sobre-primario: #2a190d;
-    --color-primario-suave: #432a18;
-    --color-sobre-primario-suave: #e4d0be;
-    --color-indicador: #432a18;
+    --color-marca: #9dad6f;
+    --color-primario-relleno: #9dad6f;
+    --color-primario-intenso: #b0bf82;
+    --color-sobre-primario: #0d1211;
+    --color-primario: #b5c38a;
+    --color-primario-suave: #262c17;
+    --color-sobre-primario-suave: #d3dbb8;
 
-    --color-fondo: #0c0a09;
-    --color-superficie: #1c1917;
-    --color-superficie-elevada: #292524;
-    --color-texto: #f5f5f4;
-    --color-texto-suave: #a8a29e;
-    --color-borde: #292524;
-    --color-borde-fuerte: #a8a29e;
+    --color-acento: #d9a9bf;
+    --color-sobre-acento: #0d1211;
+    --color-acento-suave: #3d2531;
+    --color-sobre-acento-suave: #f1c8db;
+
+    --color-fondo: #0d1211;
+    --color-superficie: #151c1b;
+    --color-superficie-elevada: #212a28;
+    --color-texto: #edf2f1;
+    --color-texto-suave: #9db0ae;
+    --color-borde: #26302e;
+    --color-borde-fuerte: #8fa3a0;
     --color-velo: rgb(0 0 0 / 65%);
 
     --color-exito: #86efac;
@@ -131,20 +148,26 @@
 
 :root[data-tema="oscuro"] {
   color-scheme: dark;
-  --color-primario: #b98d69;
-  --color-primario-intenso: #d1b194;
-  --color-sobre-primario: #2a190d;
-  --color-primario-suave: #432a18;
-  --color-sobre-primario-suave: #e4d0be;
-  --color-indicador: #432a18;
+  --color-marca: #9dad6f;
+  --color-primario-relleno: #9dad6f;
+  --color-primario-intenso: #b0bf82;
+  --color-sobre-primario: #0d1211;
+  --color-primario: #b5c38a;
+  --color-primario-suave: #262c17;
+  --color-sobre-primario-suave: #d3dbb8;
 
-  --color-fondo: #0c0a09;
-  --color-superficie: #1c1917;
-  --color-superficie-elevada: #292524;
-  --color-texto: #f5f5f4;
-  --color-texto-suave: #a8a29e;
-  --color-borde: #292524;
-  --color-borde-fuerte: #a8a29e;
+  --color-acento: #d9a9bf;
+  --color-sobre-acento: #0d1211;
+  --color-acento-suave: #3d2531;
+  --color-sobre-acento-suave: #f1c8db;
+
+  --color-fondo: #0d1211;
+  --color-superficie: #151c1b;
+  --color-superficie-elevada: #212a28;
+  --color-texto: #edf2f1;
+  --color-texto-suave: #9db0ae;
+  --color-borde: #26302e;
+  --color-borde-fuerte: #8fa3a0;
   --color-velo: rgb(0 0 0 / 65%);
 
   --color-exito: #86efac;

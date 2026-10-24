@@ -16,8 +16,8 @@
   width: 4rem;
   height: 4rem;
   border-radius: var(--radio-completo);
-  background: var(--color-primario-suave);
-  color: var(--color-sobre-primario-suave);
+  background: var(--color-acento-suave);
+  color: var(--color-sobre-acento-suave);
 }
 
 .iconoError {

@@ -22,7 +22,7 @@
   padding: 0 var(--espacio-4);
   border: 0;
   border-radius: var(--radio-s);
-  background: var(--color-primario);
+  background: var(--color-primario-relleno);
   color: var(--color-sobre-primario);
   font-weight: var(--peso-fuerte);
   cursor: pointer;

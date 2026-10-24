@@ -19,10 +19,13 @@ import estilos from './PaginaComponentes.module.css'
 type Tema = 'sistema' | 'claro' | 'oscuro'
 
 const colores = [
+  'marca',
   'primario',
+  'primario-relleno',
   'primario-intenso',
   'primario-suave',
-  'indicador',
+  'acento',
+  'acento-suave',
   'fondo',
   'superficie',
   'superficie-elevada',
