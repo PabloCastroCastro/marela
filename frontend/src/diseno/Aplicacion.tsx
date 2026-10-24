@@ -7,6 +7,7 @@ import {
   LogOut,
   Settings,
   Tractor,
+  Users,
   Wheat,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -56,9 +57,10 @@ export function Aplicacion() {
   if (explotacion.isError) {
     const error = explotacion.error instanceof ErrorApi ? explotacion.error : null
     const desactivada = error?.codigo === 'explotacion_desactivada'
+    const sinAcceso = error?.codigo === 'miembro_desactivado'
     return (
       <main className={estilos.sinExplotacion}>
-        {error?.estado === 404 || desactivada ? (
+        {error?.estado === 404 || desactivada || sinAcceso ? (
           <EstadoVacio
             titulo={
               desactivada
@@ -68,7 +70,9 @@ export function Aplicacion() {
             descripcion={
               desactivada
                 ? 'No se puede entrar en ella mientras esté desactivada. Sus datos se conservan.'
-                : 'No existe o no perteneces a ella.'
+                : sinAcceso
+                  ? 'Tu acceso a esta explotación está desactivado. Habla con su administrador.'
+                  : 'No existe o no perteneces a ella.'
             }
             accion={
               <Link to="/explotaciones" className={estilos.enlaceBoton}>
@@ -204,6 +208,16 @@ function HojaCuenta({ abierta, alCerrar }: { abierta: boolean; alCerrar: () => v
             {usuario.username} · {usuario.email}
           </span>
         </div>
+      )}
+      {explotacion.modulos.includes('administracion') && (
+        <Boton
+          variante="secundario"
+          anchoCompleto
+          icono={<Users aria-hidden size={20} />}
+          onClick={() => ir(`${rutaExplotacion(explotacion.id)}/equipo`)}
+        >
+          Equipo
+        </Boton>
       )}
       {explotacion.modulos.includes('administracion') && (
         <Boton

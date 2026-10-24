@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
-import { asc, count, eq } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 import { db } from '../db/cliente.js'
-import { member, organization } from '../db/schema/index.js'
-import { EsquemaError, validacionFallida } from '../errores.js'
+import { member, organization, user } from '../db/schema/index.js'
+import { ErrorApi, EsquemaError, validacionFallida } from '../errores.js'
 import {
   cambiarActiva,
   crearExplotacion,
@@ -10,6 +10,7 @@ import {
   PrimerAdministrador,
 } from '../explotaciones.js'
 import { type EnvSesion, soloPropietario } from '../permisos.js'
+import { restablecerContrasena } from '../usuarios.js'
 
 // Gestión de la plataforma por su propietario: las explotaciones y su primer administrador (GH-11).
 // El propietario no ve los datos de una explotación si no es miembro de ella.
@@ -122,6 +123,41 @@ const cambiarEstado = createRoute({
   },
 })
 
+const restablecer = createRoute({
+  method: 'post',
+  path: '/plataforma/usuarios/restablecer-contrasena',
+  tags: ['Plataforma'],
+  summary: 'Dar una contraseña temporal nueva a cualquier usuario',
+  description:
+    'Para quien tiene acceso a varias explotaciones, cuyo administrador no puede hacerlo. Se cierran sus sesiones.',
+  security: [{ sesion: [] }],
+  middleware: [soloPropietario()] as const,
+  request: {
+    body: {
+      content: {
+        'application/json': { schema: z.object({ usuario: z.string().trim().toLowerCase() }) },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'La contraseña temporal; no se puede volver a consultar',
+      content: {
+        'application/json': {
+          schema: z
+            .object({ usuario: z.string(), nombre: z.string(), contrasenaTemporal: z.string() })
+            .openapi('ContrasenaRestablecida'),
+        },
+      },
+    },
+    400: error('Datos no válidos (validacion)'),
+    ...comunes,
+    404: error('No existe el usuario (usuario_no_encontrado)'),
+    409: error('Es uno mismo (es_usted)'),
+  },
+})
+
 async function explotacionesConMiembros(id?: string) {
   const filas = await db
     .select({
@@ -132,7 +168,8 @@ async function explotacionesConMiembros(id?: string) {
       provincia: organization.provincia,
       activa: organization.activa,
       creadaEn: organization.createdAt,
-      miembros: count(member.id),
+      // Solo los miembros activos
+      miembros: sql<number>`count(${member.id}) filter (where ${member.activo})`.mapWith(Number),
     })
     .from(organization)
     .leftJoin(member, eq(member.organizationId, organization.id))
@@ -166,6 +203,23 @@ export const rutasPlataforma = () =>
         },
         201,
       )
+    })
+    .openapi(restablecer, async (c) => {
+      const { usuario } = c.req.valid('json')
+      const [u] = await db
+        .select({ id: user.id, usuario: user.username, nombre: user.name })
+        .from(user)
+        .where(eq(user.username, usuario))
+      if (!u) {
+        throw new ErrorApi(404, 'usuario_no_encontrado', `No existe el usuario ${usuario}`, [
+          { campo: 'usuario', mensaje: 'No hay ningún usuario con este nombre' },
+        ])
+      }
+      if (u.id === c.var.usuario.id) {
+        throw new ErrorApi(409, 'es_usted', 'Para cambiar tu propia contraseña usa tu cuenta')
+      }
+      const contrasenaTemporal = await restablecerContrasena(u.id)
+      return c.json({ usuario: u.usuario ?? usuario, nombre: u.nombre, contrasenaTemporal }, 200)
     })
     .openapi(cambiarEstado, async (c) => {
       const { explotacionId } = c.req.valid('param')

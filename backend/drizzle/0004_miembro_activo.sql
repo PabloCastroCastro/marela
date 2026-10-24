@@ -1,0 +1,1 @@
+ALTER TABLE "member" ADD COLUMN "activo" boolean DEFAULT true NOT NULL;

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CircleCheck, Copy, Plus, Tractor } from 'lucide-react'
+import { ArrowLeft, CircleCheck, KeyRound, Plus, Tractor } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { api, datos, erroresPorCampo } from '../api/cliente'
@@ -9,6 +9,7 @@ import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { Campo } from '../componentes/Campo'
 import { useConfirmacion } from '../componentes/Confirmacion'
+import { ContrasenaTemporal } from '../componentes/ContrasenaTemporal'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Chips, Insignia } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
@@ -37,6 +38,7 @@ export function PaginaPlataforma() {
   const confirmar = useConfirmacion()
   const [creando, setCreando] = useState(false)
   const [creada, setCreada] = useState<ExplotacionCreada | null>(null)
+  const [restableciendo, setRestableciendo] = useState(false)
 
   const explotaciones = useQuery({
     queryKey: CLAVE_PLATAFORMA,
@@ -89,9 +91,18 @@ export function PaginaPlataforma() {
       <main className={estilos.contenido}>
         <div className={estilos.titulo}>
           <h1>Explotaciones de la plataforma</h1>
-          <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setCreando(true)}>
-            Nueva explotación
-          </Boton>
+          <div className={estilos.botones}>
+            <Boton
+              variante="secundario"
+              icono={<KeyRound aria-hidden size={20} />}
+              onClick={() => setRestableciendo(true)}
+            >
+              Restablecer una contraseña
+            </Boton>
+            <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setCreando(true)}>
+              Nueva explotación
+            </Boton>
+          </div>
         </div>
 
         {explotaciones.isPending ? (
@@ -175,6 +186,7 @@ export function PaginaPlataforma() {
         )}
       </main>
 
+      <FormularioRestablecer abierto={restableciendo} alCerrar={() => setRestableciendo(false)} />
       <FormularioNuevaExplotacion
         abierto={creando}
         alCerrar={() => setCreando(false)}
@@ -331,16 +343,6 @@ function FormularioNuevaExplotacion({
 }
 
 function ResumenCreada({ creada }: { creada: ExplotacionCreada }) {
-  const { avisar } = useAvisos()
-  const copiar = async (texto: string) => {
-    try {
-      await navigator.clipboard.writeText(texto)
-      avisar({ tipo: 'exito', mensaje: 'Contraseña copiada' })
-    } catch {
-      avisar({ tipo: 'error', mensaje: 'No se ha podido copiar; apúntala a mano' })
-    }
-  }
-
   return (
     <div className={estilos.resumen}>
       <p>
@@ -349,26 +351,91 @@ function ResumenCreada({ creada }: { creada: ExplotacionCreada }) {
         administrador.
       </p>
       {creada.contrasenaTemporal ? (
-        <>
-          <p>Dale esta contraseña temporal. La cambiará la primera vez que entre.</p>
-          <div className={estilos.contrasena}>
-            <code>{creada.contrasenaTemporal}</code>
-            <Boton
-              variante="secundario"
-              tamano="compacto"
-              icono={<Copy aria-hidden size={18} />}
-              onClick={() => copiar(creada.contrasenaTemporal ?? '')}
-            >
-              Copiar
-            </Boton>
-          </div>
-          <p className={estilos.aviso} role="note">
-            Apúntala ahora: no se volverá a mostrar.
-          </p>
-        </>
+        <ContrasenaTemporal contrasena={creada.contrasenaTemporal} />
       ) : (
         <p>Ya puede entrar con su usuario y su contraseña de siempre.</p>
       )}
     </div>
+  )
+}
+
+// Contraseña temporal nueva para cualquier usuario, por su nombre de usuario. Es la vía para quien
+// trabaja en varias explotaciones, cuyos administradores no pueden restablecerla.
+function FormularioRestablecer({ abierto, alCerrar }: { abierto: boolean; alCerrar: () => void }) {
+  const [usuario, setUsuario] = useState('')
+  const restablecer = useMutation({
+    mutationFn: () =>
+      datos(api.POST('/api/plataforma/usuarios/restablecer-contrasena', { body: { usuario } })),
+  })
+  const cerrar = () => {
+    setUsuario('')
+    restablecer.reset()
+    alCerrar()
+  }
+  const errores = erroresPorCampo(restablecer.error)
+  const errorGeneral =
+    restablecer.error && Object.keys(errores).length === 0 ? restablecer.error.message : null
+
+  const enviar = (e: FormEvent) => {
+    e.preventDefault()
+    restablecer.mutate()
+  }
+
+  return (
+    <HojaInferior
+      abierta={abierto}
+      alCerrar={cerrar}
+      titulo="Restablecer una contraseña"
+      pie={
+        restablecer.data ? (
+          <Boton onClick={cerrar}>Hecho</Boton>
+        ) : (
+          <>
+            <Boton variante="texto" onClick={cerrar}>
+              Cancelar
+            </Boton>
+            <Boton type="submit" form="restablecer-contrasena" cargando={restablecer.isPending}>
+              Dar contraseña nueva
+            </Boton>
+          </>
+        )
+      }
+    >
+      {restablecer.data ? (
+        <>
+          <p>
+            <strong>{restablecer.data.nombre}</strong> ({restablecer.data.usuario}) tiene una
+            contraseña nueva y se han cerrado sus sesiones.
+          </p>
+          <ContrasenaTemporal contrasena={restablecer.data.contrasenaTemporal} />
+        </>
+      ) : (
+        <form
+          id="restablecer-contrasena"
+          className={estilos.formulario}
+          onSubmit={enviar}
+          noValidate
+        >
+          <p>
+            Para quien trabaja en varias explotaciones: sus administradores no pueden darle una
+            contraseña nueva. La actual dejará de servir.
+          </p>
+          {errorGeneral && (
+            <p className={estilos.error} role="alert">
+              {errorGeneral}
+            </p>
+          )}
+          <Campo
+            etiqueta="Nombre de usuario"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
+            error={errores.usuario}
+            required
+          />
+        </form>
+      )}
+    </HojaInferior>
   )
 }

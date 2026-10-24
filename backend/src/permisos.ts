@@ -88,7 +88,7 @@ export const soloPropietario = (): MiddlewareHandler<EnvSesion> => async (c, nex
 
 // Rutas /explotaciones/{explotacionId}/...: exige pertenecer a la explotación y, si se indica un
 // módulo, que el rol tenga acceso a él. 404 si no existe o no se pertenece a ella (no se revela si
-// existe), 403 si está desactivada o si el rol no alcanza. El propietario de la plataforma no tiene acceso a los datos de
+// existe), 403 si está desactivada, si el miembro está desactivado o si el rol no alcanza. El propietario de la plataforma no tiene acceso a los datos de
 // una explotación si no es miembro.
 export const permitir =
   (modulo?: Modulo, parametro = 'explotacionId'): MiddlewareHandler<EnvExplotacion> =>
@@ -107,6 +107,7 @@ export const permitir =
         provincia: organization.provincia,
         activa: organization.activa,
         rol: member.role,
+        miembroActivo: member.activo,
       })
       .from(member)
       .innerJoin(organization, eq(organization.id, member.organizationId))
@@ -114,6 +115,13 @@ export const permitir =
     if (!fila) throw noEncontrada
     if (!fila.activa) {
       throw new ErrorApi(403, 'explotacion_desactivada', 'Esta explotación está desactivada')
+    }
+    if (!fila.miembroActivo) {
+      throw new ErrorApi(
+        403,
+        'miembro_desactivado',
+        'Tu acceso a esta explotación está desactivado. Habla con su administrador.',
+      )
     }
 
     const rol = fila.rol as RolExplotacion

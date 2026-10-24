@@ -68,7 +68,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Explotaciones activas a las que pertenece el usuario, con su rol */
+        /** Explotaciones activas a las que el usuario tiene acceso, con su rol */
         get: {
             parameters: {
                 query?: never;
@@ -152,7 +152,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso) */
+                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación o miembro desactivados (explotacion_desactivada, miembro_desactivado) o sin permiso (sin_permiso) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -228,7 +228,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación desactivada (explotacion_desactivada) o sin permiso (sin_permiso) */
+                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio), explotación o miembro desactivados (explotacion_desactivada, miembro_desactivado) o sin permiso (sin_permiso) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -257,6 +257,311 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/miembros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Miembros de la explotación, activos y desactivados */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenados por nombre */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Miembro"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es administrador de la explotación (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o no se pertenece a ella */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Añadir a una persona nueva o a un usuario que ya existe */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["NuevoMiembro"];
+                };
+            };
+            responses: {
+                /** @description Añadido */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MiembroConContrasena"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es administrador de la explotación (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El usuario existente no existe o está desactivado (usuario_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Usuario o email en uso, o ya es miembro (usuario_en_uso, email_en_uso, ya_es_miembro) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/miembros/{miembroId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cambiar el rol de un miembro, o desactivarlo o reactivarlo
+         * @description Un miembro desactivado no puede entrar en la explotación. La explotación nunca se queda sin un administrador activo.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    miembroId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CambioMiembro"];
+                };
+            };
+            responses: {
+                /** @description El miembro */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Miembro"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es administrador de la explotación (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe el miembro (miembro_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dejaría la explotación sin administradores activos (ultimo_administrador) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/miembros/{miembroId}/restablecer-contrasena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dar una contraseña temporal nueva a un miembro
+         * @description Solo si el miembro pertenece únicamente a esta explotación; si no, lo hace el propietario de la plataforma. Se cierran sus sesiones.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    miembroId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La contraseña temporal */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MiembroConContrasena"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es administrador de la explotación (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe el miembro (miembro_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Tiene acceso a otras explotaciones o es uno mismo (otras_explotaciones, es_usted) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/plataforma/explotaciones": {
@@ -369,6 +674,96 @@ export interface paths {
                     };
                 };
                 /** @description REGA, usuario o email ya en uso (rega_en_uso, usuario_en_uso, email_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plataforma/usuarios/restablecer-contrasena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dar una contraseña temporal nueva a cualquier usuario
+         * @description Para quien tiene acceso a varias explotaciones, cuyo administrador no puede hacerlo. Se cierran sus sesiones.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        usuario: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description La contraseña temporal; no se puede volver a consultar */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContrasenaRestablecida"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es el propietario de la plataforma (sin_permiso) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe el usuario (usuario_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Es uno mismo (es_usted) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -517,6 +912,46 @@ export interface components {
         };
         /** @enum {string} */
         Provincia: "A Coruña" | "Álava" | "Albacete" | "Alicante" | "Almería" | "Asturias" | "Ávila" | "Badajoz" | "Barcelona" | "Bizkaia" | "Burgos" | "Cáceres" | "Cádiz" | "Cantabria" | "Castellón" | "Ceuta" | "Ciudad Real" | "Córdoba" | "Cuenca" | "Gipuzkoa" | "Girona" | "Granada" | "Guadalajara" | "Huelva" | "Huesca" | "Illes Balears" | "Jaén" | "La Rioja" | "Las Palmas" | "León" | "Lleida" | "Lugo" | "Madrid" | "Málaga" | "Melilla" | "Murcia" | "Navarra" | "Ourense" | "Palencia" | "Pontevedra" | "Salamanca" | "Santa Cruz de Tenerife" | "Segovia" | "Sevilla" | "Soria" | "Tarragona" | "Teruel" | "Toledo" | "Valencia" | "Valladolid" | "Zamora" | "Zaragoza";
+        Miembro: {
+            /**
+             * Format: uuid
+             * @description Identificador del miembro (no del usuario)
+             */
+            id: string;
+            /** Format: uuid */
+            usuarioId: string;
+            usuario: string | null;
+            nombre: string;
+            email: string;
+            /** @enum {string} */
+            rol: "administrador" | "empleado";
+            activo: boolean;
+        };
+        MiembroConContrasena: {
+            miembro: components["schemas"]["Miembro"];
+            /** @description Solo para usuarios nuevos o al restablecerla. No se puede volver a consultar. */
+            contrasenaTemporal?: string;
+        };
+        NuevoMiembro: {
+            /** @enum {string} */
+            tipo: "nuevo";
+            usuario: string;
+            nombre: string;
+            email: string;
+            /** @enum {string} */
+            rol: "administrador" | "empleado";
+        } | {
+            /** @enum {string} */
+            tipo: "existente";
+            usuario: string;
+            /** @enum {string} */
+            rol: "administrador" | "empleado";
+        };
+        CambioMiembro: {
+            /** @enum {string} */
+            rol?: "administrador" | "empleado";
+            activo?: boolean;
+        };
         ExplotacionPlataforma: {
             /** Format: uuid */
             id: string;
@@ -560,6 +995,11 @@ export interface components {
             /** @enum {string} */
             tipo: "existente";
             usuario: string;
+        };
+        ContrasenaRestablecida: {
+            usuario: string;
+            nombre: string;
+            contrasenaTemporal: string;
         };
     };
     responses: never;

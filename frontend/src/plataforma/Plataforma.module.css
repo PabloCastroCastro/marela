@@ -38,6 +38,12 @@
   gap: var(--espacio-3);
 }
 
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
 .estado {
   display: inline-flex;
   flex-wrap: wrap;
@@ -75,28 +81,6 @@
 .resumen {
   display: grid;
   gap: var(--espacio-3);
-}
-
-.contrasena {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--espacio-3);
-  padding: var(--espacio-3) var(--espacio-4);
-  border: 1px solid var(--color-borde-fuerte);
-  border-radius: var(--radio-s);
-  background: var(--color-superficie);
-}
-
-.contrasena code {
-  font-size: var(--texto-lg);
-  letter-spacing: 0.05em;
-}
-
-.aviso {
-  color: var(--color-aviso);
-  font-weight: var(--peso-medio);
 }
 
 @media (min-width: 64rem) {
