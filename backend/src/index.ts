@@ -2,7 +2,17 @@ import { serve } from '@hono/node-server'
 import { crearApp } from './app.js'
 import { config } from './config.js'
 import { pool } from './db/cliente.js'
+import { migrar } from './db/migrar.js'
 import { logger } from './logger.js'
+
+// Las migraciones pendientes se aplican antes de aceptar peticiones
+try {
+  await migrar()
+  logger.info('Migraciones de la base de datos al día')
+} catch (error) {
+  logger.fatal({ err: error }, 'No se pudieron aplicar las migraciones')
+  process.exit(1)
+}
 
 const server = serve(
   { fetch: crearApp().fetch, port: config.puerto, hostname: '0.0.0.0' },

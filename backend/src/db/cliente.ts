@@ -1,8 +1,9 @@
+import { drizzle } from 'drizzle-orm/node-postgres'
 import pg from 'pg'
 import { config } from '../config.js'
 import { logger } from '../logger.js'
+import * as schema from './schema/index.js'
 
-// Pool de conexiones a PostgreSQL. Drizzle se añade sobre él con el esquema inicial.
 export const pool = new pg.Pool({
   connectionString: config.baseDeDatos.url,
   max: config.baseDeDatos.poolMax,
@@ -13,6 +14,10 @@ export const pool = new pg.Pool({
 pool.on('error', (error) =>
   logger.warn({ err: error }, 'Error en una conexión inactiva de PostgreSQL'),
 )
+
+export const db = drizzle(pool, { schema })
+
+export type Db = typeof db
 
 // true si PostgreSQL responde a tiempo; lo usa GET /api/health
 export async function comprobarBaseDeDatos(timeoutMs = 2000): Promise<boolean> {
