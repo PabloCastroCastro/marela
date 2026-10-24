@@ -183,7 +183,7 @@ Middleware de autorización para las rutas de una explotación. Depende de #7.
 **Título:** Componentes base del frontend
 **Etiquetas:** feature, frontend
 
-Componentes propios con CSS Modules, partiendo de los de `rexional`. Depende de #4.
+Componentes propios con CSS Modules. Depende de #4.
 
 **Criterios de aceptación**
 - [ ] Botón (primario, secundario, peligro, texto; estado cargando), campo con etiqueta, ayuda y error, selector y campo de fecha
@@ -241,10 +241,10 @@ El administrador gestiona a su equipo. Depende de #8 y #10.
 **Título:** Entorno de pruebas en el servidor
 **Etiquetas:** feature, infra
 
-Despliegue en la Raspberry de `rexional`, solo por Tailscale. Depende de #2.
+Despliegue en la Raspberry Pi, solo por Tailscale. Depende de #2.
 
 **Criterios de aceptación**
-- [ ] `docs/servidor.md`: requisitos, directorios (`/opt/marela/pruebas` y `/opt/marela/pro`), `.env` de cada entorno, puertos propios (8444 y 9444) y certificado de Tailscale compartido con `rexional`
+- [ ] `docs/servidor.md`: requisitos, directorios (`/opt/marela/pruebas` y `/opt/marela/pro`), `.env` de cada entorno, puertos propios (8444 y 9444) y certificado de Tailscale (se puede compartir con otras aplicaciones del servidor)
 - [ ] `scripts/backup.sh pruebas|pro`: copia comprobada de la base de datos y copia del volumen `uploads` en `/opt/marela/backups`
 - [ ] `scripts/deploy.sh pruebas|pro [tag]`: actualiza el código, hace copia con `backup.sh` antes de desplegar en producción, compila, levanta, espera a que esté sano, comprueba `/api/health` por HTTPS y lo apunta en `deploys.log`
 - [ ] Entorno de pruebas desplegado desde `develop` y accesible por HTTPS desde el móvil, con la PWA instalable

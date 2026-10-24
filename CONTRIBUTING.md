@@ -1,6 +1,6 @@
 # Cómo contribuir
 
-Guía del flujo de trabajo de Marela, el mismo que el del proyecto `rexional`. Las decisiones están en la sección "Flujo de trabajo" del [documento de diseño](docs/diseno.md).
+Guía del flujo de trabajo de Marela. Las decisiones están en la sección "Flujo de trabajo" del [documento de diseño](docs/diseno.md).
 
 ## Issues
 

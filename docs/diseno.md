@@ -21,7 +21,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Autenticación
 
-- Propia, en el backend con Better Auth (librería, no servicio externo), igual que en `rexional`.
+- Propia, en el backend con Better Auth (librería, no servicio externo).
 - Las explotaciones se modelan con el plugin de organizaciones de Better Auth: cada usuario tiene un rol por explotación.
 - Inicio de sesión con nombre de usuario o email, más contraseña. El nombre de usuario es único y obligatorio; el email es opcional.
 - Contraseñas guardadas con hash y límite de intentos fallidos (los que trae Better Auth).
@@ -213,15 +213,14 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 - Aplicación web y móvil, con frontend y backend separados.
 - Móvil: web adaptable instalable como app (PWA).
-- Mismo stack que el proyecto `rexional`.
 - Frontend: React con TypeScript y Vite.
 - Backend: Node.js LTS con TypeScript, Hono y Zod (validación y contrato OpenAPI con `@hono/zod-openapi`).
 - Base de datos: PostgreSQL, con Drizzle ORM y migraciones SQL generadas con drizzle-kit.
 - Autenticación: Better Auth.
 - Herramientas: Biome (lint y formato) y Vitest (tests).
 - Separación de datos por explotación: una sola base de datos con identificador de explotación en cada tabla y Row-Level Security de PostgreSQL. Dar de alta una explotación es insertar una fila.
-- Archivos (fotos y adjuntos): en un volumen de Docker (`uploads`) montado en el backend, igual que en `rexional`. En la base de datos se guarda la ruta relativa, con nombres generados (nunca el nombre original) y separados por explotación.
-- Servicios del Docker Compose, igual que en `rexional`:
+- Archivos (fotos y adjuntos): en un volumen de Docker (`uploads`) montado en el backend. En la base de datos se guarda la ruta relativa, con nombres generados (nunca el nombre original) y separados por explotación.
+- Servicios del Docker Compose:
   - `db`: PostgreSQL, con su volumen de datos (`db-data`).
   - `backend`: API, con el volumen `uploads`. Aplica las migraciones al arrancar.
   - `proxy`: nginx; sirve la PWA compilada y redirige `/api` al backend. Es el único servicio que publica un puerto.
@@ -251,22 +250,23 @@ CONTRIBUTING.md
 
 ## Alojamiento y acceso
 
-- En la misma Raspberry Pi que `rexional`, con Docker, y el mismo procedimiento (guía en `docs/servidor.md`).
+- En una Raspberry Pi con Docker, que puede compartirse con otras aplicaciones (guía en `docs/servidor.md`).
 - Dos entornos independientes, cada uno con su clon del repositorio, su `.env`, su base de datos, su proyecto de Compose y su puerto:
   - Pruebas: último `develop`, en `/opt/marela/pruebas`, proyecto `marela-pruebas`, datos de ejemplo desechables.
   - Producción: un tag `vX.Y.Z` de `main`, en `/opt/marela/pro`, proyecto `marela-pro`, datos reales.
-- Puertos propios, distintos de los de `rexional` (8443 y 9443), por ejemplo 8444 y 9444. Solo el proxy de cada entorno publica un puerto.
-- Acceso inicial solo por Tailscale, con HTTPS y el certificado de Tailscale (necesario para instalar la PWA). Como el nombre del servidor es el mismo que el de `rexional`, se puede usar el mismo certificado y su renovación.
-- `docker-compose.servidor.yml` añade en el servidor la configuración HTTPS, como en `rexional`.
+- Puertos propios, distintos de los que ya estén ocupados en el servidor, por ejemplo 8444 y 9444. Solo el proxy de cada entorno publica un puerto.
+- Acceso inicial solo por Tailscale, con HTTPS y el certificado de Tailscale (necesario para instalar la PWA). Si el servidor ya tiene un certificado de Tailscale para otra aplicación, se puede usar el mismo y su renovación.
+- `docker-compose.servidor.yml` añade en el servidor la configuración HTTPS.
 - Scripts en `scripts/`: despliegue (`deploy.sh pruebas|pro [tag]`, con comprobación de salud y registro), copias de seguridad diarias de la base de datos y de `uploads` con rotación (7 diarias, 4 semanales y 6 mensuales), copia diaria fuera del servidor en el PC por Tailscale, y restauración.
 - En producción no se cargan datos de ejemplo; el primer administrador y su explotación se crean con un script.
 - Exposición pública (dominio propio y Cloudflare Tunnel o similar) en un ciclo posterior, cuando la usen más personas.
 
 ## Interfaz
 
-- Sin librería de componentes: componentes propios con CSS Modules, partiendo de los de `rexional` (botón, campo, selector, hoja inferior, confirmación, avisos, estado vacío, cargando...).
+- Sin librería de componentes: componentes propios con CSS Modules (botón, campo, selector, hoja inferior, confirmación, avisos, estado vacío, cargando...).
 - Tokens de diseño en `tokens.css`: colores, tipografía del sistema, espaciado, radios y sombras. Nunca se usan colores sueltos.
-- Color principal: verde campo.
+- Color principal: marrón café, sobre grises cálidos.
+- Normas de referencia, por orden: WCAG 2.2 nivel AA (obligatoria), Material Design 3 y Apple Human Interface Guidelines. La guía completa está en la skill `diseno-frontend` (`.claude/skills/diseno-frontend/SKILL.md`).
 - Modo claro y oscuro, según el sistema.
 - Zonas táctiles de al menos 44 px; buen contraste para usar el móvil al aire libre.
 - Iconos de Lucide, React Router para la navegación y TanStack Query para los datos.
@@ -274,11 +274,11 @@ CONTRIBUTING.md
   - En el móvil, barra inferior con las cuatro secciones y selector de explotación arriba.
   - En pantalla ancha, menú lateral con las secciones, el selector de explotación y los ajustes, y contenido más ancho para tablas y filtros.
   - Al empleado no le aparece Finanzas.
-- Catálogo de componentes en una página propia de la aplicación (en desarrollo), como en `rexional`.
+- Catálogo de componentes en una página propia de la aplicación (en desarrollo).
 
 ## Flujo de trabajo
 
-Mismo flujo que el proyecto `rexional`. El detalle irá en `CONTRIBUTING.md`.
+El detalle está en `CONTRIBUTING.md`.
 
 ### Issues
 

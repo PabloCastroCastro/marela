@@ -29,7 +29,7 @@ Un repositorio con tres proyectos independientes, cada uno con sus dependencias 
 | Backend | `backend/` | Node.js LTS + TypeScript, Hono, Zod, Drizzle ORM, Better Auth y PostgreSQL |
 | Proxy | `proxy/` | nginx: sirve la PWA y redirige `/api` al backend |
 
-El acceso se hace inicialmente por Tailscale, en la misma Raspberry Pi que `rexional`.
+Se autoaloja en una Raspberry Pi, con acceso inicialmente por Tailscale.
 
 ## Cómo contribuir
 
