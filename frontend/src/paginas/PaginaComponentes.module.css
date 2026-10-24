@@ -1,6 +1,10 @@
+/* Página suelta, sin la estructura de la aplicación */
 .catalogo {
   display: grid;
   gap: var(--espacio-6);
+  max-width: var(--ancho-contenido-amplio);
+  margin: 0 auto;
+  padding: var(--espacio-5) var(--espacio-4) var(--espacio-7);
 }
 
 .cabecera {
