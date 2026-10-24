@@ -5,6 +5,7 @@ import { config } from './config.js'
 import { comprobarBaseDeDatos } from './db/cliente.js'
 import { manejarError, rutaNoEncontrada, soloMismoOrigen, validacionFallida } from './errores.js'
 import { registrarPeticiones } from './peticiones.js'
+import { rutasExplotaciones } from './rutas/explotaciones.js'
 import { rutasSalud } from './rutas/salud.js'
 
 export const infoOpenApi = {
@@ -44,6 +45,17 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.on(['GET', 'POST'], '/auth/*', (c) => {
     if (!RUTAS_AUTH.includes(c.req.path.slice('/api/auth'.length))) return rutaNoEncontrada(c)
     return auth.handler(c.req.raw)
+  })
+
+  // Las rutas que modifican datos solo se aceptan desde la propia aplicación (protección CSRF)
+  app.on(['POST', 'PUT', 'PATCH', 'DELETE'], '/explotaciones/*', soloMismoOrigen(config.urlPublica))
+  app.route('/', rutasExplotaciones())
+
+  // Sesión en la cookie de Better Auth (con el prefijo __Secure- salvo en desarrollo)
+  app.openAPIRegistry.registerComponent('securitySchemes', 'sesion', {
+    type: 'apiKey',
+    in: 'cookie',
+    name: '__Secure-marela.session_token',
   })
 
   if (d.documentacion) {

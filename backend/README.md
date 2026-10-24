@@ -49,6 +49,7 @@ src/
   app.ts          crearApp(): middleware, errores, rutas y documentación
   auth.ts         Better Auth: inicio de sesión, sesiones y rutas publicadas
   usuarios.ts     alta, desactivación y reactivación de usuarios
+  permisos.ts     autorización por explotación y rol
   config.ts       configuración validada
   errores.ts      formato de error común y ErrorApi
   peticiones.ts   log de cada petición
@@ -57,7 +58,7 @@ src/
   db/explotacion.ts  enExplotacion(): acceso a los datos de una explotación
   db/migrar.ts    migraciones al arrancar
   db/seed.ts      datos de ejemplo
-  rutas/          un archivo por módulo (por ahora, salud)
+  rutas/          un archivo por módulo (salud, explotaciones)
   scripts/        exportación del contrato OpenAPI y crear-propietario
 ```
 
@@ -108,6 +109,43 @@ docker compose -f docker-compose.dev.yml exec backend npm run crear-propietario 
 
 Pregunta el nombre de usuario, el nombre y el email, o se pueden indicar con `--usuario`, `--nombre` y `--email`. Muestra una contraseña temporal, que se pide cambiar en el primer inicio de sesión.
 
+## Permisos
+
+Toda la autorización está en `src/permisos.ts` y se aplica siempre en el backend; el frontend solo oculta lo que el usuario no puede hacer.
+
+| Middleware | Para | Responde |
+|---|---|---|
+| `requiereSesion()` | rutas del usuario | 401 `no_autenticado` sin sesión; 403 `cambio_contrasena_obligatorio` con la contraseña temporal sin cambiar |
+| `soloPropietario()` | rutas de la plataforma (crear explotaciones…) | además, 403 `sin_permiso` si no es el propietario |
+| `permitir(modulo?)` | rutas `/explotaciones/{explotacionId}/...` | además, 404 `explotacion_no_encontrada` si no existe o no se pertenece a ella (tampoco el propietario, si no es miembro), y 403 `sin_permiso` si el rol no da acceso al módulo |
+
+Módulos y roles (`PERMISOS`):
+
+| Módulo | administrador | empleado |
+|---|---|---|
+| `animales`, `comida`, `fincas` | sí | sí |
+| `finanzas` | sí | no |
+| `administracion` (equipo y datos de la explotación) | sí | no |
+
+Una ruta de datos se declara así, y sus consultas pasan por `enLaExplotacion`, que aplica la Row-Level Security con la explotación y el usuario de la petición:
+
+```ts
+const ruta = createRoute({
+  method: 'get',
+  path: '/explotaciones/{explotacionId}/animales',
+  middleware: [permitir('animales')] as const,
+  // ...
+})
+app.openapi(ruta, async (c) => c.json(await enLaExplotacion(c, (tx) => tx.select().from(animales)), 200))
+```
+
+Las peticiones que modifican datos en `/explotaciones/*` solo se aceptan desde `URL_PUBLICA`.
+
+Rutas:
+
+- **`GET /api/explotaciones`:** las explotaciones del usuario, con su rol, para elegir con cuál trabajar.
+- **`GET /api/explotaciones/{explotacionId}`:** los datos de una explotación, el rol del usuario y los módulos a los que tiene acceso, para mostrar u ocultar secciones.
+
 ## Tests
 
 ```
@@ -117,6 +155,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/api.test.ts`: salud, documentación y rutas inexistentes (con la base de datos sustituida).
 - `test/config.test.ts`: validación de la configuración.
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
+- `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
 - `test/separacion.test.ts`: separación por explotación, auditoría y reglas del esquema, contra PostgreSQL.
 
 Los tests usan la base de datos de `TEST_DATABASE_URL`, que se crea si no existe y recibe las migraciones antes de empezar. Su nombre debe terminar en `_test`, porque los tests escriben en ella.

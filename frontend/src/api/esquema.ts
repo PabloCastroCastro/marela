@@ -61,6 +61,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Explotaciones a las que pertenece el usuario, con su rol */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenadas por nombre */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExplotacionDelUsuario"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Datos de una explotación y permisos del usuario en ella */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La explotación */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DetalleExplotacion"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Contraseña temporal sin cambiar (cambio_contrasena_obligatorio) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe o el usuario no pertenece a ella (explotacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -84,6 +203,27 @@ export interface components {
                 mensaje: string;
                 detalles?: unknown;
             };
+        };
+        ExplotacionDelUsuario: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            /** @example ES150780000001 */
+            rega: string;
+            rol: components["schemas"]["RolExplotacion"];
+        };
+        /** @enum {string} */
+        RolExplotacion: "administrador" | "empleado";
+        DetalleExplotacion: components["schemas"]["ExplotacionDelUsuario"] & {
+            /**
+             * @description Partes de la explotación a las que da acceso el rol
+             * @example [
+             *       "animales",
+             *       "comida",
+             *       "fincas"
+             *     ]
+             */
+            modulos: ("animales" | "comida" | "fincas" | "finanzas" | "administracion")[];
         };
     };
     responses: never;
