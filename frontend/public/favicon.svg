@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <title>Marela</title>
-  <rect width="512" height="512" rx="96" fill="#2e6b30"/>
+  <rect width="512" height="512" rx="96" fill="#835636"/>
   <!-- Cabeza de vaca simplificada -->
-  <path fill="#d4a93a" d="M96 150c30 10 62 14 92 10l-8 34c-38 4-70-10-84-44zm320 0c-30 10-62 14-92 10l8 34c38 4 70-10 84-44z"/>
+  <path fill="#e4d0be" d="M96 150c30 10 62 14 92 10l-8 34c-38 4-70-10-84-44zm320 0c-30 10-62 14-92 10l8 34c38 4 70-10 84-44z"/>
   <path fill="#ffffff" d="M256 150c-62 0-104 40-104 98 0 36 14 62 30 86 14 20 20 40 20 62 0 30 24 50 54 50s54-20 54-50c0-22 6-42 20-62 16-24 30-50 30-86 0-58-42-98-104-98z"/>
   <ellipse cx="256" cy="392" rx="56" ry="40" fill="#e8b4a8"/>
-  <circle cx="234" cy="392" r="8" fill="#1b1f1d"/>
-  <circle cx="278" cy="392" r="8" fill="#1b1f1d"/>
-  <circle cx="210" cy="262" r="14" fill="#1b1f1d"/>
-  <circle cx="302" cy="262" r="14" fill="#1b1f1d"/>
+  <circle cx="234" cy="392" r="8" fill="#2a190d"/>
+  <circle cx="278" cy="392" r="8" fill="#2a190d"/>
+  <circle cx="210" cy="262" r="14" fill="#2a190d"/>
+  <circle cx="302" cy="262" r="14" fill="#2a190d"/>
 </svg>

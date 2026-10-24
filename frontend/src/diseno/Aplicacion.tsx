@@ -34,7 +34,9 @@ export function Aplicacion() {
               [estilos.enlace, isActive && estilos.activo].filter(Boolean).join(' ')
             }
           >
-            <Icono aria-hidden size={24} />
+            <span className={estilos.icono}>
+              <Icono aria-hidden size={24} />
+            </span>
             <span>{texto}</span>
           </NavLink>
         ))}
