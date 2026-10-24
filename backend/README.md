@@ -1,6 +1,6 @@
 # Marela · Backend
 
-API REST de Marela en **Node.js 24 + TypeScript** con **Hono**. Incluye la base de datos PostgreSQL: esquema y migraciones con Drizzle, separación por explotación y datos de ejemplo. La autenticación con Better Auth llega en GH-7.
+API REST de Marela en **Node.js 24 + TypeScript** con **Hono**. Incluye la base de datos PostgreSQL (esquema y migraciones con Drizzle, separación por explotación y datos de ejemplo) y la autenticación con Better Auth.
 
 Es un proyecto independiente: tiene sus propias dependencias y no importa código de `frontend/` ni de `proxy/`. Su contrato con el frontend es la API HTTP bajo `/api`, descrita en OpenAPI en [`openapi.json`](openapi.json).
 
@@ -21,6 +21,7 @@ Es un proyecto independiente: tiene sus propias dependencias y no importa códig
 | `npm run db:migrate` | Aplica las migraciones pendientes (el backend también lo hace al arrancar) |
 | `npm run db:check` | Falla si el esquema tiene cambios sin migración (lo ejecuta la CI) |
 | `npm run db:seed` | Carga los datos de ejemplo; se niega con `ENTORNO=produccion` |
+| `npm run crear-propietario` | Crea el propietario de la plataforma (ver "Autenticación") |
 
 ## Variables de entorno
 
@@ -32,6 +33,8 @@ Es un proyecto independiente: tiene sus propias dependencias y no importa códig
 | `PORT` | `3000` | Puerto HTTP |
 | `DB_POOL_MAX` | `10` | Conexiones máximas del pool de PostgreSQL |
 | `DB_TIMEOUT_CONEXION_MS` | `5000` | Tiempo máximo para obtener una conexión |
+| `BETTER_AUTH_SECRET` | | Obligatoria. Clave de al menos 32 caracteres con la que se firman las sesiones, distinta en cada entorno (`openssl rand -base64 32`) |
+| `URL_PUBLICA` | | Obligatoria. Dirección desde la que se abre la aplicación (`https://servidor.tailnet.ts.net:8444`). Solo se aceptan peticiones de autenticación desde ella |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` o `silent` |
 | `TEST_DATABASE_URL` | | Base de datos de los tests; debe terminar en `_test`. Si no está, se usa `DATABASE_URL` |
 | `CHOKIDAR_USEPOLLING` | `false` | `true` para que `npm run dev` detecte cambios por sondeo (código montado desde Windows). En Compose se activa con `RECARGA_POLLING` |
@@ -44,6 +47,8 @@ La configuración se valida al arrancar (`src/config.ts`): si falta una variable
 src/
   index.ts        arranque del servidor y cierre ordenado
   app.ts          crearApp(): middleware, errores, rutas y documentación
+  auth.ts         Better Auth: inicio de sesión, sesiones y rutas publicadas
+  usuarios.ts     alta, desactivación y reactivación de usuarios
   config.ts       configuración validada
   errores.ts      formato de error común y ErrorApi
   peticiones.ts   log de cada petición
@@ -53,7 +58,7 @@ src/
   db/migrar.ts    migraciones al arrancar
   db/seed.ts      datos de ejemplo
   rutas/          un archivo por módulo (por ahora, salud)
-  scripts/        exportación del contrato OpenAPI
+  scripts/        exportación del contrato OpenAPI y crear-propietario
 ```
 
 - **Rutas** con `@hono/zod-openapi`: el esquema de Zod valida la petición y a la vez genera el contrato OpenAPI.
@@ -66,6 +71,43 @@ src/
 - **Documentación** interactiva en `/api/docs` (Scalar) y contrato en `/api/openapi.json`, salvo con `ENTORNO=produccion`. Tras cambiar la API, actualiza el contrato versionado con `npm run openapi`.
 - **Logs** con pino: JSON de una línea en pruebas y producción, legibles en desarrollo. Cada petición registra método, ruta, estado y duración, sin cuerpos, cabeceras ni parámetros; los healthchecks solo con `LOG_LEVEL=debug`.
 
+## Autenticación
+
+Con [Better Auth](https://www.better-auth.com), en `src/auth.ts`, con los plugins de nombre de usuario y de organizaciones (cada organización es una explotación).
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/auth/sign-in/username` | Inicia sesión con `{ username, password }`; el usuario no distingue mayúsculas |
+| `POST /api/auth/sign-in/email` | Inicia sesión con `{ email, password }` |
+| `POST /api/auth/sign-out` | Cierra la sesión |
+| `GET /api/auth/get-session` | Sesión y usuario actuales, o `null` |
+| `POST /api/auth/change-password` | Cambia la contraseña con `{ currentPassword, newPassword }` |
+
+Las demás rutas de Better Auth (registro, recuperación por email, gestión de organizaciones…) responden 404: lo que haga falta se expone con rutas propias. Los errores de estas rutas tienen el formato de Better Auth, `{ code, message }`.
+
+- **Sesión:**
+  - En una cookie `HttpOnly` y `SameSite=Lax`, `Secure` salvo en desarrollo (entonces se llama `marela.session_token`; con `Secure`, `__Secure-marela.session_token`).
+  - Dura 30 días y se renueva con el uso una vez al día.
+- **Seguridad:**
+  - Las peticiones `POST` solo se aceptan desde `URL_PUBLICA` (403 `origen_no_permitido` desde otro origen).
+  - Límite de intentos de inicio de sesión: 5 por minuto desde cada IP (429). La IP es la de `X-Real-IP`, que fija nginx.
+- **Contraseñas:**
+  - De al menos 10 caracteres.
+  - Los usuarios se crean con una contraseña temporal (`debeCambiarContrasena` en el usuario de la sesión). Al cambiarla deja de serlo. GH-8 impedirá usar el resto de la API mientras sea temporal.
+- **Usuarios desactivados:** `desactivarUsuario()` (`src/usuarios.ts`) cierra todas sus sesiones, y ya no pueden iniciar sesión (403 `USUARIO_DESACTIVADO`) hasta que se reactiven.
+- **Logs:** los mensajes de Better Auth van al log de la aplicación.
+
+### Crear el propietario de la plataforma
+
+No hay registro público. El propietario se crea desde el servidor, y él crea después las explotaciones y sus administradores:
+
+```
+docker compose exec backend node dist/scripts/crear-propietario.js       # servidor
+docker compose -f docker-compose.dev.yml exec backend npm run crear-propietario   # desarrollo
+```
+
+Pregunta el nombre de usuario, el nombre y el email, o se pueden indicar con `--usuario`, `--nombre` y `--email`. Muestra una contraseña temporal, que se pide cambiar en el primer inicio de sesión.
+
 ## Tests
 
 ```
@@ -74,6 +116,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 
 - `test/api.test.ts`: salud, documentación y rutas inexistentes (con la base de datos sustituida).
 - `test/config.test.ts`: validación de la configuración.
+- `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/separacion.test.ts`: separación por explotación, auditoría y reglas del esquema, contra PostgreSQL.
 
 Los tests usan la base de datos de `TEST_DATABASE_URL`, que se crea si no existe y recibe las migraciones antes de empezar. Su nombre debe terminar en `_test`, porque los tests escriben en ella.
@@ -86,7 +129,7 @@ PostgreSQL 18 con Drizzle ORM. Los identificadores son UUID v7 generados por Pos
 
 Son las tablas de Better Auth (`user`, `session`, `account`, `verification`) con sus plugins:
 
-- **Usuario:** inicio de sesión con nombre de usuario o email (`username`). La marca `propietario` identifica al propietario de la plataforma.
+- **Usuario:** inicio de sesión con nombre de usuario o email, los dos obligatorios y únicos. `propietario` identifica al propietario de la plataforma, `activo` permite desactivarlo y `debeCambiarContrasena` marca una contraseña temporal.
 - **Organizaciones:** cada `organization` es una explotación, con su código REGA (`ES` y 12 dígitos, único). `member` guarda el rol del usuario en cada explotación: `administrador` o `empleado`.
 
 ### Separación por explotación

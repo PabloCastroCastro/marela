@@ -95,7 +95,7 @@ docker compose -f docker-compose.dev.yml exec frontend npm test
 Para probar la versión de servidor en local (nginx con la PWA compilada en http://localhost:8080):
 
 ```
-POSTGRES_PASSWORD=local docker compose up --build
+POSTGRES_PASSWORD=local BETTER_AUTH_SECRET=local-sin-valor-real-0123456789abcdef URL_PUBLICA=http://localhost:8080 docker compose up --build
 ```
 
 Para trabajar en un solo proyecto sin Docker, sigue el README de su carpeta.

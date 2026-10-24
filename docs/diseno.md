@@ -23,13 +23,14 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 - Propia, en el backend con Better Auth (librería, no servicio externo).
 - Las explotaciones se modelan con el plugin de organizaciones de Better Auth: cada usuario tiene un rol por explotación.
-- Inicio de sesión con nombre de usuario o email, más contraseña. El nombre de usuario es único y obligatorio; el email es opcional.
-- Contraseñas guardadas con hash y límite de intentos fallidos (los que trae Better Auth).
+- Inicio de sesión con nombre de usuario o email, más contraseña. El nombre de usuario y el email son obligatorios y únicos.
+- Contraseñas de al menos 10 caracteres, guardadas con hash, y límite de intentos de inicio de sesión (5 por minuto desde cada IP).
+- El propietario de la plataforma se crea desde el servidor con el comando `crear-propietario`.
 - Alta de usuarios:
-  - Si el usuario tiene email, el administrador le envía una invitación con un enlace para fijar su contraseña.
-  - Si no tiene email, el administrador le asigna una contraseña temporal que el usuario debe cambiar en el primer inicio de sesión.
+  - El administrador le asigna una contraseña temporal, que se muestra una sola vez y que el usuario debe cambiar en el primer inicio de sesión.
+  - Cuando haya envío de correo (ciclo 9), en su lugar se le enviará una invitación con un enlace para fijar su contraseña.
   - Si el usuario ya existe en otra explotación, el administrador lo añade por su nombre de usuario con el rol correspondiente.
-- Recuperación de contraseña: por email si lo tiene; si no, la restablece el administrador.
+- Recuperación de contraseña: la restablece el administrador con una nueva contraseña temporal; con el envío de correo (ciclo 9), también por email.
 - Sesión: cookie httpOnly con sesión de 30 días que se renueva con el uso, para poder trabajar sin conexión varios días.
 - Al desactivar a un usuario, se revocan sus sesiones y deja de tener acceso.
 - Si la sesión caduca sin conexión, los registros pendientes se conservan en el dispositivo y se sincronizan tras volver a iniciar sesión.

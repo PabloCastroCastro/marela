@@ -18,6 +18,10 @@ export const user = pgTable('user', {
   displayUsername: text('display_username'),
   // Propietario de la plataforma: crea las explotaciones y su primer administrador
   propietario: boolean('propietario').notNull().default(false),
+  // Un usuario desactivado no puede iniciar sesión y pierde las sesiones abiertas
+  activo: boolean('activo').notNull().default(true),
+  // Contraseña temporal: hasta cambiarla, el usuario no puede hacer nada más (GH-8)
+  debeCambiarContrasena: boolean('debe_cambiar_contrasena').notNull().default(false),
   createdAt: creadoEn(),
   updatedAt: actualizadoEn(),
 })

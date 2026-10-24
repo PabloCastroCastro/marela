@@ -15,6 +15,13 @@
       "when": 1792873231409,
       "tag": "0001_esquema_inicial",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792875541734,
+      "tag": "0002_usuario_activo_y_contrasena_temporal",
+      "breakpoints": true
     }
   ]
 }
