@@ -13,8 +13,9 @@
   min-height: calc(var(--altura-cabecera) + env(safe-area-inset-top, 0px));
   padding: env(safe-area-inset-top, 0px) calc(var(--espacio-4) + env(safe-area-inset-right, 0px)) 0
     calc(var(--espacio-4) + env(safe-area-inset-left, 0px));
-  background: var(--color-primario);
-  color: var(--color-sobre-primario);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  border-bottom: 1px solid var(--color-borde);
 }
 
 .marca {
@@ -62,7 +63,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--espacio-1);
   min-height: var(--altura-navegacion);
   color: var(--color-texto-suave);
   font-size: var(--texto-xs);
@@ -70,8 +71,23 @@
   text-decoration: none;
 }
 
+/* Píldora del icono: en la pestaña activa se rellena con el indicador */
+.icono {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--radio-completo);
+  transition: background-color var(--duracion-corta) var(--curva);
+}
+
 .activo {
-  color: var(--color-acento);
+  color: var(--color-primario);
+  font-weight: var(--peso-fuerte);
+}
+
+.activo .icono {
+  background: var(--color-indicador);
 }
 
 .activo svg {
@@ -108,13 +124,24 @@
     justify-content: flex-start;
     gap: var(--espacio-3);
     min-height: var(--altura-tactil);
-    padding: 0 var(--espacio-3);
-    border-radius: var(--radio-m);
+    padding: 0 var(--espacio-4);
+    border-radius: var(--radio-completo);
     font-size: var(--texto-base);
   }
 
+  .icono {
+    width: auto;
+    height: auto;
+  }
+
+  /* En el menú lateral, toda la fila: primario sobre primario suave (5,2:1) */
+  .activo,
+  .activo .icono {
+    background: var(--color-primario-suave);
+  }
+
   .activo {
-    background: var(--color-superficie-alterna);
+    color: var(--color-sobre-primario-suave);
   }
 
   .contenido {
