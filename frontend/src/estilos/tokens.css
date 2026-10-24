@@ -89,8 +89,13 @@
   --curva-salida: cubic-bezier(0.3, 0, 0.8, 0.15);
 }
 
+/*
+  Modo oscuro: según el sistema, salvo que la página fuerce un tema con data-tema en <html> (lo usa el
+  catálogo de componentes). Los dos bloques deben tener las mismas declaraciones: lo comprueba
+  test/estilos.test.ts.
+*/
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="claro"]) {
     --color-primario: #b98d69;
     --color-primario-intenso: #d1b194;
     --color-sobre-primario: #2a190d;
@@ -122,6 +127,44 @@
     --sombra-2: 0 4px 12px rgb(0 0 0 / 50%);
     --sombra-3: 0 12px 32px rgb(0 0 0 / 60%);
   }
+}
+
+:root[data-tema="oscuro"] {
+  color-scheme: dark;
+  --color-primario: #b98d69;
+  --color-primario-intenso: #d1b194;
+  --color-sobre-primario: #2a190d;
+  --color-primario-suave: #432a18;
+  --color-sobre-primario-suave: #e4d0be;
+  --color-indicador: #432a18;
+
+  --color-fondo: #0c0a09;
+  --color-superficie: #1c1917;
+  --color-superficie-elevada: #292524;
+  --color-texto: #f5f5f4;
+  --color-texto-suave: #a8a29e;
+  --color-borde: #292524;
+  --color-borde-fuerte: #a8a29e;
+  --color-velo: rgb(0 0 0 / 65%);
+
+  --color-exito: #86efac;
+  --color-exito-suave: #052e16;
+  --color-aviso: #fcd34d;
+  --color-aviso-suave: #451a03;
+  --color-peligro: #fca5a5;
+  --color-peligro-suave: #450a0a;
+  --color-informacion: #93c5fd;
+  --color-informacion-suave: #172554;
+  --color-peligro-relleno: #ef4444;
+  --color-sobre-peligro: #0c0a09;
+
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --sombra-2: 0 4px 12px rgb(0 0 0 / 50%);
+  --sombra-3: 0 12px 32px rgb(0 0 0 / 60%);
+}
+
+:root[data-tema="claro"] {
+  color-scheme: light;
 }
 
 /* Con movimiento reducido no hay desplazamientos: las animaciones son instantáneas o fundidos */

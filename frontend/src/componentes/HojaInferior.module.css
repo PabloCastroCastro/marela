@@ -1,0 +1,130 @@
+/* Móvil: hoja pegada abajo */
+.hoja {
+  width: 100%;
+  max-width: none;
+  max-height: 90dvh;
+  margin: auto 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-l) var(--radio-l) 0 0;
+  background: var(--color-superficie-elevada);
+  color: var(--color-texto);
+  box-shadow: var(--sombra-3);
+}
+
+.hoja::backdrop {
+  background: var(--color-velo);
+}
+
+.hoja[open] {
+  animation: subir var(--duracion-larga) var(--curva);
+}
+
+.hoja[open]::backdrop {
+  animation: fundido var(--duracion-larga) var(--curva);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  max-height: 90dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Asa para cerrar arrastrando: área táctil amplia con una barra pequeña */
+.asa {
+  display: grid;
+  place-items: center;
+  height: var(--espacio-5);
+  cursor: grab;
+  touch-action: none;
+}
+
+.asa::before {
+  content: "";
+  width: 32px;
+  height: 4px;
+  border-radius: var(--radio-completo);
+  background: var(--color-borde-fuerte);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  padding: 0 var(--espacio-2) var(--espacio-2) var(--espacio-4);
+}
+
+.cabecera h2 {
+  font-size: var(--texto-lg);
+}
+
+.cuerpo {
+  display: grid;
+  gap: var(--espacio-4);
+  padding: var(--espacio-2) var(--espacio-4) var(--espacio-4);
+  overflow-y: auto;
+}
+
+.pie {
+  display: flex;
+  gap: var(--espacio-3);
+  padding: var(--espacio-3) var(--espacio-4) var(--espacio-4);
+  border-top: 1px solid var(--color-borde);
+}
+
+.pie > * {
+  flex: 1;
+}
+
+/* Pantalla ancha: diálogo centrado */
+@media (min-width: 40rem) {
+  .hoja {
+    width: calc(100% - 2 * var(--espacio-6));
+    max-width: var(--ancho-contenido);
+    max-height: 85dvh;
+    margin: auto;
+    border-radius: var(--radio-l);
+  }
+
+  .hoja[open] {
+    animation-name: aparecer;
+  }
+
+  .panel {
+    max-height: 85dvh;
+    padding-top: var(--espacio-3);
+  }
+
+  .asa {
+    display: none;
+  }
+
+  .pie {
+    justify-content: flex-end;
+  }
+
+  .pie > * {
+    flex: 0 0 auto;
+  }
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes fundido {
+  from {
+    opacity: 0;
+  }
+}

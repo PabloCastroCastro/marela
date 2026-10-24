@@ -16,7 +16,9 @@ src/
   proveedores.tsx   TanStack Query
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
   diseno/           estructura común: cabecera y navegación adaptable
-  paginas/          inicio, secciones (provisionales) y página no encontrada
+  componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)
+  paginas/          inicio, secciones (provisionales), catálogo de componentes y página no encontrada
+  formato.ts        fechas, números, kilos y euros en español
   pwa/              aviso de versión nueva
   estilos/          tokens.css (variables de diseño) y base.css
 public/             logo.svg e iconos de la PWA (generados)
@@ -49,6 +51,28 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 - Objetivos táctiles de al menos 44 px.
 - **Accesibilidad**: foco visible con teclado, enlace para saltar al contenido y `prefers-reduced-motion`.
 - Iconos de [Lucide](https://lucide.dev) (`lucide-react`).
+
+## Componentes
+
+Componentes propios en `src/componentes/`, cada uno con su `.module.css`, según la skill [`diseno-frontend`](../.claude/skills/diseno-frontend/SKILL.md):
+
+| Archivo | Componentes |
+|---|---|
+| `Boton.tsx` | `Boton` (`primario`, `secundario`, `texto`, `peligro`; `compacto`, `normal`, `grande`; `cargando`) y `BotonIcono` |
+| `Campo.tsx` | `Campo`, `CampoFecha`, `AreaTexto` y `Selector`, con etiqueta, ayuda y error |
+| `HojaInferior.tsx` | Hoja que sube desde abajo en el móvil (se cierra arrastrando el asa) y diálogo centrado desde 40rem |
+| `Confirmacion.tsx` | `useConfirmacion()`: `await confirmar({ titulo, textoConfirmar, peligrosa })` |
+| `Avisos.tsx` | `useAvisos()`: `avisar({ tipo, mensaje, accion })`; los de éxito duran 4 s y los de error se quedan |
+| `Estados.tsx` | `EstadoVacio`, `EstadoError` (con Reintentar), `Cargando` y `Esqueleto` |
+| `Etiquetas.tsx` | `Insignia`, `Chip`, `Chips` (selección única) y `Tarjeta` |
+| `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas |
+| `Filtros.tsx` | `BarraFiltros` y `Buscador` (avisa 300 ms después de dejar de escribir) |
+
+`useAvisos` y `useConfirmacion` necesitan sus proveedores, que ya pone `Proveedores` (`src/proveedores.tsx`).
+
+**Catálogo:** en desarrollo, `/componentes` muestra todos los componentes con ejemplos, y un selector para verlos en claro u oscuro sin cambiar el sistema (`data-tema` en `<html>`). No existe en la versión compilada. Cada componente común nuevo se añade al catálogo.
+
+`test/estilos.test.ts` comprueba que ningún `.module.css` usa colores sueltos, que ninguna clase se define dos veces en un módulo y que el tema oscuro forzado tiene los mismos valores que el del sistema.
 
 ## API
 

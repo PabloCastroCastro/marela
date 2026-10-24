@@ -1,0 +1,55 @@
+.campo {
+  display: grid;
+  gap: var(--espacio-1);
+  align-content: start;
+}
+
+.etiqueta {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.control {
+  width: 100%;
+  min-height: var(--altura-control);
+  padding: 0 var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-s);
+  background: var(--color-fondo);
+  /* 16px como mínimo: con menos, iOS hace zoom al enfocar el campo */
+  font-size: max(16px, var(--texto-base));
+  transition: border-color var(--duracion-corta) ease-out;
+}
+
+.control:focus-visible {
+  border-color: var(--color-foco);
+}
+
+.control:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.control[aria-invalid="true"] {
+  border-color: var(--color-peligro);
+}
+
+.area {
+  padding-block: var(--espacio-3);
+  resize: vertical;
+}
+
+.selector {
+  cursor: pointer;
+}
+
+.ayuda {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.error {
+  color: var(--color-peligro);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}

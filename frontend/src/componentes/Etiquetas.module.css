@@ -1,0 +1,87 @@
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  min-height: 24px;
+  padding: 0 var(--espacio-2);
+  border-radius: var(--radio-completo);
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-medio);
+  white-space: nowrap;
+}
+
+.insignia svg {
+  width: 14px;
+  height: 14px;
+}
+
+.neutro {
+  background: var(--color-superficie);
+  color: var(--color-texto-suave);
+  box-shadow: inset 0 0 0 1px var(--color-borde);
+}
+
+.exito {
+  background: var(--color-exito-suave);
+  color: var(--color-exito);
+}
+
+.aviso {
+  background: var(--color-aviso-suave);
+  color: var(--color-aviso);
+}
+
+.peligro {
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+}
+
+.informacion {
+  background: var(--color-informacion-suave);
+  color: var(--color-informacion);
+}
+
+.chips {
+  display: flex;
+  gap: var(--espacio-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* El chip mide 32 px, pero el área táctil llega a 48 px con el margen vertical */
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--espacio-1);
+  height: 32px;
+  margin: var(--espacio-2) 0;
+  padding: 0 var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-completo);
+  background: transparent;
+  color: var(--color-texto);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+  cursor: pointer;
+  transition: background-color var(--duracion-corta) ease-out;
+}
+
+@media (hover: hover) {
+  .chip:not(.seleccionado):hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+  }
+}
+
+.seleccionado {
+  border-color: transparent;
+  background: var(--color-primario-suave);
+  color: var(--color-sobre-primario-suave);
+}
+
+.tarjeta {
+  padding: var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+  background: var(--color-fondo);
+}

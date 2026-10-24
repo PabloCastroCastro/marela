@@ -165,7 +165,7 @@ Se usa la **fuente del sistema** (`--fuente`), sin descargas: carga al instante 
 - **Campos:** el texto de los campos es siempre de 16 px o más, para evitar el zoom automático de iOS.
 - **Cifras:** con `font-variant-numeric: tabular-nums` (pesos, kilos, importes y crotales en columnas).
 - **Líneas:** de 70 caracteres como máximo.
-- **Formatos:** fechas y números con `Intl` en `es-ES`.
+- **Formatos:** fechas y números con `Intl` en `es-ES`, con las funciones de `src/formato.ts` (`fecha`, `numero`, `kilos`, `euros`).
   - Fechas: `dd/mm/aaaa`.
   - Números: coma decimal y punto de miles.
   - Euros: `1.234,50 €`.
@@ -217,7 +217,7 @@ La estructura la da `src/diseno/Aplicacion.tsx`:
 
 ## 6. Componentes (`src/componentes/`)
 
-El catálogo base llega con GH-9 y se puede ver en `/componentes` (solo en desarrollo, en claro y oscuro).
+El catálogo base (GH-9) se puede ver en `/componentes` (solo en desarrollo, con selector de tema claro u oscuro); el README del frontend dice en qué archivo está cada componente. Los de la tabla que aún no existen (`Casilla`, `Opcion`, `Interruptor`, `ElementoLista`, `CabeceraSeccion`, `TarjetaCifra`, `BotonFlotante`, `AvisoSinConexion`) se crean en `src/componentes/` cuando los necesite la primera pantalla, y se añaden al catálogo.
 
 ### 6.1 Reglas comunes
 

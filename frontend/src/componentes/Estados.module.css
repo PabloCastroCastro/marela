@@ -1,0 +1,85 @@
+.estado {
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-7) var(--espacio-4);
+  text-align: center;
+}
+
+.estado h2 {
+  font-size: var(--texto-lg);
+}
+
+.icono {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radio-completo);
+  background: var(--color-primario-suave);
+  color: var(--color-sobre-primario-suave);
+}
+
+.iconoError {
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+}
+
+.descripcion {
+  max-width: 28rem;
+  color: var(--color-texto-suave);
+}
+
+.accion {
+  margin-top: var(--espacio-2);
+}
+
+.cargando {
+  display: grid;
+  justify-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-7) var(--espacio-4);
+  color: var(--color-texto-suave);
+}
+
+.girando {
+  color: var(--color-primario);
+  animation: girar 0.9s linear infinite;
+}
+
+.esqueleto {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.bloque {
+  display: block;
+  width: 100%;
+  height: 1rem;
+  border-radius: var(--radio-s);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  animation: pulso 1.4s ease-in-out infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulso {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .girando {
+    animation-duration: 3s;
+  }
+
+  .bloque {
+    animation: none;
+  }
+}
