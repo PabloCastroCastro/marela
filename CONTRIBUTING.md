@@ -49,6 +49,7 @@ Cada pull request a `develop` o `main`, y cada push a esas ramas, ejecuta el wor
 | Backend | `backend/` | Lint y formato, tipos, compilación, tests contra PostgreSQL, migraciones, contrato OpenAPI e imagen Docker |
 | Frontend | `frontend/` o `backend/openapi.json` | Lint y formato, tipos, compilación, tests y cliente de la API al día con el contrato |
 | Proxy | `proxy/` o `frontend/` | Imagen Docker (compila el frontend) y `nginx -t` |
+| Scripts | `scripts/` | ShellCheck de los scripts del servidor |
 | Prueba de humo | cualquiera de los anteriores o `docker-compose.yml` | `docker compose up` completo y la API a través de nginx |
 | Resultado de la CI | siempre | Falla si algún trabajo ha fallado. Es la comprobación que se exige para mergear |
 

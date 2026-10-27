@@ -23,6 +23,7 @@ jobs:
       backend: ${{ steps.filtro.outputs.backend }}
       frontend: ${{ steps.filtro.outputs.frontend }}
       proxy: ${{ steps.filtro.outputs.proxy }}
+      scripts: ${{ steps.filtro.outputs.scripts }}
       humo: ${{ steps.filtro.outputs.humo }}
     steps:
       - uses: actions/checkout@v7
@@ -42,6 +43,9 @@ jobs:
             proxy:
               - 'proxy/**'
               - 'frontend/**'
+              - '.github/workflows/ci.yml'
+            scripts:
+              - 'scripts/**'
               - '.github/workflows/ci.yml'
             humo:
               - 'backend/**'
@@ -200,9 +204,20 @@ jobs:
         if: always()
         run: docker compose down -v
 
+  scripts:
+    name: Scripts
+    needs: cambios
+    if: needs.cambios.outputs.scripts == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: ShellCheck
+        run: shellcheck -x scripts/*.sh
+
   resultado:
     name: Resultado de la CI
-    needs: [cambios, backend, frontend, proxy, humo]
+    needs: [cambios, backend, frontend, proxy, scripts, humo]
     # Comprobación única para la protección de ramas: falla si algún trabajo falló o se canceló
     if: always()
     runs-on: ubuntu-latest
