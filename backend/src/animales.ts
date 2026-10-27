@@ -177,11 +177,24 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
   return filas.map(ficha)
 }
 
+// Ficha completa: los datos del animal y sus hijos (de los que es madre o padre)
 export async function verAnimal(tx: Transaccion, animalId: string) {
   const [fila] = await consulta(tx).where(eq(animales.id, animalId))
   if (!fila)
     throw new ErrorApi(404, 'animal_no_encontrado', 'No existe el animal en esta explotación')
-  return ficha(fila)
+  const hijos = await tx
+    .select({
+      id: animales.id,
+      crotal: animales.crotal,
+      nombre: animales.nombre,
+      sexo: animales.sexo,
+      fechaNacimiento: animales.fechaNacimiento,
+      estado: animales.estado,
+    })
+    .from(animales)
+    .where(or(eq(animales.madreId, animalId), eq(animales.padreId, animalId)))
+    .orderBy(asc(animales.fechaNacimiento))
+  return { ...ficha(fila), hijos }
 }
 
 // Madre y padre: de esta explotación (la Row-Level Security solo deja ver los suyos), del sexo que

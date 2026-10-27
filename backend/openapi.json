@@ -535,6 +535,69 @@
           "modificadoEn"
         ]
       },
+      "AnimalDetalle": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Animal"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "hijos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "crotal": {
+                      "type": "string"
+                    },
+                    "nombre": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sexo": {
+                      "type": "string",
+                      "enum": [
+                        "hembra",
+                        "macho"
+                      ]
+                    },
+                    "fechaNacimiento": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "estado": {
+                      "type": "string",
+                      "enum": [
+                        "activo",
+                        "vendido",
+                        "muerto"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "crotal",
+                    "nombre",
+                    "sexo",
+                    "fechaNacimiento",
+                    "estado"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "hijos"
+            ]
+          }
+        ]
+      },
       "DatosAnimal": {
         "type": "object",
         "properties": {
@@ -1729,7 +1792,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Animal"
+                  "$ref": "#/components/schemas/AnimalDetalle"
                 }
               }
             }
@@ -1819,11 +1882,11 @@
         ],
         "responses": {
           "200": {
-            "description": "La ficha",
+            "description": "La ficha, con sus hijos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Animal"
+                  "$ref": "#/components/schemas/AnimalDetalle"
                 }
               }
             }
@@ -1906,7 +1969,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Animal"
+                  "$ref": "#/components/schemas/AnimalDetalle"
                 }
               }
             }

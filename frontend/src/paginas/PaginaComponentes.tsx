@@ -2,11 +2,12 @@ import { Plus, Save, Syringe, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
+import { BotonFlotante } from '../componentes/BotonFlotante'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
 import { useConfirmacion } from '../componentes/Confirmacion'
 import { Cargando, Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Chips, Insignia, Tarjeta } from '../componentes/Etiquetas'
-import { BarraFiltros, Buscador } from '../componentes/Filtros'
+import { BarraFiltros, Buscador, FiltroDesplegable } from '../componentes/Filtros'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { Vaca } from '../componentes/iconos'
 import { Tabla } from '../componentes/Tabla'
@@ -178,6 +179,12 @@ export function PaginaComponentes() {
           <Boton>Normal</Boton>
           <Boton tamano="grande">Grande</Boton>
           <BotonIcono etiqueta="Borrar" icono={<Trash2 aria-hidden size={22} />} />
+          {/* Solo en el móvil, abajo a la derecha */}
+          <BotonFlotante
+            etiqueta="Añadir animal"
+            icono={<Plus aria-hidden size={26} />}
+            alPulsar={() => avisar({ mensaje: 'Botón flotante' })}
+          />
         </div>
       </section>
 
@@ -302,21 +309,28 @@ export function PaginaComponentes() {
         <BarraFiltros
           buscador={<Buscador etiqueta="Buscar por crotal o nombre" alCambiar={setTexto} />}
         >
-          <Chips
-            etiqueta="Tipo de animal"
+          <FiltroDesplegable
+            etiqueta="Tipo"
             opciones={[
               { valor: 'todos', texto: 'Todos' },
               { valor: 'vaca', texto: 'Vacas' },
               { valor: 'ternero', texto: 'Terneros' },
               { valor: 'toro', texto: 'Toros' },
             ]}
-            seleccion={tipo}
+            valor={tipo}
+            porDefecto="todos"
             alCambiar={setTipo}
           />
-          <CampoFecha
-            etiqueta="Nacidos desde"
-            value={desde}
-            onChange={(e) => setDesde(e.target.value)}
+          <FiltroDesplegable
+            etiqueta="Nacidos"
+            opciones={[
+              { valor: '', texto: 'Cuando sea' },
+              { valor: '2026-01-01', texto: 'Este año' },
+              { valor: '2020-01-01', texto: 'Desde 2020' },
+            ]}
+            valor={desde}
+            porDefecto=""
+            alCambiar={setDesde}
           />
         </BarraFiltros>
         {filtrados.length === 0 ? (

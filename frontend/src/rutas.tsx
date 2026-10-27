@@ -1,4 +1,6 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
+import { PaginaAnimal } from './animales/PaginaAnimal'
+import { PaginaAnimales } from './animales/PaginaAnimales'
 import { PaginaCambiarContrasena } from './auth/PaginaCambiarContrasena'
 import { PaginaEntrar } from './auth/PaginaEntrar'
 import { RUTA_CAMBIAR_CONTRASENA, RUTA_ENTRAR, RutaProtegida } from './auth/RutaProtegida'
@@ -48,7 +50,15 @@ export const rutas: RouteObject[] = [
             path: 'animales',
             element: (
               <SoloModulo modulo="animales">
-                <PaginaSeccion titulo="Animales" />
+                <PaginaAnimales />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'animales/:animalId',
+            element: (
+              <SoloModulo modulo="animales">
+                <PaginaAnimal />
               </SoloModulo>
             ),
           },
