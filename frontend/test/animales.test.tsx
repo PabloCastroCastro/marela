@@ -41,12 +41,13 @@ describe('lista de animales', () => {
     expect(screen.getByText('3 animales')).toBeInTheDocument()
     expect(within(lista).queryByText(/Vendida/)).not.toBeInTheDocument()
 
-    await usuario.click(screen.getByRole('button', { name: 'Machos' }))
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Sexo/ }), 'Machos')
+    expect(screen.getByRole('combobox', { name: /^Sexo/ })).toHaveAccessibleName('Sexo: Machos')
     expect(await screen.findByText('1 animal')).toBeInTheDocument()
     expect(within(await tarjetas()).getByText('ES041503456812')).toBeInTheDocument()
 
-    await usuario.click(screen.getByRole('button', { name: 'Hembras y machos' }))
-    await usuario.click(screen.getByRole('button', { name: 'Vendidos' }))
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Sexo/ }), 'Todos')
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'Vendidos')
     expect(within(await tarjetas()).getByText('ES041503457099')).toBeInTheDocument()
   })
 

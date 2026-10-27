@@ -89,7 +89,7 @@ Componentes propios en `src/componentes/`, cada uno con su `.module.css`, según
 | `Estados.tsx` | `EstadoVacio`, `EstadoError` (con Reintentar), `Cargando` y `Esqueleto` |
 | `Etiquetas.tsx` | `Insignia`, `Chip`, `Chips` (selección única) y `Tarjeta` |
 | `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas |
-| `Filtros.tsx` | `BarraFiltros` y `Buscador` (avisa 300 ms después de dejar de escribir) |
+| `Filtros.tsx` | `BarraFiltros`, `Buscador` (avisa 300 ms después de dejar de escribir) y `FiltroDesplegable` ("Estado: Activos ▾": un desplegable nativo con forma de chip, marcado cuando no está en su valor por defecto) |
 | `BotonFlotante.tsx` | Acción de crear en el móvil, encima de la barra inferior; en pantalla ancha no se muestra |
 | `iconos.ts` | Iconos propios con el estilo de Lucide (`Vaca`) |
 

@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router'
 import { Boton } from '../componentes/Boton'
 import { BotonFlotante } from '../componentes/BotonFlotante'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
-import { Chips } from '../componentes/Etiquetas'
-import { BarraFiltros, Buscador } from '../componentes/Filtros'
+import { BarraFiltros, Buscador, FiltroDesplegable } from '../componentes/Filtros'
 import { Vaca } from '../componentes/iconos'
 import { Tabla } from '../componentes/Tabla'
 import { rutaExplotacion } from '../explotaciones/datos'
@@ -50,7 +49,7 @@ export function PaginaAnimales() {
       <BarraFiltros
         buscador={<Buscador etiqueta="Buscar por crotal, nombre o raza" alCambiar={setTexto} />}
       >
-        <Chips
+        <FiltroDesplegable
           etiqueta="Estado"
           opciones={[
             { valor: 'activo', texto: 'Activos' },
@@ -58,17 +57,19 @@ export function PaginaAnimales() {
             { valor: 'muerto', texto: 'Muertos' },
             { valor: 'todos', texto: 'Todos' },
           ]}
-          seleccion={estado}
+          valor={estado}
+          porDefecto="activo"
           alCambiar={setEstado}
         />
-        <Chips
+        <FiltroDesplegable
           etiqueta="Sexo"
           opciones={[
-            { valor: 'todos', texto: 'Hembras y machos' },
+            { valor: 'todos', texto: 'Todos' },
             { valor: 'hembra', texto: 'Hembras' },
             { valor: 'macho', texto: 'Machos' },
           ]}
-          seleccion={sexo}
+          valor={sexo}
+          porDefecto="todos"
           alCambiar={setSexo}
         />
       </BarraFiltros>
