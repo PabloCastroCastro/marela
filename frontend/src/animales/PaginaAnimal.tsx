@@ -73,7 +73,7 @@ export function PaginaAnimal() {
         <div className={estilos.acciones}>
           {a.estado === 'activo' && (
             <Boton
-              variante="texto"
+              variante="secundario"
               className={estilos.peligro}
               icono={<UserRoundX aria-hidden size={18} />}
               onClick={() => setDandoDeBaja(true)}
