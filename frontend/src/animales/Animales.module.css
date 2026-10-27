@@ -33,6 +33,32 @@
   text-decoration: none;
 }
 
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.peligro {
+  color: var(--color-peligro);
+}
+
+.baja {
+  display: grid;
+  gap: var(--espacio-3);
+  justify-items: start;
+  border-color: var(--color-borde-fuerte);
+  background: var(--color-superficie);
+}
+
+.baja h2 {
+  font-size: var(--texto-lg);
+}
+
+.baja dl {
+  width: 100%;
+}
+
 .cabeceraFicha {
   display: grid;
   gap: var(--espacio-1);

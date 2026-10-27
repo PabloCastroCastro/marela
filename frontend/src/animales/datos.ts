@@ -14,6 +14,18 @@ export const ESTADOS: Record<EstadoAnimal, string> = {
   activo: 'Activo',
   vendido: 'Vendido',
   muerto: 'Muerto',
+  baja: 'De baja',
+}
+
+export type TipoBaja = NonNullable<Animal['tipoBaja']>
+export type DatosBaja = components['schemas']['DatosBaja']
+
+export const TIPOS_BAJA: Record<TipoBaja, string> = {
+  venta: 'Venta',
+  muerte: 'Muerte',
+  sacrificio: 'Sacrificio en la explotación',
+  robo_extravio: 'Robo o extravío',
+  otra: 'Otra causa',
 }
 
 // Todas las consultas de animales cuelgan de esta clave, para refrescarlas juntas tras un cambio

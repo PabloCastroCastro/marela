@@ -55,6 +55,7 @@ export function PaginaAnimales() {
             { valor: 'activo', texto: 'Activos' },
             { valor: 'vendido', texto: 'Vendidos' },
             { valor: 'muerto', texto: 'Muertos' },
+            { valor: 'baja', texto: 'Otras bajas' },
             { valor: 'todos', texto: 'Todos' },
           ]}
           valor={estado}

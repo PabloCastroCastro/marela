@@ -4,6 +4,7 @@ import { alias } from 'drizzle-orm/pg-core'
 import type { Transaccion } from './db/explotacion.js'
 import {
   animales,
+  ESTADO_POR_BAJA,
   type ESTADOS_ANIMAL,
   FORMATO_CROTAL,
   ORIGENES,
@@ -121,6 +122,7 @@ const columnas = {
   regaOrigen: animales.regaOrigen,
   estado: animales.estado,
   fechaBaja: animales.fechaBaja,
+  tipoBaja: animales.tipoBaja,
   causaBaja: animales.causaBaja,
   observaciones: animales.observaciones,
   creadoEn: animales.creadoEn,
@@ -283,6 +285,64 @@ export async function editarAnimal(tx: Transaccion, animalId: string, cambios: o
 }
 
 // Razas para sugerir: las habituales y las que ya se usan en la explotación
+// Bajas que se registran desde la ficha. La venta llega desde Finanzas (GH-38).
+export const TIPOS_BAJA_FICHA = ['muerte', 'sacrificio', 'robo_extravio', 'otra'] as const
+
+export const DatosBaja = z
+  .object({
+    tipo: z.enum(TIPOS_BAJA_FICHA),
+    fecha,
+    causa: textoOpcional.openapi({ description: 'Detalle; obligatorio si el tipo es "otra"' }),
+  })
+  .superRefine((b, ctx) => {
+    if (b.fecha > hoyEnMadrid())
+      ctx.addIssue({ code: 'custom', path: ['fecha'], message: 'La fecha no puede ser futura' })
+    if (b.tipo === 'otra' && !b.causa)
+      ctx.addIssue({ code: 'custom', path: ['causa'], message: 'Explica la causa de la baja' })
+  })
+  .openapi('DatosBaja')
+
+export type DatosBaja = z.output<typeof DatosBaja>
+
+export async function darDeBaja(tx: Transaccion, animalId: string, baja: DatosBaja) {
+  const actual = await verAnimal(tx, animalId)
+  if (actual.estado !== 'activo') {
+    throw new ErrorApi(409, 'ya_de_baja', 'El animal ya está dado de baja')
+  }
+  const desde = actual.fechaEntrada ?? actual.fechaNacimiento
+  if (baja.fecha < desde) {
+    const mensaje = `La fecha no puede ser anterior a la ${actual.fechaEntrada ? 'entrada' : 'fecha de nacimiento'}`
+    throw new ErrorApi(400, 'validacion', mensaje, [{ campo: 'fecha', mensaje }])
+  }
+  await tx
+    .update(animales)
+    .set({
+      estado: ESTADO_POR_BAJA[baja.tipo],
+      tipoBaja: baja.tipo,
+      fechaBaja: baja.fecha,
+      causaBaja: baja.causa ?? null,
+    })
+    .where(eq(animales.id, animalId))
+  return verAnimal(tx, animalId)
+}
+
+// Deshace una baja registrada por error: el animal vuelve a estar activo. La baja queda en el
+// historial de cambios. Una venta se deshace desde Finanzas, junto con la venta.
+export async function deshacerBaja(tx: Transaccion, animalId: string) {
+  const actual = await verAnimal(tx, animalId)
+  if (actual.estado === 'activo') {
+    throw new ErrorApi(409, 'no_de_baja', 'El animal no está dado de baja')
+  }
+  if (actual.tipoBaja === 'venta') {
+    throw new ErrorApi(409, 'baja_por_venta', 'Una venta se deshace desde Finanzas, con la venta')
+  }
+  await tx
+    .update(animales)
+    .set({ estado: 'activo', tipoBaja: null, fechaBaja: null, causaBaja: null })
+    .where(eq(animales.id, animalId))
+  return verAnimal(tx, animalId)
+}
+
 export async function razas(tx: Transaccion) {
   const usadas = await tx.selectDistinct({ raza: animales.raza }).from(animales)
   return [...new Set([...RAZAS_HABITUALES, ...usadas.map((r) => r.raza)])].sort((a, b) =>

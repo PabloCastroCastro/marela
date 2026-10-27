@@ -1,16 +1,18 @@
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, Undo2, UserRoundX } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ErrorApi } from '../api/cliente'
 import { Boton } from '../componentes/Boton'
+import { useConfirmacion } from '../componentes/Confirmacion'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { edad, fecha } from '../formato'
 import estilos from './Animales.module.css'
-import { type AnimalDetalle, identificacion, SEXOS, useAnimal } from './datos'
+import { type AnimalDetalle, ESTADOS, identificacion, SEXOS, TIPOS_BAJA, useAnimal } from './datos'
 import { FormularioAnimal } from './FormularioAnimal'
+import { FormularioBaja, useDeshacerBaja } from './FormularioBaja'
 import { InsigniaEstado } from './InsigniaEstado'
 
 // Ficha de un animal: sus datos, su madre y su padre, y sus hijos (GH-15)
@@ -19,6 +21,9 @@ export function PaginaAnimal() {
   const { animalId = '' } = useParams()
   const animal = useAnimal(explotacion.id, animalId)
   const [editando, setEditando] = useState(false)
+  const [dandoDeBaja, setDandoDeBaja] = useState(false)
+  const deshacer = useDeshacerBaja(animalId)
+  const confirmar = useConfirmacion()
   const lista = `${rutaExplotacion(explotacion.id)}/animales`
 
   const volver = (
@@ -65,14 +70,58 @@ export function PaginaAnimal() {
             <InsigniaEstado estado={a.estado} />
           </div>
         </div>
-        <Boton
-          variante="secundario"
-          icono={<Pencil aria-hidden size={18} />}
-          onClick={() => setEditando(true)}
-        >
-          Editar
-        </Boton>
+        <div className={estilos.acciones}>
+          {a.estado === 'activo' && (
+            <Boton
+              variante="texto"
+              className={estilos.peligro}
+              icono={<UserRoundX aria-hidden size={18} />}
+              onClick={() => setDandoDeBaja(true)}
+            >
+              Dar de baja
+            </Boton>
+          )}
+          <Boton
+            variante="secundario"
+            icono={<Pencil aria-hidden size={18} />}
+            onClick={() => setEditando(true)}
+          >
+            Editar
+          </Boton>
+        </div>
       </div>
+
+      {a.estado !== 'activo' && a.tipoBaja && (
+        <Tarjeta aria-labelledby="ficha-baja" className={estilos.baja}>
+          <h2 id="ficha-baja">Baja</h2>
+          <dl className={estilos.datos}>
+            <Dato titulo="Motivo">{TIPOS_BAJA[a.tipoBaja]}</Dato>
+            <Dato titulo="Fecha">{fecha(a.fechaBaja ?? '')}</Dato>
+            {a.causaBaja && (
+              <Dato titulo={a.tipoBaja === 'otra' ? 'Causa' : 'Detalle'}>{a.causaBaja}</Dato>
+            )}
+          </dl>
+          {a.tipoBaja === 'venta' ? (
+            <p className={estilos.suave}>Una venta se deshace desde Finanzas.</p>
+          ) : (
+            <Boton
+              variante="secundario"
+              icono={<Undo2 aria-hidden size={18} />}
+              cargando={deshacer.isPending}
+              onClick={async () => {
+                const ok = await confirmar({
+                  titulo: '¿Deshacer la baja?',
+                  mensaje: `${identificacion(a)} volverá a estar entre los animales activos. La baja quedará en el historial.`,
+                  textoConfirmar: 'Deshacer la baja',
+                })
+                if (ok) deshacer.mutate()
+              }}
+            >
+              Deshacer la baja
+            </Boton>
+          )}
+        </Tarjeta>
+      )}
 
       <div className={estilos.tarjetas}>
         <Tarjeta aria-labelledby="ficha-datos">
@@ -91,12 +140,6 @@ export function PaginaAnimal() {
                 ? 'Nacido en la explotación'
                 : `Comprado, entró el ${fecha(a.fechaEntrada ?? '')} desde ${a.regaOrigen}`}
             </Dato>
-            {a.estado !== 'activo' && (
-              <Dato titulo="Baja">
-                {fecha(a.fechaBaja ?? '')}
-                {a.causaBaja ? `: ${a.causaBaja}` : ''}
-              </Dato>
-            )}
           </dl>
         </Tarjeta>
 
@@ -120,7 +163,7 @@ export function PaginaAnimal() {
                   <Link to={`${lista}/${h.id}`}>{identificacion(h)}</Link>
                   <span className={estilos.suave}>
                     {SEXOS[h.sexo]} · {fecha(h.fechaNacimiento)}
-                    {h.estado !== 'activo' && ` · ${h.estado}`}
+                    {h.estado !== 'activo' && ` · ${ESTADOS[h.estado].toLowerCase()}`}
                   </span>
                 </li>
               ))}
@@ -142,6 +185,7 @@ export function PaginaAnimal() {
 
       {/* Se monta de nuevo al abrirlo, para partir siempre de la ficha actual */}
       {editando && <FormularioAnimal abierto alCerrar={() => setEditando(false)} animal={a} />}
+      {dandoDeBaja && <FormularioBaja animal={a} alCerrar={() => setDandoDeBaja(false)} />}
     </section>
   )
 }

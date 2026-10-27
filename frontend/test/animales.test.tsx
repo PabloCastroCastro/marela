@@ -171,3 +171,84 @@ describe('edad', () => {
     expect(edad('2019-03-14', hoy)).toBe('7 años')
   })
 })
+
+describe('bajas', () => {
+  it('da de baja un animal desde su ficha y lo deshace desde el aviso', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    await usuario.click(await screen.findByRole('button', { name: 'Dar de baja' }))
+    const hoja = screen.getByRole('dialog', { name: /Dar de baja Marela/ })
+    await usuario.selectOptions(within(hoja).getByLabelText('Motivo'), 'Muerte')
+    await usuario.type(within(hoja).getByLabelText(/^Detalle/), 'Neumonía')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Dar de baja' }))
+
+    expect(
+      await screen.findByText('Baja de Marela · ES041503456789 registrada'),
+    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Baja' })).toBeInTheDocument()
+    expect(estado.animales[0]).toMatchObject({
+      estado: 'muerto',
+      tipoBaja: 'muerte',
+      causaBaja: 'Neumonía',
+    })
+
+    await usuario.click(screen.getByRole('button', { name: 'Deshacer' }))
+    expect(await screen.findByText(/vuelve a estar activo/)).toBeInTheDocument()
+    expect(estado.animales[0]?.estado).toBe('activo')
+  })
+
+  it('con otra causa pide explicarla', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    await usuario.click(await screen.findByRole('button', { name: 'Dar de baja' }))
+    const hoja = screen.getByRole('dialog', { name: /Dar de baja/ })
+    await usuario.selectOptions(within(hoja).getByLabelText('Motivo'), 'Otra causa')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Dar de baja' }))
+    expect(await within(hoja).findByText('Explica la causa de la baja')).toBeInTheDocument()
+  })
+
+  it('deshace una baja desde la ficha, tras confirmarlo', async () => {
+    estado.animales[0] = {
+      ...(estado.animales[0] as (typeof estado.animales)[number]),
+      estado: 'baja',
+      tipoBaja: 'robo_extravio',
+      fechaBaja: '2026-10-01',
+    }
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    expect(await screen.findByText('Robo o extravío')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Dar de baja' })).not.toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Deshacer la baja' }))
+    await usuario.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Deshacer la baja' }),
+    )
+    expect(await screen.findByRole('button', { name: 'Dar de baja' })).toBeInTheDocument()
+    expect(estado.animales[0]?.estado).toBe('activo')
+  })
+
+  it('una venta no se deshace desde la ficha', async () => {
+    simularApi(estado)
+    abrir(`${animales}/a4`)
+    expect(await screen.findByText('Una venta se deshace desde Finanzas.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Deshacer la baja' })).not.toBeInTheDocument()
+  })
+
+  it('las otras bajas se consultan con su filtro', async () => {
+    estado.animales[1] = {
+      ...(estado.animales[1] as (typeof estado.animales)[number]),
+      estado: 'baja',
+      tipoBaja: 'otra',
+      fechaBaja: '2026-10-01',
+      causaBaja: 'Cedido',
+    }
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(animales)
+    expect(within(await tarjetas()).queryByText('ES041503456812')).not.toBeInTheDocument()
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'Otras bajas')
+    expect(within(await tarjetas()).getByText('ES041503456812')).toBeInTheDocument()
+  })
+})
