@@ -714,7 +714,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Animal"];
+                        "application/json": components["schemas"]["AnimalDetalle"];
                     };
                 };
                 /** @description Datos no válidos, madre o padre que no corresponden (validacion) */
@@ -790,13 +790,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description La ficha */
+                /** @description La ficha, con sus hijos */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Animal"];
+                        "application/json": components["schemas"]["AnimalDetalle"];
                     };
                 };
                 /** @description Sin sesión */
@@ -859,7 +859,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Animal"];
+                        "application/json": components["schemas"]["AnimalDetalle"];
                     };
                 };
                 /** @description Datos no válidos (validacion) */
@@ -1342,6 +1342,20 @@ export interface components {
             creadoEn: string;
             /** Format: date-time */
             modificadoEn: string;
+        };
+        AnimalDetalle: components["schemas"]["Animal"] & {
+            hijos: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+                /** @enum {string} */
+                sexo: "hembra" | "macho";
+                /** Format: date */
+                fechaNacimiento: string;
+                /** @enum {string} */
+                estado: "activo" | "vendido" | "muerto";
+            }[];
         };
         DatosAnimal: {
             /** @example ES041503456789 */

@@ -230,7 +230,7 @@ La estructura la da `src/diseno/Aplicacion.tsx`:
 
 ## 6. Componentes (`src/componentes/`)
 
-El catálogo base (GH-9) se puede ver en `/componentes` (solo en desarrollo, con selector de tema claro u oscuro); el README del frontend dice en qué archivo está cada componente. Los de la tabla que aún no existen (`Casilla`, `Opcion`, `Interruptor`, `ElementoLista`, `CabeceraSeccion`, `TarjetaCifra`, `BotonFlotante`, `AvisoSinConexion`) se crean en `src/componentes/` cuando los necesite la primera pantalla, y se añaden al catálogo.
+El catálogo base (GH-9) se puede ver en `/componentes` (solo en desarrollo, con selector de tema claro u oscuro); el README del frontend dice en qué archivo está cada componente. Los de la tabla que aún no existen (`Casilla`, `Opcion`, `Interruptor`, `ElementoLista`, `CabeceraSeccion`, `TarjetaCifra`, `AvisoSinConexion`) se crean en `src/componentes/` cuando los necesite la primera pantalla, y se añaden al catálogo.
 
 ### 6.1 Reglas comunes
 

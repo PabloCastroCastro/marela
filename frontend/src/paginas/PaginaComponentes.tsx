@@ -2,6 +2,7 @@ import { Plus, Save, Syringe, Trash2, TriangleAlert } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
+import { BotonFlotante } from '../componentes/BotonFlotante'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
 import { useConfirmacion } from '../componentes/Confirmacion'
 import { Cargando, Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
@@ -178,6 +179,12 @@ export function PaginaComponentes() {
           <Boton>Normal</Boton>
           <Boton tamano="grande">Grande</Boton>
           <BotonIcono etiqueta="Borrar" icono={<Trash2 aria-hidden size={22} />} />
+          {/* Solo en el móvil, abajo a la derecha */}
+          <BotonFlotante
+            etiqueta="Añadir animal"
+            icono={<Plus aria-hidden size={26} />}
+            alPulsar={() => avisar({ mensaje: 'Botón flotante' })}
+          />
         </div>
       </section>
 

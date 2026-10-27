@@ -44,6 +44,19 @@ const Animal = z
   })
   .openapi('Animal')
 
+const AnimalDetalle = Animal.extend({
+  hijos: z.array(
+    z.object({
+      id: z.uuid(),
+      crotal: z.string(),
+      nombre: z.string().nullable(),
+      sexo: z.enum(SEXOS),
+      fechaNacimiento: z.iso.date(),
+      estado: z.enum(ESTADOS_ANIMAL),
+    }),
+  ),
+}).openapi('AnimalDetalle')
+
 const Parametros = z.object({
   explotacionId: z.string().openapi({ param: { name: 'explotacionId', in: 'path' } }),
 })
@@ -107,7 +120,7 @@ const ver = createRoute({
   security: [{ sesion: [] }],
   middleware: [permitir('animales')] as const,
   request: { params: ParametrosAnimal },
-  responses: { 200: json(Animal, 'La ficha'), ...comunes },
+  responses: { 200: json(AnimalDetalle, 'La ficha, con sus hijos'), ...comunes },
 })
 
 const crear = createRoute({
@@ -122,7 +135,7 @@ const crear = createRoute({
     body: { content: { 'application/json': { schema: DatosAnimal } }, required: true },
   },
   responses: {
-    201: json(Animal, 'Creado'),
+    201: json(AnimalDetalle, 'Creado'),
     400: error('Datos no válidos, madre o padre que no corresponden (validacion)'),
     ...comunes,
     409: error('Ya hay un animal con este crotal en la plataforma (crotal_en_uso)'),
@@ -142,7 +155,7 @@ const editar = createRoute({
     body: { content: { 'application/json': { schema: CambioAnimal } }, required: true },
   },
   responses: {
-    200: json(Animal, 'La ficha actualizada'),
+    200: json(AnimalDetalle, 'La ficha actualizada'),
     400: error('Datos no válidos (validacion)'),
     ...comunes,
     409: error(

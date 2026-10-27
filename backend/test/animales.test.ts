@@ -223,10 +223,28 @@ describe('madre y padre', () => {
       }),
     )
     expect(res.status).toBe(201)
-    expect(await res.json()).toMatchObject({
+    const ternera = await res.json()
+    expect(ternera).toMatchObject({
       madre: { id: madre.id, crotal: madre.crotal, nombre: 'Madre' },
       padre: { id: toro.id, nombre: 'Toro' },
     })
+
+    // La ficha de la madre y la del padre muestran a su hija
+    for (const progenitor of [madre, toro]) {
+      const fichaProgenitor = await (
+        await pedir('GET', `/explotaciones/${a}/animales/${progenitor.id}`, ana.cookie)
+      ).json()
+      expect(fichaProgenitor.hijos).toEqual([
+        {
+          id: ternera.id,
+          crotal: ternera.crotal,
+          nombre: 'Ternera',
+          sexo: 'hembra',
+          fechaNacimiento: '2026-02-11',
+          estado: 'activo',
+        },
+      ])
+    }
 
     const conTexto = await pedir(
       'POST',

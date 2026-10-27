@@ -31,3 +31,18 @@ export const euros = (n: number) =>
     currency: 'EUR',
     useGrouping: 'always',
   }).format(n)
+
+// Edad a partir de la fecha de nacimiento (aaaa-mm-dd): en días, meses o años, como se dice en la
+// explotación ("3 semanas", "8 meses", "6 años")
+export function edad(nacimiento: string, hoy = new Date()) {
+  const n = new Date(`${nacimiento}T00:00:00`)
+  const dias = Math.floor((hoy.getTime() - n.getTime()) / 86_400_000)
+  if (dias < 0) return '—'
+  if (dias < 31)
+    return dias < 14 ? `${dias} ${dias === 1 ? 'día' : 'días'}` : `${Math.floor(dias / 7)} semanas`
+  let meses = (hoy.getFullYear() - n.getFullYear()) * 12 + hoy.getMonth() - n.getMonth()
+  if (hoy.getDate() < n.getDate()) meses -= 1
+  if (meses < 24) return `${Math.max(meses, 1)} ${meses === 1 ? 'mes' : 'meses'}`
+  const anos = Math.floor(meses / 12)
+  return `${anos} años`
+}

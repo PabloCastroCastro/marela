@@ -1,0 +1,35 @@
+.flotante {
+  position: fixed;
+  right: calc(var(--espacio-4) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--altura-navegacion) + env(safe-area-inset-bottom, 0px) + var(--espacio-4));
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: var(--radio-l);
+  background: var(--color-primario-relleno);
+  color: var(--color-sobre-primario);
+  box-shadow: var(--sombra-2);
+  cursor: pointer;
+  transition:
+    background-color var(--duracion-corta) ease-out,
+    transform var(--duracion-corta) ease-out;
+}
+
+@media (hover: hover) {
+  .flotante:hover {
+    background: var(--color-primario-intenso);
+  }
+}
+
+.flotante:active {
+  transform: scale(0.96);
+}
+
+@media (min-width: 64rem) {
+  .flotante {
+    display: none;
+  }
+}
