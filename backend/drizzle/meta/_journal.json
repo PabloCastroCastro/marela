@@ -36,6 +36,20 @@
       "when": 1792881137784,
       "tag": "0004_miembro_activo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793121742185,
+      "tag": "0005_animales",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793121752048,
+      "tag": "0006_animales_triggers",
+      "breakpoints": true
     }
   ]
 }

@@ -45,8 +45,9 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Ficha del animal
 
-- Crotal / identificación oficial
-- Raza
+- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma.
+- Nombre, opcional (muchas vacas lo tienen y es como se las reconoce)
+- Raza: se elige de una lista de razas de carne habituales en España o se escribe otra
 - Sexo
 - Fecha de nacimiento
 - Madre: enlace a su ficha si está en el sistema; opcional o texto libre si no (por ejemplo, un animal comprado)
@@ -211,7 +212,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ## Aspectos generales de los datos
 
-- Auditoría: cada registro guarda quién lo creó y modificó, y cuándo.
+- Auditoría: cada registro guarda quién lo creó y modificó, y cuándo. Además, cada alta, cambio o borrado queda en un historial con el estado anterior y el nuevo.
 - Las correcciones y borrados quedan registrados; en datos sanitarios (tratamientos, partos, bajas) se prefiere anular a borrar.
 
 ## Aspectos técnicos

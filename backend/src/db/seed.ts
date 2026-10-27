@@ -1,8 +1,16 @@
 import { hashPassword } from 'better-auth/crypto'
 import { config } from '../config.js'
 import { db, pool } from './cliente.js'
+import { enExplotacion } from './explotacion.js'
 import { migrar } from './migrar.js'
-import { account, member, organization, type RolExplotacion, user } from './schema/index.js'
+import {
+  account,
+  animales,
+  member,
+  organization,
+  type RolExplotacion,
+  user,
+} from './schema/index.js'
 
 // Datos de ejemplo para desarrollo y pruebas (GH-6). Idempotente: usa identificadores fijos y no
 // modifica lo que ya existe. Nunca se ejecuta en producción.
@@ -28,6 +36,7 @@ const USUARIO = 1
 const CUENTA = 2
 const EXPLOTACION = 3
 const MIEMBRO = 4
+const ANIMAL = 5
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -111,7 +120,119 @@ await db.transaction(async (tx) => {
     .onConflictDoNothing()
 })
 
+// Animales de A Veiga, dados de alta por Ana: vacas, un toro propio, un toro comprado y terneros con
+// su madre y su padre (propio o dosis externa)
+type AnimalEjemplo = {
+  n: number
+  crotal: string
+  nombre?: string
+  raza: string
+  sexo: 'hembra' | 'macho'
+  nacimiento: string
+  madre?: number
+  padre?: number
+  padreTexto?: string
+  comprado?: { entrada: string; rega: string }
+}
+
+const animalesVeiga: AnimalEjemplo[] = [
+  {
+    n: 1,
+    crotal: 'ES041503456789',
+    nombre: 'Marela',
+    raza: 'Rubia Gallega',
+    sexo: 'hembra',
+    nacimiento: '2019-03-14',
+  },
+  {
+    n: 2,
+    crotal: 'ES041503456790',
+    nombre: 'Bonita',
+    raza: 'Rubia Gallega',
+    sexo: 'hembra',
+    nacimiento: '2020-05-02',
+  },
+  {
+    n: 3,
+    crotal: 'ES041503456791',
+    nombre: 'Pinta',
+    raza: 'Cruzada',
+    sexo: 'hembra',
+    nacimiento: '2018-04-21',
+  },
+  {
+    n: 4,
+    crotal: 'ES041503456812',
+    nombre: 'Moreno',
+    raza: 'Rubia Gallega',
+    sexo: 'macho',
+    nacimiento: '2018-11-20',
+  },
+  {
+    n: 5,
+    crotal: 'ES071203300145',
+    nombre: 'Lucero',
+    raza: 'Limusina',
+    sexo: 'macho',
+    nacimiento: '2021-02-08',
+    comprado: { entrada: '2023-06-15', rega: 'ES270280000002' },
+  },
+  {
+    n: 6,
+    crotal: 'ES041503457001',
+    raza: 'Rubia Gallega',
+    sexo: 'hembra',
+    nacimiento: '2026-02-11',
+    madre: 1,
+    padre: 4,
+  },
+  {
+    n: 7,
+    crotal: 'ES041503457002',
+    raza: 'Cruzada',
+    sexo: 'macho',
+    nacimiento: '2026-03-03',
+    madre: 3,
+    padre: 5,
+  },
+  {
+    n: 8,
+    crotal: 'ES041503457003',
+    raza: 'Rubia Gallega',
+    sexo: 'macho',
+    nacimiento: '2026-04-19',
+    madre: 2,
+    padreTexto: 'Dosis RG-1187',
+  },
+]
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    // En orden: madres y padres antes que sus terneros
+    for (const a of animalesVeiga) {
+      await tx
+        .insert(animales)
+        .values({
+          id: sid(ANIMAL, a.n),
+          crotal: a.crotal,
+          nombre: a.nombre ?? null,
+          raza: a.raza,
+          sexo: a.sexo,
+          fechaNacimiento: a.nacimiento,
+          madreId: a.madre ? sid(ANIMAL, a.madre) : null,
+          padreId: a.padre ? sid(ANIMAL, a.padre) : null,
+          padreTexto: a.padreTexto ?? null,
+          origen: a.comprado ? 'comprado' : 'nacido',
+          fechaEntrada: a.comprado?.entrada ?? null,
+          regaOrigen: a.comprado?.rega ?? null,
+        })
+        .onConflictDoNothing()
+    }
+  },
+)
+
 await pool.end()
 console.log(
-  `Datos de ejemplo cargados: ${usuarios.length} usuarios y ${explotaciones.length} explotaciones (contraseña ${CONTRASENA})`,
+  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length} animales (contraseña ${CONTRASENA})`,
 )
