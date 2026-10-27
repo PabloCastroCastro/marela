@@ -1,0 +1,201 @@
+/*
+  Tokens de diseño. Toda la aplicación usa estas variables y nunca colores sueltos.
+  La guía de uso está en la skill diseno-frontend (.claude/skills/diseno-frontend/SKILL.md).
+*/
+:root {
+  color-scheme: light dark;
+
+  /*
+    Marca: verde oliva #9dad6f. Es claro, así que se usa de relleno (botones, pestaña activa) con
+    texto oscuro encima (6,8:1). Para textos, enlaces e iconos sobre el fondo, un oliva más oscuro
+    (con blanco, #9dad6f solo llegaría a 2,4:1).
+  */
+  --color-marca: #9dad6f;
+  --color-primario-relleno: #9dad6f;
+  --color-primario-intenso: #8e9f5e;
+  --color-sobre-primario: #18211f;
+  --color-primario: #66753f;
+  --color-primario-suave: #eef1e3;
+  --color-sobre-primario-suave: #4f5c30;
+
+  /* Acento: ciruela, con el rosa de la paleta como fondo suave. Para detalles, nunca para acciones */
+  --color-acento: #704c5e;
+  --color-sobre-acento: #ffffff;
+  --color-acento-suave: #f1c8db;
+  --color-sobre-acento-suave: #704c5e;
+
+  /* Neutros: grises con el tono verdoso de #88a09e */
+  --color-fondo: #ffffff;
+  --color-superficie: #f6f8f8;
+  --color-superficie-elevada: #ffffff;
+  --color-texto: #18211f;
+  --color-texto-suave: #5c6e6b;
+  --color-borde: #dde4e3;
+  /* Borde de campos, casillas y chips: 3:1 sobre el fondo */
+  --color-borde-fuerte: #73878a;
+  --color-velo: rgb(13 18 17 / 50%);
+
+  /* Estados: texto o icono, y su fondo suave */
+  --color-exito: #15803d;
+  --color-exito-suave: #f0fdf4;
+  --color-aviso: #b45309;
+  --color-aviso-suave: #fffbeb;
+  --color-peligro: #b91c1c;
+  --color-peligro-suave: #fef2f2;
+  --color-informacion: #1d4ed8;
+  --color-informacion-suave: #eff6ff;
+  /* Relleno del botón de peligro */
+  --color-peligro-relleno: #dc2626;
+  --color-sobre-peligro: #ffffff;
+  --color-foco: var(--color-primario);
+
+  /* Tipografía: la del sistema, sin descargas. Roles de Material 3 */
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --texto-xs: 0.75rem; /* Label: etiquetas, chips, pestañas */
+  --texto-sm: 0.875rem; /* Body M: texto secundario, celdas */
+  --texto-base: 1rem; /* Body L y Title M: texto base y campos (nunca menos: iOS hace zoom) */
+  --texto-lg: 1.25rem; /* Title L: título de sección o tarjeta */
+  --texto-xl: 1.5rem; /* Headline: título de pantalla */
+  --texto-2xl: 2.25rem; /* Display: cifras destacadas */
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-fuerte: 600;
+
+  /* Espaciado: rejilla de 8px con medios pasos de 4px */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.5rem;
+  --espacio-3: 0.75rem;
+  --espacio-4: 1rem;
+  --espacio-5: 1.5rem;
+  --espacio-6: 2rem;
+  --espacio-7: 3rem;
+
+  /* Formas: controles, tarjetas, hojas y diálogos, chips */
+  --radio-s: 8px;
+  --radio-m: 12px;
+  --radio-l: 16px;
+  --radio-completo: 999px;
+
+  /* Elevación de Material 3: 1 barras, 2 menús, 3 diálogos, hojas y avisos */
+  --sombra-1: 0 1px 2px rgb(24 33 31 / 8%);
+  --sombra-2: 0 4px 12px rgb(24 33 31 / 12%);
+  --sombra-3: 0 12px 32px rgb(24 33 31 / 18%);
+
+  /* Medidas: objetivos táctiles de al menos 44px y controles principales de 48px */
+  --altura-tactil: 44px;
+  --altura-control: 48px;
+  --altura-cabecera: 56px;
+  --altura-navegacion: 64px;
+  --ancho-contenido: 40rem;
+  --ancho-contenido-amplio: 72rem;
+  --ancho-menu-lateral: 15rem;
+
+  /* Movimiento de Material 3 */
+  --duracion-corta: 150ms; /* microinteracciones */
+  --duracion-salida: 200ms;
+  --duracion-entrada: 250ms;
+  --duracion-larga: 350ms; /* diálogos, hojas y cambio de pantalla */
+  --curva: cubic-bezier(0.2, 0, 0, 1);
+  --curva-entrada: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --curva-salida: cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+
+/*
+  Modo oscuro: según el sistema, salvo que la página fuerce un tema con data-tema en <html> (lo usa el
+  catálogo de componentes). Los dos bloques deben tener las mismas declaraciones: lo comprueba
+  test/estilos.test.ts.
+*/
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --color-marca: #9dad6f;
+    --color-primario-relleno: #9dad6f;
+    --color-primario-intenso: #b0bf82;
+    --color-sobre-primario: #0d1211;
+    --color-primario: #b5c38a;
+    --color-primario-suave: #262c17;
+    --color-sobre-primario-suave: #d3dbb8;
+
+    --color-acento: #d9a9bf;
+    --color-sobre-acento: #0d1211;
+    --color-acento-suave: #3d2531;
+    --color-sobre-acento-suave: #f1c8db;
+
+    --color-fondo: #0d1211;
+    --color-superficie: #151c1b;
+    --color-superficie-elevada: #212a28;
+    --color-texto: #edf2f1;
+    --color-texto-suave: #9db0ae;
+    --color-borde: #26302e;
+    --color-borde-fuerte: #8fa3a0;
+    --color-velo: rgb(0 0 0 / 65%);
+
+    --color-exito: #86efac;
+    --color-exito-suave: #052e16;
+    --color-aviso: #fcd34d;
+    --color-aviso-suave: #451a03;
+    --color-peligro: #fca5a5;
+    --color-peligro-suave: #450a0a;
+    --color-informacion: #93c5fd;
+    --color-informacion-suave: #172554;
+    --color-peligro-relleno: #ef4444;
+    --color-sobre-peligro: #0c0a09;
+
+    --sombra-1: 0 1px 2px rgb(0 0 0 / 40%);
+    --sombra-2: 0 4px 12px rgb(0 0 0 / 50%);
+    --sombra-3: 0 12px 32px rgb(0 0 0 / 60%);
+  }
+}
+
+:root[data-tema="oscuro"] {
+  color-scheme: dark;
+  --color-marca: #9dad6f;
+  --color-primario-relleno: #9dad6f;
+  --color-primario-intenso: #b0bf82;
+  --color-sobre-primario: #0d1211;
+  --color-primario: #b5c38a;
+  --color-primario-suave: #262c17;
+  --color-sobre-primario-suave: #d3dbb8;
+
+  --color-acento: #d9a9bf;
+  --color-sobre-acento: #0d1211;
+  --color-acento-suave: #3d2531;
+  --color-sobre-acento-suave: #f1c8db;
+
+  --color-fondo: #0d1211;
+  --color-superficie: #151c1b;
+  --color-superficie-elevada: #212a28;
+  --color-texto: #edf2f1;
+  --color-texto-suave: #9db0ae;
+  --color-borde: #26302e;
+  --color-borde-fuerte: #8fa3a0;
+  --color-velo: rgb(0 0 0 / 65%);
+
+  --color-exito: #86efac;
+  --color-exito-suave: #052e16;
+  --color-aviso: #fcd34d;
+  --color-aviso-suave: #451a03;
+  --color-peligro: #fca5a5;
+  --color-peligro-suave: #450a0a;
+  --color-informacion: #93c5fd;
+  --color-informacion-suave: #172554;
+  --color-peligro-relleno: #ef4444;
+  --color-sobre-peligro: #0c0a09;
+
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --sombra-2: 0 4px 12px rgb(0 0 0 / 50%);
+  --sombra-3: 0 12px 32px rgb(0 0 0 / 60%);
+}
+
+:root[data-tema="claro"] {
+  color-scheme: light;
+}
+
+/* Con movimiento reducido no hay desplazamientos: las animaciones son instantáneas o fundidos */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duracion-corta: 0ms;
+    --duracion-salida: 0ms;
+    --duracion-entrada: 0ms;
+    --duracion-larga: 0ms;
+  }
+}

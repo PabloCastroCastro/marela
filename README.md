@@ -17,6 +17,8 @@ Todas las decisiones funcionales, técnicas y de organización están en el [doc
 - Arquitectura, alojamiento e interfaz
 - Flujo de trabajo: ramas, commits, versiones y definición de terminado
 
+La instalación en el servidor, los despliegues y las copias de seguridad están en [docs/servidor.md](docs/servidor.md).
+
 El plan de ciclos y el backlog de issues están en [docs/backlog.md](docs/backlog.md); el avance de cada ciclo se sigue en los [milestones](https://github.com/PabloCastroCastro/marela/milestones).
 
 ## Arquitectura
@@ -29,7 +31,7 @@ Un repositorio con tres proyectos independientes, cada uno con sus dependencias 
 | Backend | `backend/` | Node.js LTS + TypeScript, Hono, Zod, Drizzle ORM, Better Auth y PostgreSQL |
 | Proxy | `proxy/` | nginx: sirve la PWA y redirige `/api` al backend |
 
-El acceso se hace inicialmente por Tailscale, en la misma Raspberry Pi que `rexional`.
+Se autoaloja en una Raspberry Pi, con acceso inicialmente por Tailscale.
 
 ## Cómo contribuir
 
@@ -49,7 +51,8 @@ docker-compose.dev.yml       desarrollo local
 docker-compose.yml           servidor (pruebas y producción) y versión de servidor en local
 docker-compose.servidor.yml  solo en el servidor: certificado HTTPS de Tailscale
 .env.example                 configuración de Compose
-docs/                        documento de diseño
+scripts/                     despliegue y copias de seguridad en el servidor
+docs/                        documento de diseño, backlog y guía del servidor
 ```
 
 Cada proyecto es independiente: tiene sus propias dependencias, su Dockerfile y su README, y no importa código de los demás.
@@ -71,6 +74,12 @@ docker compose -f docker-compose.dev.yml up --build
 | Documentación de la API | http://localhost:3000/api/docs |
 | PostgreSQL | `localhost:5432`, usuario, contraseña y base de datos `marela` |
 
+Para cargar los datos de ejemplo (dos explotaciones con sus usuarios, listados en el [README del backend](backend/README.md#datos-de-ejemplo)) y poder iniciar sesión, por ejemplo con `ana` y `marela-dev`:
+
+```
+docker compose -f docker-compose.dev.yml exec backend npm run db:seed
+```
+
 El código de `backend/` y `frontend/` se monta en los contenedores, así que los cambios se aplican al guardar. **En Windows**, con el repositorio en `C:\`, los cambios no llegan como eventos a los contenedores y la recarga no se produce: pon `RECARGA_POLLING=true` en un `.env` (copia de `.env.example`). Si clonas el repositorio dentro de WSL no hace falta.
 
 Si cambian las dependencias de un proyecto, reconstruye y renueva sus `node_modules`:
@@ -89,7 +98,7 @@ docker compose -f docker-compose.dev.yml exec frontend npm test
 Para probar la versión de servidor en local (nginx con la PWA compilada en http://localhost:8080):
 
 ```
-POSTGRES_PASSWORD=local docker compose up --build
+POSTGRES_PASSWORD=local BETTER_AUTH_SECRET=local-sin-valor-real-0123456789abcdef URL_PUBLICA=http://localhost:8080 docker compose up --build
 ```
 
 Para trabajar en un solo proyecto sin Docker, sigue el README de su carpeta.

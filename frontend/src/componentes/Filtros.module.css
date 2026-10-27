@@ -1,0 +1,55 @@
+.barra {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--espacio-2) var(--espacio-3);
+}
+
+.buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lupa {
+  position: absolute;
+  left: var(--espacio-3);
+  color: var(--color-texto-suave);
+  pointer-events: none;
+}
+
+.entrada {
+  width: 100%;
+  min-height: var(--altura-control);
+  padding: 0 var(--altura-control) 0 calc(var(--espacio-3) + 20px + var(--espacio-2));
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-s);
+  background: var(--color-fondo);
+  font-size: max(16px, var(--texto-base));
+}
+
+.entrada:focus-visible {
+  border-color: var(--color-foco);
+}
+
+/* Sin la cruz propia del navegador: está el botón de borrar */
+.entrada::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.borrar {
+  position: absolute;
+  right: 0;
+}
+
+@media (min-width: 64rem) {
+  .barra {
+    grid-template-columns: minmax(16rem, 24rem) 1fr;
+    align-items: end;
+  }
+}

@@ -1,0 +1,128 @@
+.boton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-2);
+  min-width: var(--altura-tactil);
+  padding: 0 var(--espacio-5);
+  border: 1px solid transparent;
+  border-radius: var(--radio-s);
+  font-weight: var(--peso-medio);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duracion-corta) ease-out,
+    transform var(--duracion-corta) ease-out;
+}
+
+/* Capa de estado de Material 3: 8 % al pasar el ratón y 12 % al pulsar, del color del contenido */
+.boton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracion-corta) ease-out;
+}
+
+@media (hover: hover) {
+  .boton:not(:disabled):hover::after {
+    opacity: 0.08;
+  }
+}
+
+.boton:not(:disabled):active::after {
+  opacity: 0.12;
+}
+
+.boton:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.boton[aria-busy="true"] {
+  cursor: progress;
+  opacity: 1;
+}
+
+.compacto {
+  min-height: 36px;
+  padding: 0 var(--espacio-4);
+}
+
+.normal {
+  min-height: var(--altura-control);
+}
+
+.grande {
+  min-height: 56px;
+  font-size: var(--texto-lg);
+}
+
+.primario {
+  background: var(--color-primario-relleno);
+  color: var(--color-sobre-primario);
+}
+
+@media (hover: hover) {
+  .primario:not(:disabled):hover {
+    background: var(--color-primario-intenso);
+  }
+
+  .primario:not(:disabled):hover::after {
+    opacity: 0;
+  }
+}
+
+.secundario {
+  background: transparent;
+  border-color: var(--color-borde-fuerte);
+  color: var(--color-primario);
+}
+
+.texto {
+  background: transparent;
+  color: var(--color-primario);
+  padding: 0 var(--espacio-3);
+}
+
+.peligro {
+  background: var(--color-peligro-relleno);
+  color: var(--color-sobre-peligro);
+}
+
+.icono {
+  width: var(--altura-control);
+  height: var(--altura-control);
+  padding: 0;
+  border-radius: var(--radio-completo);
+  background: transparent;
+  color: var(--color-texto-suave);
+}
+
+.anchoCompleto {
+  width: 100%;
+}
+
+.girando {
+  animation: girar 0.9s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .girando {
+    animation-duration: 3s;
+  }
+}

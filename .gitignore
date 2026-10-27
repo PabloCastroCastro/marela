@@ -1,0 +1,50 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+dev-dist/
+*.tsbuildinfo
+vite.config.*.timestamp-*
+.vite/
+
+# Tests y cobertura
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Variables de entorno: solo se versiona el ejemplo
+.env
+.env.*
+!.env.example
+
+# Datos locales de desarrollo (volúmenes, subidas y copias de seguridad)
+data/
+uploads/
+backups/
+*.dump
+*.sql.gz
+
+# Copias temporales de npm run db:check (backend)
+.db-check-*/
+
+# Cachés de herramientas
+.cache/
+.eslintcache
+.stylelintcache
+
+# Editores y sistema operativo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

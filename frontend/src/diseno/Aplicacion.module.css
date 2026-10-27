@@ -1,0 +1,268 @@
+.aplicacion {
+  min-height: 100dvh;
+}
+
+/* La cabecera y la navegación respetan el área segura (muesca, barra de gestos) */
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  min-height: calc(var(--altura-cabecera) + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) calc(var(--espacio-4) + env(safe-area-inset-right, 0px)) 0
+    calc(var(--espacio-4) + env(safe-area-inset-left, 0px));
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--altura-tactil);
+  color: inherit;
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-fuerte);
+  text-decoration: none;
+}
+
+.logo {
+  border-radius: var(--radio-s);
+}
+
+/* En el móvil la cabecera lleva el logo, el selector de explotación y la cuenta */
+.nombreMarca {
+  display: none;
+}
+
+.selectorMovil {
+  flex: 1;
+  min-width: 0;
+}
+
+.selectorAncho {
+  display: none;
+}
+
+.cuenta {
+  margin-left: auto;
+  margin-right: calc(-1 * var(--espacio-2));
+  color: var(--color-texto);
+}
+
+.selector {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  max-width: 100%;
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-2);
+  border: 0;
+  border-radius: var(--radio-s);
+  background: transparent;
+  color: var(--color-texto);
+  font: inherit;
+  font-weight: var(--peso-medio);
+  text-align: start;
+}
+
+.selectorBoton {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .selectorBoton:hover {
+    background: var(--color-primario-suave);
+  }
+}
+
+.selectorBoton svg {
+  flex: none;
+  color: var(--color-texto-suave);
+}
+
+.nombreExplotacion {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sinExplotacion {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--espacio-4);
+}
+
+.enlaceBoton {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--altura-control);
+  padding: 0 var(--espacio-5);
+  border-radius: var(--radio-s);
+  background: var(--color-primario-relleno);
+  color: var(--color-sobre-primario);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.usuario {
+  display: grid;
+  gap: var(--espacio-1);
+}
+
+.nombreUsuario {
+  font-weight: var(--peso-fuerte);
+}
+
+.datosUsuario {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.salir {
+  color: var(--color-peligro);
+}
+
+.contenido {
+  width: 100%;
+  max-width: var(--ancho-contenido);
+  margin: 0 auto;
+  padding: var(--espacio-4) calc(var(--espacio-4) + env(safe-area-inset-right, 0px))
+    calc(var(--altura-navegacion) + env(safe-area-inset-bottom, 0px) + var(--espacio-5))
+    calc(var(--espacio-4) + env(safe-area-inset-left, 0px));
+}
+
+/* Móvil: navegación inferior */
+.navegacion {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 10;
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  min-height: calc(var(--altura-navegacion) + env(safe-area-inset-bottom, 0px));
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
+  background: var(--color-superficie);
+  border-top: 1px solid var(--color-borde);
+}
+
+.enlace {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-1);
+  min-height: var(--altura-navegacion);
+  color: var(--color-texto-suave);
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+/* Píldora del icono: en la pestaña activa se rellena con el color de la marca */
+.icono {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--radio-completo);
+  transition: background-color var(--duracion-corta) var(--curva);
+}
+
+.activo {
+  color: var(--color-primario);
+  font-weight: var(--peso-fuerte);
+}
+
+/* Píldora del icono activo con el color de la marca y el icono oscuro encima (6,8:1) */
+.activo .icono {
+  background: var(--color-primario-relleno);
+  color: var(--color-sobre-primario);
+}
+
+.activo svg {
+  stroke-width: 2.5;
+}
+
+/* Pantalla ancha: menú lateral y contenido más ancho para tablas y filtros */
+@media (min-width: 64rem) {
+  .aplicacion {
+    display: grid;
+    grid-template-columns: var(--ancho-menu-lateral) 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .cabecera {
+    grid-column: 1 / -1;
+  }
+
+  .nombreMarca {
+    display: inline;
+  }
+
+  .selectorMovil {
+    display: none;
+  }
+
+  .selectorAncho {
+    display: block;
+    margin-bottom: var(--espacio-3);
+    padding-bottom: var(--espacio-3);
+    border-bottom: 1px solid var(--color-borde);
+  }
+
+  .selectorAncho .selector {
+    width: 100%;
+    padding: 0 var(--espacio-3);
+  }
+
+  .navegacion {
+    position: sticky;
+    top: var(--altura-cabecera);
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-1);
+    min-height: calc(100dvh - var(--altura-cabecera));
+    padding: var(--espacio-4) var(--espacio-3);
+    border-top: 0;
+    border-right: 1px solid var(--color-borde);
+  }
+
+  .enlace {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--espacio-3);
+    min-height: var(--altura-tactil);
+    padding: 0 var(--espacio-4);
+    border-radius: var(--radio-completo);
+    font-size: var(--texto-base);
+  }
+
+  .icono {
+    width: auto;
+    height: auto;
+  }
+
+  /* En el menú lateral, toda la fila: primario sobre primario suave (5,2:1) */
+  .activo,
+  .activo .icono {
+    background: var(--color-primario-suave);
+    color: inherit;
+  }
+
+  .activo {
+    color: var(--color-sobre-primario-suave);
+  }
+
+  .contenido {
+    max-width: var(--ancho-contenido-amplio);
+    padding: var(--espacio-5) var(--espacio-6);
+  }
+}
