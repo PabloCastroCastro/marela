@@ -57,7 +57,8 @@ export type AnimalSimulado = {
   origen: 'nacido' | 'comprado'
   fechaEntrada: string | null
   regaOrigen: string | null
-  estado: 'activo' | 'vendido' | 'muerto'
+  estado: 'activo' | 'vendido' | 'muerto' | 'baja'
+  tipoBaja: 'venta' | 'muerte' | 'sacrificio' | 'robo_extravio' | 'otra' | null
   fechaBaja: string | null
   causaBaja: string | null
   observaciones: string | null
@@ -78,6 +79,7 @@ export const animalSimulado = (
   fechaEntrada: null,
   regaOrigen: null,
   estado: 'activo',
+  tipoBaja: null,
   fechaBaja: null,
   causaBaja: null,
   observaciones: null,
@@ -193,6 +195,7 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         nombre: 'Vendida',
         raza: 'Limusina',
         estado: 'vendido',
+        tipoBaja: 'venta',
         fechaBaja: '2026-05-01',
         causaBaja: 'Venta',
       }),
@@ -208,6 +211,7 @@ const errorApi = (status: number, codigo: string, detalles?: unknown) =>
 const DETALLE = /^\/api\/explotaciones\/([^/]+)$/
 const EQUIPO = /^\/api\/explotaciones\/([^/]+)\/miembros(?:\/([^/]+))?(?:\/([^/]+))?$/
 const ANIMALES = /^\/api\/explotaciones\/([^/]+)\/animales(?:\/([^/]+))?$/
+const BAJA = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/baja$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -275,6 +279,42 @@ export function simularApi(estado: EstadoSimulado) {
         municipio: e.municipio ?? null,
         provincia: e.provincia ?? null,
         modulos: MODULOS[e.rol],
+      })
+    }
+
+    const deBaja = ruta.match(BAJA)
+    if (deBaja) {
+      const a = estado.animales.find((x) => x.id === deBaja[1])
+      if (!a) return errorApi(404, 'animal_no_encontrado')
+      if (metodo === 'POST') {
+        if (cuerpo.tipo === 'otra' && !cuerpo.causa) {
+          return errorApi(400, 'validacion', [
+            { campo: 'causa', mensaje: 'Explica la causa de la baja' },
+          ])
+        }
+        const porTipo = {
+          muerte: 'muerto',
+          sacrificio: 'muerto',
+          robo_extravio: 'baja',
+          otra: 'baja',
+        } as const
+        Object.assign(a, {
+          estado: porTipo[cuerpo.tipo as keyof typeof porTipo],
+          tipoBaja: cuerpo.tipo,
+          fechaBaja: cuerpo.fecha,
+          causaBaja: cuerpo.causa ?? null,
+        })
+      } else {
+        if (a.tipoBaja === 'venta') return errorApi(409, 'baja_por_venta')
+        Object.assign(a, { estado: 'activo', tipoBaja: null, fechaBaja: null, causaBaja: null })
+      }
+      return json({
+        ...a,
+        madre: null,
+        padre: null,
+        hijos: [],
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-02T10:00:00.000Z',
       })
     }
 

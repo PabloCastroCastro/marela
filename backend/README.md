@@ -160,7 +160,9 @@ Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.
 - **`GET /api/explotaciones/{id}/animales`:** lista ordenada por crotal, con búsqueda (`q`, en crotal, nombre y raza) y filtros (`estado`, `sexo`).
 - **`GET /api/explotaciones/{id}/animales/{animalId}`:** la ficha, con la madre y el padre resumidos (`{ id, crotal, nombre }`).
 - **`POST /api/explotaciones/{id}/animales`:** alta. El crotal se normaliza: sin espacios y en mayúsculas.
-- **`PATCH /api/explotaciones/{id}/animales/{animalId}`:** edita los datos de la ficha (solo los campos que cambian, validando la ficha completa). El estado y la baja tienen su propio flujo (GH-18).
+- **`PATCH /api/explotaciones/{id}/animales/{animalId}`:** edita los datos de la ficha (solo los campos que cambian, validando la ficha completa). El estado y la baja tienen su propio flujo.
+- **`POST /api/explotaciones/{id}/animales/{animalId}/baja`:** `{ tipo, fecha, causa }` da de baja un animal activo: `muerte` o `sacrificio` (queda `muerto`), `robo_extravio` u `otra` (queda `baja`; `otra` exige la causa). La fecha no puede ser futura ni anterior al nacimiento o la entrada. La venta (`vendido`) la registra Finanzas (GH-38).
+- **`DELETE /api/explotaciones/{id}/animales/{animalId}/baja`:** deshace una baja registrada por error; el animal vuelve a estar activo y la baja queda en el historial. Una venta no se deshace aquí (409 `baja_por_venta`).
 - **`GET /api/explotaciones/{id}/animales/razas`:** razas para sugerir: las habituales y las que ya usa la explotación.
 
 Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
@@ -169,7 +171,7 @@ Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 - **Madre y padre:** su ficha en la explotación, o un texto libre, nunca los dos. La madre es una hembra y el padre, un macho (trigger `comprobar_progenitores`). La misma explotación la garantizan claves foráneas compuestas. Un animal con hijos no puede cambiar de sexo (409 `sexo_con_hijos`).
 - **Origen:** nacido en la explotación, o comprado con fecha de entrada y REGA de origen.
 - **Fechas:** no futuras, y la de entrada no anterior al nacimiento.
-- **Baja:** un animal activo no tiene fecha ni causa de baja, y uno vendido o muerto tiene fecha de baja.
+- **Baja:** un animal activo no tiene tipo, fecha ni causa de baja; uno de baja tiene tipo y fecha, con el estado que corresponde al tipo, y causa si el tipo es `otra`.
 
 ## Historial de cambios
 

@@ -54,7 +54,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - Padre: enlace a su ficha si es toro propio, texto libre (nombre o código) si es dosis externa
 - Origen: nacido en la explotación o comprado (con fecha de entrada y código REGA de la explotación de origen). Las compras son excepcionales (por ejemplo, un toro).
 - Estado (activo, vendido, muerto...)
-- Fecha y causa de baja (venta, muerte...)
+- Baja: tipo (venta, muerte, sacrificio en la explotación, robo o extravío, u otra causa), fecha y detalle (obligatorio si es otra causa). La muerte y el sacrificio dejan el animal como «muerto»; el robo, el extravío y otras causas, «de baja»; la venta, «vendido». Una baja registrada por error se deshace y queda en el historial; la venta se registra y se deshace desde Finanzas.
 - Fotos
 - Observaciones
 

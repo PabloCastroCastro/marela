@@ -1,4 +1,4 @@
-import { CircleCheck, CircleSlash, HandCoins } from 'lucide-react'
+import { CircleCheck, CircleHelp, CircleSlash, HandCoins } from 'lucide-react'
 import { Insignia } from '../componentes/Etiquetas'
 import { ESTADOS, type EstadoAnimal } from './datos'
 
@@ -13,7 +13,15 @@ export function InsigniaEstado({ estado }: { estado: EstadoAnimal }) {
   }
   return (
     <Insignia
-      icono={estado === 'vendido' ? <HandCoins aria-hidden /> : <CircleSlash aria-hidden />}
+      icono={
+        estado === 'vendido' ? (
+          <HandCoins aria-hidden />
+        ) : estado === 'muerto' ? (
+          <CircleSlash aria-hidden />
+        ) : (
+          <CircleHelp aria-hidden />
+        )
+      }
     >
       {ESTADOS[estado]}
     </Insignia>

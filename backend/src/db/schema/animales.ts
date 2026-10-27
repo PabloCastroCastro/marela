@@ -21,11 +21,23 @@ import { auditoria, deExplotacion, separacionPorExplotacion } from './explotacio
 
 export const SEXOS = ['hembra', 'macho'] as const
 export const ORIGENES = ['nacido', 'comprado'] as const
-export const ESTADOS_ANIMAL = ['activo', 'vendido', 'muerto'] as const
+// "baja": fuera de la explotación por otra causa que no es la venta ni la muerte (robo, extravío…)
+export const ESTADOS_ANIMAL = ['activo', 'vendido', 'muerto', 'baja'] as const
+
+// Tipo de baja y estado en que deja al animal. La venta la registra Finanzas (GH-38).
+export const TIPOS_BAJA = ['venta', 'muerte', 'sacrificio', 'robo_extravio', 'otra'] as const
+export const ESTADO_POR_BAJA = {
+  venta: 'vendido',
+  muerte: 'muerto',
+  sacrificio: 'muerto',
+  robo_extravio: 'baja',
+  otra: 'baja',
+} as const satisfies Record<(typeof TIPOS_BAJA)[number], (typeof ESTADOS_ANIMAL)[number]>
 
 export const sexoAnimal = pgEnum('sexo_animal', SEXOS)
 export const origenAnimal = pgEnum('origen_animal', ORIGENES)
 export const estadoAnimal = pgEnum('estado_animal', ESTADOS_ANIMAL)
+export const tipoBaja = pgEnum('tipo_baja', TIPOS_BAJA)
 
 // Crotal oficial: los españoles, ES y 12 dígitos; los de otros países (animales comprados fuera),
 // su código de país y hasta 12 dígitos
@@ -54,7 +66,9 @@ export const animales = pgTable(
     fechaEntrada: date('fecha_entrada', { mode: 'string' }),
     regaOrigen: text('rega_origen'),
     estado: estadoAnimal('estado').notNull().default('activo'),
+    tipoBaja: tipoBaja('tipo_baja'),
     fechaBaja: date('fecha_baja', { mode: 'string' }),
+    // Detalle de la baja; obligatorio si el tipo es "otra"
     causaBaja: text('causa_baja'),
     observaciones: text('observaciones'),
     ...auditoria(),
@@ -92,8 +106,13 @@ export const animales = pgTable(
     ),
     check(
       'animales_baja',
-      sql`(${t.estado} = 'activo' and ${t.fechaBaja} is null and ${t.causaBaja} is null)
-        or (${t.estado} <> 'activo' and ${t.fechaBaja} is not null)`,
+      // Con ::text: un valor nuevo de un enum no se puede usar en la misma transacción que lo añade
+      sql`(${t.estado}::text = 'activo' and ${t.tipoBaja} is null and ${t.fechaBaja} is null
+            and ${t.causaBaja} is null)
+        or (${t.fechaBaja} is not null and (${t.tipoBaja}::text, ${t.estado}::text) in (
+            ('venta', 'vendido'), ('muerte', 'muerto'), ('sacrificio', 'muerto'),
+            ('robo_extravio', 'baja'), ('otra', 'baja'))
+          and (${t.tipoBaja}::text <> 'otra' or btrim(coalesce(${t.causaBaja}, '')) <> ''))`,
     ),
     separacionPorExplotacion(),
   ],

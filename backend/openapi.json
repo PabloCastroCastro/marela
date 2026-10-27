@@ -480,7 +480,22 @@
             "enum": [
               "activo",
               "vendido",
-              "muerto"
+              "muerto",
+              "baja"
+            ]
+          },
+          "tipoBaja": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "venta",
+              "muerte",
+              "sacrificio",
+              "robo_extravio",
+              "otra",
+              null
             ]
           },
           "fechaBaja": {
@@ -528,6 +543,7 @@
           "fechaEntrada",
           "regaOrigen",
           "estado",
+          "tipoBaja",
           "fechaBaja",
           "causaBaja",
           "observaciones",
@@ -577,7 +593,8 @@
                       "enum": [
                         "activo",
                         "vendido",
-                        "muerto"
+                        "muerto",
+                        "baja"
                       ]
                     }
                   },
@@ -687,6 +704,35 @@
           "raza",
           "sexo",
           "fechaNacimiento"
+        ]
+      },
+      "DatosBaja": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "muerte",
+              "sacrificio",
+              "robo_extravio",
+              "otra"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "causa": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Detalle; obligatorio si el tipo es \"otra\""
+          }
+        },
+        "required": [
+          "tipo",
+          "fecha"
         ]
       },
       "CambioAnimal": {
@@ -1690,7 +1736,8 @@
               "enum": [
                 "activo",
                 "vendido",
-                "muerto"
+                "muerto",
+                "baja"
               ]
             },
             "required": false,
@@ -2016,6 +2063,194 @@
           },
           "409": {
             "description": "Crotal en uso o cambio de sexo de un animal con hijos (crotal_en_uso, sexo_con_hijos)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/baja": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Dar de baja un animal (muerte, sacrificio, robo o extravío, u otra causa)",
+        "description": "La venta se registra desde Finanzas.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosBaja"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha, con la baja",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El animal ya está de baja (ya_de_baja)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Deshacer una baja registrada por error",
+        "description": "El animal vuelve a estar activo; la baja queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La ficha, de nuevo activo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta)",
             "content": {
               "application/json": {
                 "schema": {

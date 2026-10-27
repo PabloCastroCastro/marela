@@ -380,3 +380,133 @@ describe('restricciones de la base de datos', () => {
     })
   })
 })
+
+describe('bajas', () => {
+  const darBaja = (animalId: string, datos: object, cookie = ana.cookie) =>
+    pedir('POST', `/explotaciones/${a}/animales/${animalId}/baja`, cookie, datos)
+
+  it('por muerte: sale del listado de activos y se ve con el filtro', async () => {
+    const animal = await alta(ana.cookie, a, vaca({ raza: 'Para la baja' }))
+    const res = await darBaja(
+      animal.id,
+      { tipo: 'muerte', fecha: '2026-10-20', causa: 'Neumonía' },
+      brais.cookie,
+    )
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      estado: 'muerto',
+      tipoBaja: 'muerte',
+      fechaBaja: '2026-10-20',
+      causaBaja: 'Neumonía',
+    })
+    const ids = async (consulta: string) =>
+      (
+        (await (
+          await pedir('GET', `/explotaciones/${a}/animales?${consulta}`, ana.cookie)
+        ).json()) as { id: string }[]
+      ).map((x) => x.id)
+    expect(await ids('estado=activo&q=Para la baja')).not.toContain(animal.id)
+    expect(await ids('estado=muerto&q=Para la baja')).toContain(animal.id)
+  })
+
+  it('por sacrificio queda muerto; por robo, extravío u otra causa, de baja', async () => {
+    for (const [tipo, estado, causa] of [
+      ['sacrificio', 'muerto', undefined],
+      ['robo_extravio', 'baja', undefined],
+      ['otra', 'baja', 'Cedida a una escuela agraria'],
+    ] as const) {
+      const animal = await alta(ana.cookie, a, vaca())
+      const res = await darBaja(animal.id, { tipo, fecha: '2026-10-01', causa })
+      expect(await res.json()).toMatchObject({ estado, tipoBaja: tipo })
+    }
+  })
+
+  it('valida la causa, las fechas y que no esté ya de baja', async () => {
+    const animal = await alta(ana.cookie, a, vaca({ fechaNacimiento: '2024-05-01' }))
+    expect(await campos(await darBaja(animal.id, { tipo: 'otra', fecha: '2026-10-01' }))).toContain(
+      'causa',
+    )
+    expect(
+      await campos(await darBaja(animal.id, { tipo: 'muerte', fecha: '2999-01-01' })),
+    ).toContain('fecha')
+    expect(
+      await campos(await darBaja(animal.id, { tipo: 'muerte', fecha: '2024-04-01' })),
+    ).toContain('fecha')
+    expect(
+      await campos(await darBaja(animal.id, { tipo: 'venta', fecha: '2026-10-01' })),
+    ).toContain('tipo')
+
+    await darBaja(animal.id, { tipo: 'muerte', fecha: '2026-10-01' })
+    const otraVez = await darBaja(animal.id, { tipo: 'muerte', fecha: '2026-10-02' })
+    expect(otraVez.status).toBe(409)
+    expect(await codigo(otraVez)).toBe('ya_de_baja')
+  })
+
+  it('se deshace una baja registrada por error, y queda en el historial', async () => {
+    const animal = await alta(ana.cookie, a, vaca())
+    await darBaja(animal.id, { tipo: 'robo_extravio', fecha: '2026-10-01' })
+    const res = await pedir(
+      'DELETE',
+      `/explotaciones/${a}/animales/${animal.id}/baja`,
+      brais.cookie,
+    )
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      estado: 'activo',
+      tipoBaja: null,
+      fechaBaja: null,
+      causaBaja: null,
+    })
+
+    const historial = await enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+      tx
+        .select()
+        .from(historialCambios)
+        .where(eq(historialCambios.filaId, animal.id))
+        .orderBy(historialCambios.fecha),
+    )
+    expect(historial.map((h) => [h.operacion, (h.despues as { estado: string }).estado])).toEqual([
+      ['alta', 'activo'],
+      ['cambio', 'baja'],
+      ['cambio', 'activo'],
+    ])
+
+    const activo = await pedir(
+      'DELETE',
+      `/explotaciones/${a}/animales/${animal.id}/baja`,
+      ana.cookie,
+    )
+    expect(await codigo(activo)).toBe('no_de_baja')
+  })
+
+  it('una venta no se deshace desde la ficha', async () => {
+    const animal = await alta(ana.cookie, a, vaca())
+    await enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+      tx
+        .update(animales)
+        .set({ estado: 'vendido', tipoBaja: 'venta', fechaBaja: '2026-10-01' })
+        .where(eq(animales.id, animal.id)),
+    )
+    const res = await pedir('DELETE', `/explotaciones/${a}/animales/${animal.id}/baja`, ana.cookie)
+    expect(res.status).toBe(409)
+    expect(await codigo(res)).toBe('baja_por_venta')
+  })
+
+  it('la base de datos exige un estado coherente con el tipo, y la causa si es otra', async () => {
+    const animal = await alta(ana.cookie, a, vaca())
+    const cambiar = (valores: Partial<typeof animales.$inferInsert>) =>
+      enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+        tx.update(animales).set(valores).where(eq(animales.id, animal.id)),
+      )
+    await expect(
+      cambiar({ estado: 'baja', tipoBaja: 'muerte', fechaBaja: '2026-10-01' }),
+    ).rejects.toMatchObject({
+      cause: { constraint: 'animales_baja' },
+    })
+    await expect(
+      cambiar({ estado: 'baja', tipoBaja: 'otra', fechaBaja: '2026-10-01' }),
+    ).rejects.toMatchObject({
+      cause: { constraint: 'animales_baja' },
+    })
+  })
+})

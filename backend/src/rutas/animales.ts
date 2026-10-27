@@ -3,12 +3,15 @@ import {
   CambioAnimal,
   crearAnimal,
   DatosAnimal,
+  DatosBaja,
+  darDeBaja,
+  deshacerBaja,
   editarAnimal,
   listarAnimales,
   razas,
   verAnimal,
 } from '../animales.js'
-import { ESTADOS_ANIMAL, ORIGENES, SEXOS } from '../db/schema/index.js'
+import { ESTADOS_ANIMAL, ORIGENES, SEXOS, TIPOS_BAJA } from '../db/schema/index.js'
 import { EsquemaError, validacionFallida } from '../errores.js'
 import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
 
@@ -36,6 +39,7 @@ const Animal = z
     fechaEntrada: z.iso.date().nullable(),
     regaOrigen: z.string().nullable(),
     estado: z.enum(ESTADOS_ANIMAL),
+    tipoBaja: z.enum(TIPOS_BAJA).nullable(),
     fechaBaja: z.iso.date().nullable(),
     causaBaja: z.string().nullable(),
     observaciones: z.string().nullable(),
@@ -164,6 +168,44 @@ const editar = createRoute({
   },
 })
 
+const baja = createRoute({
+  method: 'post',
+  path: '/explotaciones/{explotacionId}/animales/{animalId}/baja',
+  tags: ['Animales'],
+  summary: 'Dar de baja un animal (muerte, sacrificio, robo o extravío, u otra causa)',
+  description: 'La venta se registra desde Finanzas.',
+  security: [{ sesion: [] }],
+  middleware: [permitir('animales')] as const,
+  request: {
+    params: ParametrosAnimal,
+    body: { content: { 'application/json': { schema: DatosBaja } }, required: true },
+  },
+  responses: {
+    200: json(AnimalDetalle, 'La ficha, con la baja'),
+    400: error('Datos no válidos (validacion)'),
+    ...comunes,
+    409: error('El animal ya está de baja (ya_de_baja)'),
+  },
+})
+
+const deshacer = createRoute({
+  method: 'delete',
+  path: '/explotaciones/{explotacionId}/animales/{animalId}/baja',
+  tags: ['Animales'],
+  summary: 'Deshacer una baja registrada por error',
+  description: 'El animal vuelve a estar activo; la baja queda en el historial de cambios.',
+  security: [{ sesion: [] }],
+  middleware: [permitir('animales')] as const,
+  request: { params: ParametrosAnimal },
+  responses: {
+    200: json(AnimalDetalle, 'La ficha, de nuevo activo'),
+    ...comunes,
+    409: error(
+      'No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta)',
+    ),
+  },
+})
+
 export const rutasAnimales = () =>
   new OpenAPIHono<EnvExplotacion>({ defaultHook: validacionFallida })
     // Antes que /{animalId}, para que "razas" no se tome por un identificador
@@ -178,6 +220,15 @@ export const rutasAnimales = () =>
     .openapi(crear, async (c) =>
       c.json(await enLaExplotacion(c, (tx) => crearAnimal(tx, c.req.valid('json'))), 201),
     )
+    .openapi(baja, async (c) => {
+      const { animalId } = c.req.valid('param')
+      const datos = c.req.valid('json')
+      return c.json(await enLaExplotacion(c, (tx) => darDeBaja(tx, animalId, datos)), 200)
+    })
+    .openapi(deshacer, async (c) => {
+      const { animalId } = c.req.valid('param')
+      return c.json(await enLaExplotacion(c, (tx) => deshacerBaja(tx, animalId)), 200)
+    })
     .openapi(editar, async (c) => {
       const { animalId } = c.req.valid('param')
       const cambios = c.req.valid('json')

@@ -15,6 +15,12 @@ export function fecha(valor: string | Date) {
   return formatoFecha.format(d)
 }
 
+// Fecha de hoy en formato aaaa-mm-dd, en la hora local (la de los campos de fecha)
+export function hoy() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 // Coma decimal y punto de miles (también en los números de 4 cifras: 1.234)
 export const numero = (n: number, decimales = 0) =>
   new Intl.NumberFormat('es-ES', {
