@@ -1,0 +1,364 @@
+import { randomInt } from 'node:crypto'
+import { eq } from 'drizzle-orm'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { crearApp } from '../src/app.js'
+import { pool } from '../src/db/cliente.js'
+import { enExplotacion } from '../src/db/explotacion.js'
+import { animales, historialCambios } from '../src/db/schema/index.js'
+import {
+  hacerMiembro,
+  iniciarSesion,
+  nuevaExplotacion,
+  nuevoUsuario,
+  ORIGEN,
+} from './utilidades.js'
+
+const app = crearApp()
+
+const pedir = (metodo: string, ruta: string, cookie: string, cuerpo?: object) =>
+  Promise.resolve(
+    app.request(`/api${ruta}`, {
+      method: metodo,
+      headers: {
+        cookie,
+        origin: ORIGEN,
+        ...(cuerpo ? { 'content-type': 'application/json' } : {}),
+      },
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+    }),
+  )
+
+const codigo = async (res: Response) =>
+  ((await res.json()) as { error: { codigo: string } }).error.codigo
+
+const campos = async (res: Response) =>
+  ((await res.json()) as { error: { detalles?: { campo: string }[] } }).error.detalles?.map(
+    (d) => d.campo,
+  ) ?? []
+
+// Crotal español único: la base de test se reutiliza entre ejecuciones
+const crotal = () =>
+  `ES${String(randomInt(1e6)).padStart(6, '0')}${String(randomInt(1e6)).padStart(6, '0')}`
+
+const vaca = (cambios: object = {}) => ({
+  crotal: crotal(),
+  nombre: 'Marela',
+  raza: 'Rubia Gallega',
+  sexo: 'hembra',
+  fechaNacimiento: '2019-03-14',
+  ...cambios,
+})
+
+let a = ''
+let b = ''
+let ana = { id: '', cookie: '' }
+let brais = { id: '', cookie: '' }
+let carla = { id: '', cookie: '' }
+
+const alta = async (cookie: string, explotacion: string, datos: object) => {
+  const res = await pedir('POST', `/explotaciones/${explotacion}/animales`, cookie, datos)
+  if (res.status !== 201) throw new Error(`Alta fallida (${res.status}): ${await res.text()}`)
+  return (await res.json()) as { id: string; crotal: string }
+}
+
+beforeAll(async () => {
+  a = (await nuevaExplotacion('A de animales')).id
+  b = (await nuevaExplotacion('B de animales')).id
+  for (const [persona, explotacion, rol] of [
+    ['ana', a, 'administrador'],
+    ['brais', a, 'empleado'],
+    ['carla', b, 'administrador'],
+  ] as const) {
+    const u = await nuevoUsuario()
+    await hacerMiembro(explotacion, u.id, rol)
+    const datos = { id: u.id, cookie: await iniciarSesion(app, u) }
+    if (persona === 'ana') ana = datos
+    if (persona === 'brais') brais = datos
+    if (persona === 'carla') carla = datos
+  }
+})
+
+afterAll(async () => {
+  await pool.end()
+})
+
+describe('alta y consulta', () => {
+  it('da de alta un animal con el crotal normalizado y la auditoría', async () => {
+    const c = crotal()
+    const res = await pedir('POST', `/explotaciones/${a}/animales`, brais.cookie, {
+      ...vaca(),
+      crotal: ` ${c.slice(0, 2).toLowerCase()} ${c.slice(2, 8)} ${c.slice(8)} `,
+      nombre: '  ',
+    })
+    expect(res.status).toBe(201)
+    const animal = await res.json()
+    expect(animal).toMatchObject({
+      crotal: c,
+      nombre: null,
+      raza: 'Rubia Gallega',
+      sexo: 'hembra',
+      origen: 'nacido',
+      estado: 'activo',
+      madre: null,
+      padre: null,
+    })
+    const [fila] = await enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+      tx.select().from(animales).where(eq(animales.id, animal.id)),
+    )
+    expect(fila?.creadoPor).toBe(brais.id)
+  })
+
+  it('lista con búsqueda y filtros, solo los de la explotación', async () => {
+    const marca = `Raza${randomInt(1e6)}`
+    await alta(ana.cookie, a, vaca({ raza: marca, nombre: 'Bonita' }))
+    await alta(ana.cookie, a, vaca({ raza: marca, nombre: 'Moreno', sexo: 'macho' }))
+    await alta(carla.cookie, b, vaca({ raza: marca, nombre: 'De B' }))
+
+    const lista = async (consulta: string) =>
+      (await (
+        await pedir('GET', `/explotaciones/${a}/animales?${consulta}`, ana.cookie)
+      ).json()) as {
+        nombre: string
+      }[]
+    expect((await lista(`q=${marca}`)).map((x) => x.nombre).sort()).toEqual(['Bonita', 'Moreno'])
+    expect((await lista(`q=${marca}&sexo=macho`)).map((x) => x.nombre)).toEqual(['Moreno'])
+    expect((await lista(`q=bonit`)).map((x) => x.nombre)).toContain('Bonita')
+    expect(await lista(`q=${marca}&estado=vendido`)).toEqual([])
+  })
+
+  it('no ve ni edita animales de otra explotación', async () => {
+    const deB = await alta(carla.cookie, b, vaca())
+    expect((await pedir('GET', `/explotaciones/${a}/animales/${deB.id}`, ana.cookie)).status).toBe(
+      404,
+    )
+    expect(
+      (await pedir('PATCH', `/explotaciones/${a}/animales/${deB.id}`, ana.cookie, { nombre: 'X' }))
+        .status,
+    ).toBe(404)
+  })
+
+  it('valida el crotal y no lo repite en toda la plataforma', async () => {
+    const malo = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({ crotal: 'ES123' }),
+    )
+    expect(malo.status).toBe(400)
+    expect(await campos(malo)).toContain('crotal')
+
+    const enB = await alta(carla.cookie, b, vaca())
+    const repetido = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({ crotal: enB.crotal }),
+    )
+    expect(repetido.status).toBe(409)
+    expect(await codigo(repetido)).toBe('crotal_en_uso')
+
+    // De otro país: su código y hasta 12 dígitos
+    expect(
+      (
+        await pedir(
+          'POST',
+          `/explotaciones/${a}/animales`,
+          ana.cookie,
+          vaca({ crotal: `FR${randomInt(1e9)}` }),
+        )
+      ).status,
+    ).toBe(201)
+  })
+
+  it('valida fechas y origen', async () => {
+    const futura = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({ fechaNacimiento: '2999-01-01' }),
+    )
+    expect(await campos(futura)).toContain('fechaNacimiento')
+
+    const sinDatos = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({ origen: 'comprado' }),
+    )
+    expect(sinDatos.status).toBe(400)
+    expect(await campos(sinDatos)).toEqual(expect.arrayContaining(['fechaEntrada', 'regaOrigen']))
+
+    const comprado = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({
+        sexo: 'macho',
+        origen: 'comprado',
+        fechaEntrada: '2024-05-02',
+        regaOrigen: 'es270280000099',
+      }),
+    )
+    expect(comprado.status).toBe(201)
+    expect(await comprado.json()).toMatchObject({
+      origen: 'comprado',
+      regaOrigen: 'ES270280000099',
+    })
+  })
+})
+
+describe('madre y padre', () => {
+  it('enlaza madre hembra y padre macho de la explotación, o un texto', async () => {
+    const madre = await alta(ana.cookie, a, vaca({ nombre: 'Madre' }))
+    const toro = await alta(ana.cookie, a, vaca({ nombre: 'Toro', sexo: 'macho' }))
+    const res = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({
+        nombre: 'Ternera',
+        fechaNacimiento: '2026-02-11',
+        madreId: madre.id,
+        padreId: toro.id,
+      }),
+    )
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({
+      madre: { id: madre.id, crotal: madre.crotal, nombre: 'Madre' },
+      padre: { id: toro.id, nombre: 'Toro' },
+    })
+
+    const conTexto = await pedir(
+      'POST',
+      `/explotaciones/${a}/animales`,
+      ana.cookie,
+      vaca({
+        madreTexto: 'Vaca comprada sin ficha',
+        padreTexto: 'Dosis LIM-2041',
+      }),
+    )
+    expect(await conTexto.json()).toMatchObject({
+      madreTexto: 'Vaca comprada sin ficha',
+      padre: null,
+      padreTexto: 'Dosis LIM-2041',
+    })
+  })
+
+  it('rechaza madre macho, padre hembra, progenitores de otra explotación y enlace más texto', async () => {
+    const toro = await alta(ana.cookie, a, vaca({ sexo: 'macho' }))
+    const vacaA = await alta(ana.cookie, a, vaca())
+    const vacaB = await alta(carla.cookie, b, vaca())
+
+    for (const [datos, campo] of [
+      [{ madreId: toro.id }, 'madreId'],
+      [{ padreId: vacaA.id }, 'padreId'],
+      [{ madreId: vacaB.id }, 'madreId'],
+      [{ madreId: vacaA.id, madreTexto: 'Otra' }, 'madreTexto'],
+    ] as const) {
+      const res = await pedir('POST', `/explotaciones/${a}/animales`, ana.cookie, vaca(datos))
+      expect(res.status).toBe(400)
+      expect(await campos(res)).toContain(campo)
+    }
+  })
+})
+
+describe('edición e historial', () => {
+  it('edita la ficha y deja cada cambio en el historial, con quién y cuándo', async () => {
+    const animal = await alta(ana.cookie, a, vaca({ nombre: 'Antes' }))
+    const res = await pedir('PATCH', `/explotaciones/${a}/animales/${animal.id}`, brais.cookie, {
+      nombre: 'Después',
+      observaciones: 'Cojea de la pata trasera',
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({
+      nombre: 'Después',
+      observaciones: 'Cojea de la pata trasera',
+      crotal: animal.crotal,
+    })
+
+    const historial = await enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+      tx
+        .select()
+        .from(historialCambios)
+        .where(eq(historialCambios.filaId, animal.id))
+        .orderBy(historialCambios.fecha),
+    )
+    expect(historial.map((h) => [h.operacion, h.usuarioId])).toEqual([
+      ['alta', ana.id],
+      ['cambio', brais.id],
+    ])
+    expect(historial[1]?.antes).toMatchObject({ nombre: 'Antes' })
+    expect(historial[1]?.despues).toMatchObject({ nombre: 'Después', modificado_por: brais.id })
+  })
+
+  it('no deja cambiar el sexo de un animal con hijos', async () => {
+    const madre = await alta(ana.cookie, a, vaca())
+    await alta(ana.cookie, a, vaca({ fechaNacimiento: '2026-01-01', madreId: madre.id }))
+    const res = await pedir('PATCH', `/explotaciones/${a}/animales/${madre.id}`, ana.cookie, {
+      sexo: 'macho',
+    })
+    expect(res.status).toBe(409)
+    expect(await codigo(res)).toBe('sexo_con_hijos')
+  })
+
+  it('valida la ficha completa al editar', async () => {
+    const animal = await alta(ana.cookie, a, vaca())
+    const res = await pedir('PATCH', `/explotaciones/${a}/animales/${animal.id}`, ana.cookie, {
+      origen: 'comprado',
+    })
+    expect(res.status).toBe(400)
+    expect(await campos(res)).toContain('fechaEntrada')
+  })
+})
+
+describe('razas', () => {
+  it('sugiere las habituales y las que ya usa la explotación', async () => {
+    await alta(ana.cookie, a, vaca({ raza: 'Vianesa' }))
+    const lista = await (
+      await pedir('GET', `/explotaciones/${a}/animales/razas`, ana.cookie)
+    ).json()
+    expect(lista).toEqual(expect.arrayContaining(['Rubia Gallega', 'Limusina', 'Vianesa']))
+  })
+})
+
+describe('restricciones de la base de datos', () => {
+  const insertar = (valores: Partial<typeof animales.$inferInsert>) =>
+    enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+      tx.insert(animales).values({
+        crotal: crotal(),
+        raza: 'Rubia Gallega',
+        sexo: 'hembra',
+        fechaNacimiento: '2020-01-01',
+        ...valores,
+      }),
+    )
+
+  it('formato del crotal, origen y baja', async () => {
+    await expect(insertar({ crotal: 'ES123' })).rejects.toMatchObject({ cause: { code: '23514' } })
+    await expect(insertar({ crotal: 'ES12345678' })).rejects.toMatchObject({
+      cause: { code: '23514' },
+    })
+    await expect(insertar({ origen: 'comprado' })).rejects.toMatchObject({
+      cause: { constraint: 'animales_origen' },
+    })
+    await expect(insertar({ estado: 'vendido' })).rejects.toMatchObject({
+      cause: { constraint: 'animales_baja' },
+    })
+  })
+
+  it('madre de otra explotación, y madre macho o padre hembra', async () => {
+    const vacaB = await alta(carla.cookie, b, vaca())
+    await expect(insertar({ madreId: vacaB.id })).rejects.toMatchObject({
+      cause: { code: '23503' },
+    })
+
+    const toro = await alta(ana.cookie, a, vaca({ sexo: 'macho' }))
+    const vacaA = await alta(ana.cookie, a, vaca())
+    await expect(insertar({ madreId: toro.id })).rejects.toMatchObject({
+      cause: { constraint: 'animales_madre_hembra' },
+    })
+    await expect(insertar({ padreId: vacaA.id })).rejects.toMatchObject({
+      cause: { constraint: 'animales_padre_macho' },
+    })
+  })
+})

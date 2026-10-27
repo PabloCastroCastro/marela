@@ -564,6 +564,353 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/animales/razas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Razas para sugerir: las habituales y las que ya se usan en la explotación */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description En orden alfabético */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Animales de la explotación, con búsqueda y filtros */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Busca en el crotal, el nombre y la raza */
+                    q?: string;
+                    estado?: "activo" | "vendido" | "muerto";
+                    sexo?: "hembra" | "macho";
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenados por crotal */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Animal"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Dar de alta un animal */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAnimal"];
+                };
+            };
+            responses: {
+                /** @description Creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Animal"];
+                    };
+                };
+                /** @description Datos no válidos, madre o padre que no corresponden (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya hay un animal con este crotal en la plataforma (crotal_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ficha de un animal */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La ficha */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Animal"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Editar la ficha de un animal
+         * @description Solo los campos que cambian. El estado y la baja tienen su propio flujo.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CambioAnimal"];
+                };
+            };
+            responses: {
+                /** @description La ficha actualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Animal"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Crotal en uso o cambio de sexo de un animal con hijos (crotal_en_uso, sexo_con_hijos) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -951,6 +1298,104 @@ export interface components {
             /** @enum {string} */
             rol?: "administrador" | "empleado";
             activo?: boolean;
+        };
+        Animal: {
+            /** Format: uuid */
+            id: string;
+            crotal: string;
+            nombre: string | null;
+            raza: string;
+            /** @enum {string} */
+            sexo: "hembra" | "macho";
+            /** Format: date */
+            fechaNacimiento: string;
+            /** Format: uuid */
+            madreId: string | null;
+            madreTexto: string | null;
+            madre: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            } | null;
+            /** Format: uuid */
+            padreId: string | null;
+            padreTexto: string | null;
+            padre: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            } | null;
+            /** @enum {string} */
+            origen: "nacido" | "comprado";
+            /** Format: date */
+            fechaEntrada: string | null;
+            regaOrigen: string | null;
+            /** @enum {string} */
+            estado: "activo" | "vendido" | "muerto";
+            /** Format: date */
+            fechaBaja: string | null;
+            causaBaja: string | null;
+            observaciones: string | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosAnimal: {
+            /** @example ES041503456789 */
+            crotal: string;
+            /** @example Marela */
+            nombre?: string | null;
+            /** @example Rubia Gallega */
+            raza: string;
+            /** @enum {string} */
+            sexo: "hembra" | "macho";
+            /** Format: date */
+            fechaNacimiento: string;
+            /** Format: uuid */
+            madreId?: string | null;
+            madreTexto?: string | null;
+            /** Format: uuid */
+            padreId?: string | null;
+            padreTexto?: string | null;
+            /**
+             * @default nacido
+             * @enum {string}
+             */
+            origen: "nacido" | "comprado";
+            /** Format: date */
+            fechaEntrada?: string | null;
+            regaOrigen?: string | null;
+            observaciones?: string | null;
+        };
+        CambioAnimal: {
+            /** @example ES041503456789 */
+            crotal?: string;
+            /** @example Marela */
+            nombre?: string | null;
+            /** @example Rubia Gallega */
+            raza?: string;
+            /** @enum {string} */
+            sexo?: "hembra" | "macho";
+            /** Format: date */
+            fechaNacimiento?: string;
+            /** Format: uuid */
+            madreId?: string | null;
+            madreTexto?: string | null;
+            /** Format: uuid */
+            padreId?: string | null;
+            padreTexto?: string | null;
+            /**
+             * @default nacido
+             * @enum {string}
+             */
+            origen: "nacido" | "comprado";
+            /** Format: date */
+            fechaEntrada?: string | null;
+            regaOrigen?: string | null;
+            observaciones?: string | null;
         };
         ExplotacionPlataforma: {
             /** Format: uuid */

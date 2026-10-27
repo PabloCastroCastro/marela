@@ -347,6 +347,370 @@
           }
         }
       },
+      "Animal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "crotal": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "raza": {
+            "type": "string"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "madreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "madre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "padre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ]
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activo",
+              "vendido",
+              "muerto"
+            ]
+          },
+          "fechaBaja": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "causaBaja": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "crotal",
+          "nombre",
+          "raza",
+          "sexo",
+          "fechaNacimiento",
+          "madreId",
+          "madreTexto",
+          "madre",
+          "padreId",
+          "padreTexto",
+          "padre",
+          "origen",
+          "fechaEntrada",
+          "regaOrigen",
+          "estado",
+          "fechaBaja",
+          "causaBaja",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosAnimal": {
+        "type": "object",
+        "properties": {
+          "crotal": {
+            "type": "string",
+            "example": "ES041503456789"
+          },
+          "nombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Marela"
+          },
+          "raza": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Rubia Gallega"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "madreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ],
+            "default": "nacido"
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "crotal",
+          "raza",
+          "sexo",
+          "fechaNacimiento"
+        ]
+      },
+      "CambioAnimal": {
+        "type": "object",
+        "properties": {
+          "crotal": {
+            "type": "string",
+            "example": "ES041503456789"
+          },
+          "nombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Marela"
+          },
+          "raza": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Rubia Gallega"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "madreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ],
+            "default": "nacido"
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "ExplotacionPlataforma": {
         "type": "object",
         "properties": {
@@ -1147,6 +1511,448 @@
           },
           "409": {
             "description": "Tiene acceso a otras explotaciones o es uno mismo (otras_explotaciones, es_usted)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/razas": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Razas para sugerir: las habituales y las que ya se usan en la explotación",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "En orden alfabético",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Animales de la explotación, con búsqueda y filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Busca en el crotal, el nombre y la raza",
+              "example": "Rubia"
+            },
+            "required": false,
+            "description": "Busca en el crotal, el nombre y la raza",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "activo",
+                "vendido",
+                "muerto"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hembra",
+                "macho"
+              ]
+            },
+            "required": false,
+            "name": "sexo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados por crotal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Animal"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Dar de alta un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnimal"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Animal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, madre o padre que no corresponden (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un animal con este crotal en la plataforma (crotal_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Ficha de un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La ficha",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Animal"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Editar la ficha de un animal",
+        "description": "Solo los campos que cambian. El estado y la baja tienen su propio flujo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioAnimal"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Animal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Crotal en uso o cambio de sexo de un animal con hijos (crotal_en_uso, sexo_con_hijos)",
             "content": {
               "application/json": {
                 "schema": {
