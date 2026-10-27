@@ -7,7 +7,7 @@ Plan de trabajo de Marela: ciclos, etiquetas, milestones e issues. Las decisione
 | Ciclo | Objetivo | Versión |
 |---|---|---|
 | 1 · Base, usuarios y explotaciones | Tres proyectos funcionando, CI, inicio de sesión, explotaciones, usuarios y roles, componentes base y entorno de pruebas en el servidor | v0.1.0 |
-| 2 · Animales: fichas | Ficha del animal, altas, importación, fotos, bajas y traslados | v0.2.0 |
+| 2 · Animales: fichas | Ficha del animal, altas y bajas | v0.2.0 |
 | 3 · Animales: sanidad y reproducción | Tratamientos con periodo de supresión, pesos, eventos reproductivos y partos | v0.3.0 |
 | 4 · Fincas | Ficha de la finca, labores, abono y fitosanitarios, y pastoreo | v0.4.0 |
 | 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock | v0.5.0 |
@@ -37,7 +37,7 @@ Plan de trabajo de Marela: ciclos, etiquetas, milestones e issues. Las decisione
 | Título | Descripción |
 |---|---|
 | Ciclo 1 · Base, usuarios y explotaciones | Tres proyectos funcionando, CI, inicio de sesión, explotaciones, usuarios y roles, componentes base y entorno de pruebas en el servidor (v0.1.0) |
-| Ciclo 2 · Animales: fichas | Ficha del animal, altas, importación, fotos, bajas y traslados (v0.2.0) |
+| Ciclo 2 · Animales: fichas | Ficha del animal, altas y bajas (v0.2.0) |
 | Ciclo 3 · Animales: sanidad y reproducción | Tratamientos con periodo de supresión, pesos, eventos reproductivos y partos (v0.3.0) |
 | Ciclo 4 · Fincas | Ficha de la finca, labores, abono y fitosanitarios, y pastoreo (v0.4.0) |
 | Ciclo 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock (v0.5.0) |
@@ -281,32 +281,6 @@ Depende de #9, #10 y #14.
 - [ ] Alta y edición en hoja inferior o diálogo, con errores por campo
 - [ ] Estado vacío que invita a dar de alta el primer animal
 
-#### GH-16
-**Título:** Fotos de los animales
-**Etiquetas:** feature, backend, frontend
-
-Depende de #14 y #15.
-
-**Criterios de aceptación**
-- [ ] Subida de fotos desde la cámara o la galería del móvil, en el volumen `uploads`, separadas por explotación y con nombres generados
-- [ ] Las fotos se reducen y convierten a un formato ligero al subirlas
-- [ ] Galería en la ficha, con foto principal; borrar con confirmación
-- [ ] Solo se sirven a miembros de la explotación
-- [ ] Límite de tamaño coherente con `MAX_SUBIDA` del proxy
-
-#### GH-17
-**Título:** Importación de animales desde Excel o CSV
-**Etiquetas:** feature, backend, frontend
-
-Depende de #14 y #15.
-
-**Criterios de aceptación**
-- [ ] Plantilla descargable con las columnas admitidas
-- [ ] Subida de un `.xlsx` o `.csv` con vista previa antes de importar
-- [ ] Errores por fila (crotal repetido, fecha no válida, madre inexistente…) sin importar nada si hay errores
-- [ ] Madres y padres resueltos por crotal, también entre animales del mismo archivo
-- [ ] Importación en una sola transacción
-
 #### GH-18
 **Título:** Bajas de animales
 **Etiquetas:** feature, backend, frontend
@@ -318,18 +292,6 @@ Depende de #14 y #15.
 - [ ] Los animales de baja no aparecen en el listado por defecto, pero se pueden consultar con un filtro
 - [ ] Deshacer una baja registrada por error
 - [ ] Las bajas por venta se registran desde Finanzas (#38)
-
-#### GH-19
-**Título:** Traslados entre explotaciones
-**Etiquetas:** feature, backend, frontend
-
-Movimiento de un animal entre explotaciones del mismo usuario. Depende de #14.
-
-**Criterios de aceptación**
-- [ ] Solo un usuario que es administrador en las dos explotaciones puede trasladar
-- [ ] El animal conserva su historial (tratamientos, pesos, reproducción) en la explotación de destino
-- [ ] Queda registrado el traslado: fecha, origen y destino
-- [ ] Tests de que la explotación de origen deja de ver al animal y la de destino lo ve
 
 ---
 
@@ -751,3 +713,41 @@ Estudiar qué exige la normativa del cuaderno digital y cómo exportar los datos
 **Etiquetas:** feature, backend, frontend
 
 Campo de retención de IRPF en las facturas emitidas (1 % por defecto), descontado del total a cobrar.
+
+#### GH-16
+**Título:** Fotos de los animales
+**Etiquetas:** feature, backend, frontend
+
+Depende de #14 y #15.
+
+**Criterios de aceptación**
+- [ ] Subida de fotos desde la cámara o la galería del móvil, en el volumen `uploads`, separadas por explotación y con nombres generados
+- [ ] Las fotos se reducen y convierten a un formato ligero al subirlas
+- [ ] Galería en la ficha, con foto principal; borrar con confirmación
+- [ ] Solo se sirven a miembros de la explotación
+- [ ] Límite de tamaño coherente con `MAX_SUBIDA` del proxy
+
+#### GH-17
+**Título:** Importación de animales desde Excel o CSV
+**Etiquetas:** feature, backend, frontend
+
+Depende de #14 y #15.
+
+**Criterios de aceptación**
+- [ ] Plantilla descargable con las columnas admitidas
+- [ ] Subida de un `.xlsx` o `.csv` con vista previa antes de importar
+- [ ] Errores por fila (crotal repetido, fecha no válida, madre inexistente…) sin importar nada si hay errores
+- [ ] Madres y padres resueltos por crotal, también entre animales del mismo archivo
+- [ ] Importación en una sola transacción
+
+#### GH-19
+**Título:** Traslados entre explotaciones
+**Etiquetas:** feature, backend, frontend
+
+Movimiento de un animal entre explotaciones del mismo usuario. Depende de #14.
+
+**Criterios de aceptación**
+- [ ] Solo un usuario que es administrador en las dos explotaciones puede trasladar
+- [ ] El animal conserva su historial (tratamientos, pesos, reproducción) en la explotación de destino
+- [ ] Queda registrado el traslado: fecha, origen y destino
+- [ ] Tests de que la explotación de origen deja de ver al animal y la de destino lo ve
