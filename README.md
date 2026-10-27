@@ -17,6 +17,8 @@ Todas las decisiones funcionales, técnicas y de organización están en el [doc
 - Arquitectura, alojamiento e interfaz
 - Flujo de trabajo: ramas, commits, versiones y definición de terminado
 
+La instalación en el servidor, los despliegues y las copias de seguridad están en [docs/servidor.md](docs/servidor.md).
+
 El plan de ciclos y el backlog de issues están en [docs/backlog.md](docs/backlog.md); el avance de cada ciclo se sigue en los [milestones](https://github.com/PabloCastroCastro/marela/milestones).
 
 ## Arquitectura
@@ -49,7 +51,8 @@ docker-compose.dev.yml       desarrollo local
 docker-compose.yml           servidor (pruebas y producción) y versión de servidor en local
 docker-compose.servidor.yml  solo en el servidor: certificado HTTPS de Tailscale
 .env.example                 configuración de Compose
-docs/                        documento de diseño
+scripts/                     despliegue y copias de seguridad en el servidor
+docs/                        documento de diseño, backlog y guía del servidor
 ```
 
 Cada proyecto es independiente: tiene sus propias dependencias, su Dockerfile y su README, y no importa código de los demás.
