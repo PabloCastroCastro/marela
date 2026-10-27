@@ -173,6 +173,17 @@ Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 - **Fechas:** no futuras, y la de entrada no anterior al nacimiento.
 - **Baja:** un animal activo no tiene tipo, fecha ni causa de baja; uno de baja tiene tipo y fecha, con el estado que corresponde al tipo, y causa si el tipo es `otra`.
 
+### Pesos
+
+Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/pesos`:** las pesadas, de la más antigua a la más reciente. La ganancia entre pesadas la calcula el frontend.
+- **`POST /api/explotaciones/{id}/animales/{animalId}/pesos`:** `{ fecha, kg, momento }` registra una pesada. `momento` es `nacimiento`, `destete`, `venta` u `otro` (por defecto); los tres primeros, como mucho una vez por animal (409 `momento_repetido`).
+- **`PUT /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** corrige una pesada.
+- **`DELETE /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** borra una pesada registrada por error y la devuelve, para poder deshacerlo. Queda en el historial.
+
+Reglas: kilos mayores que 0 y hasta 2.000, con un decimal, y fecha no futura, entre el nacimiento y la baja del animal (trigger `comprobar_fecha_pesada`, migración `0009`).
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.
@@ -216,7 +227,8 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/api.test.ts`: salud, documentación y rutas inexistentes (con la base de datos sustituida).
 - `test/config.test.ts`: validación de la configuración.
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
-- `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas y restricciones de la base de datos.
+- `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
+- `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
 - `test/miembros.test.ts`: altas nuevas y existentes, roles, desactivación con y sin otras explotaciones, último administrador y restablecimiento de contraseñas (también por el propietario).
 - `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
 - `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
@@ -271,7 +283,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre). Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

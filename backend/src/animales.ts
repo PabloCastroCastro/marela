@@ -284,7 +284,6 @@ export async function editarAnimal(tx: Transaccion, animalId: string, cambios: o
   return verAnimal(tx, animalId)
 }
 
-// Razas para sugerir: las habituales y las que ya se usan en la explotación
 // Bajas que se registran desde la ficha. La venta llega desde Finanzas (GH-38).
 export const TIPOS_BAJA_FICHA = ['muerte', 'sacrificio', 'robo_extravio', 'otra'] as const
 
@@ -343,6 +342,7 @@ export async function deshacerBaja(tx: Transaccion, animalId: string) {
   return verAnimal(tx, animalId)
 }
 
+// Razas para sugerir: las habituales y las que ya se usan en la explotación
 export async function razas(tx: Transaccion) {
   const usadas = await tx.selectDistinct({ raza: animales.raza }).from(animales)
   return [...new Set([...RAZAS_HABITUALES, ...usadas.map((r) => r.raza)])].sort((a, b) =>

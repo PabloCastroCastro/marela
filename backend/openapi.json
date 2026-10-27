@@ -820,6 +820,81 @@
           }
         }
       },
+      "Pesada": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "kg": {
+            "type": "number"
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "nacimiento",
+              "destete",
+              "venta",
+              "otro"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "animalId",
+          "fecha",
+          "kg",
+          "momento",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosPesada": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "kg": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 2000,
+            "example": 412.5
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "nacimiento",
+              "destete",
+              "venta",
+              "otro"
+            ],
+            "default": "otro"
+          }
+        },
+        "required": [
+          "fecha",
+          "kg"
+        ]
+      },
       "ExplotacionPlataforma": {
         "type": "object",
         "properties": {
@@ -2251,6 +2326,380 @@
           },
           "409": {
             "description": "No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Pesadas de un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más antigua a la más reciente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pesada"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar una pesada",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPesada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pesada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o fecha fuera de la vida del animal (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos/{pesoId}": {
+      "put": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Corregir una pesada",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pesoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPesada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pesada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o fecha fuera de la vida del animal (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el animal o la pesada (pesada_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Borrar una pesada registrada por error",
+        "description": "Queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pesoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La pesada borrada, para poder deshacerlo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pesada"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el animal o la pesada (pesada_no_encontrada)",
             "content": {
               "application/json": {
                 "schema": {

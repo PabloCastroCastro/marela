@@ -14,8 +14,9 @@ import { type AnimalDetalle, ESTADOS, identificacion, SEXOS, TIPOS_BAJA, useAnim
 import { FormularioAnimal } from './FormularioAnimal'
 import { FormularioBaja, useDeshacerBaja } from './FormularioBaja'
 import { InsigniaEstado } from './InsigniaEstado'
+import { TarjetaPesos } from './TarjetaPesos'
 
-// Ficha de un animal: sus datos, su madre y su padre, y sus hijos (GH-15)
+// Ficha de un animal: sus datos, su madre y su padre, sus hijos (GH-15) y sus pesos (GH-21)
 export function PaginaAnimal() {
   const explotacion = useExplotacionActual()
   const { animalId = '' } = useParams()
@@ -170,6 +171,8 @@ export function PaginaAnimal() {
             </ul>
           )}
         </Tarjeta>
+
+        <TarjetaPesos animal={a} />
 
         {a.observaciones && (
           <Tarjeta aria-labelledby="ficha-observaciones">

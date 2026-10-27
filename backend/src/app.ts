@@ -8,6 +8,7 @@ import { registrarPeticiones } from './peticiones.js'
 import { rutasAnimales } from './rutas/animales.js'
 import { rutasExplotaciones } from './rutas/explotaciones.js'
 import { rutasMiembros } from './rutas/miembros.js'
+import { rutasPesos } from './rutas/pesos.js'
 import { rutasPlataforma } from './rutas/plataforma.js'
 import { rutasSalud } from './rutas/salud.js'
 
@@ -57,6 +58,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasExplotaciones())
   app.route('/', rutasMiembros())
   app.route('/', rutasAnimales())
+  app.route('/', rutasPesos())
   app.route('/', rutasPlataforma())
 
   // Sesión en la cookie de Better Auth (con el prefijo __Secure- salvo en desarrollo)

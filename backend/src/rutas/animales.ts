@@ -65,7 +65,7 @@ const Parametros = z.object({
   explotacionId: z.string().openapi({ param: { name: 'explotacionId', in: 'path' } }),
 })
 
-const ParametrosAnimal = Parametros.extend({
+export const ParametrosAnimal = Parametros.extend({
   animalId: z.uuid().openapi({ param: { name: 'animalId', in: 'path' } }),
 })
 
@@ -78,18 +78,18 @@ const Filtros = z.object({
   sexo: z.enum(SEXOS).optional(),
 })
 
-const error = (description: string) => ({
+export const error = (description: string) => ({
   description,
   content: { 'application/json': { schema: EsquemaError } },
 })
 
-const comunes = {
+export const comunes = {
   401: error('Sin sesión'),
   403: error('Sin acceso a la explotación o a sus animales'),
   404: error('No existe la explotación o el animal (animal_no_encontrado)'),
 }
 
-const json = <T extends z.ZodType>(schema: T, description: string) => ({
+export const json = <T extends z.ZodType>(schema: T, description: string) => ({
   description,
   content: { 'application/json': { schema } },
 })
