@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { Map as IconoMapa, Plus, Search, Trash2 } from 'lucide-react'
+import { type FormEvent, lazy, Suspense, useState } from 'react'
 import { api, datos, erroresPorCampo } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -8,23 +8,40 @@ import { AreaTexto, Campo, Selector } from '../componentes/Campo'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { hectareas, numero } from '../formato'
+import {
+  type Contorno,
+  consultarCatastro,
+  consultarRecinto,
+  type RecintoSigpac,
+  usoSigpac,
+} from './cartografia'
 import { CLAVE_FINCAS, type DatosFinca, type FincaDetalle, REGIMENES, type Regimen } from './datos'
 import estilos from './Fincas.module.css'
+
+// Leaflet pesa: el mapa se descarga solo al abrirlo (GH-52)
+const MapaParcelas = lazy(() => import('./MapaParcelas'))
 
 type ParcelaFormulario = {
   id?: string
   provincia: string
   municipio: string
+  agregado: string
+  zona: string
   poligono: string
   parcela: string
   recinto: string
   referenciaCatastral: string
   superficie: string
+  // Del mapa o de la consulta por referencia (GH-52)
+  uso: string | null
+  contorno: Contorno | null
 }
 
 const SIGPAC = [
   ['provincia', 'Provincia'],
   ['municipio', 'Municipio'],
+  ['agregado', 'Agregado'],
+  ['zona', 'Zona'],
   ['poligono', 'Polígono'],
   ['parcela', 'Parcela'],
   ['recinto', 'Recinto'],
@@ -33,11 +50,36 @@ const SIGPAC = [
 const parcelaNueva = (): ParcelaFormulario => ({
   provincia: '',
   municipio: '',
+  agregado: '',
+  zona: '',
   poligono: '',
   parcela: '',
   recinto: '',
   referenciaCatastral: '',
   superficie: '',
+  uso: null,
+  contorno: null,
+})
+
+const sinCeros = (n: number) => numero(n, 4).replace(/,?0+$/, '')
+
+// Una parcela sin nada escrito, como la que se ofrece al dar de alta una finca
+const vacia = (p: ParcelaFormulario) =>
+  !p.id &&
+  [...SIGPAC.map(([c]) => p[c]), p.referenciaCatastral, p.superficie].every((v) => !v.trim())
+
+const desdeRecinto = (r: RecintoSigpac): ParcelaFormulario => ({
+  provincia: r.provincia,
+  municipio: r.municipio,
+  agregado: r.agregado,
+  zona: r.zona,
+  poligono: r.poligono,
+  parcela: r.parcela,
+  recinto: r.recinto,
+  referenciaCatastral: r.referenciaCatastral ?? '',
+  superficie: sinCeros(r.superficie),
+  uso: r.uso,
+  contorno: r.contorno,
 })
 
 // "1,2345" → 1.2345; null si no es un número
@@ -84,19 +126,92 @@ export function FormularioFinca({
           id: p.id,
           provincia: p.provincia ?? '',
           municipio: p.municipio ?? '',
+          agregado: p.agregado ?? '',
+          zona: p.zona ?? '',
           poligono: p.poligono ?? '',
           parcela: p.parcela ?? '',
           recinto: p.recinto ?? '',
           referenciaCatastral: p.referenciaCatastral ?? '',
-          superficie: numero(p.superficie, 4).replace(/,?0+$/, ''),
+          superficie: sinCeros(p.superficie),
+          uso: p.uso,
+          contorno: p.contorno,
         }))
       : [parcelaNueva()],
   )
   const [erroresLocales, setErroresLocales] = useState<Record<string, string>>({})
   const cambiar = <K extends keyof typeof f>(campo: K, valor: (typeof f)[K]) =>
     setF((v) => ({ ...v, [campo]: valor }))
+  // Al cambiar la referencia, el uso y el contorno consultados dejan de valer
   const cambiarParcela = (i: number, campo: keyof ParcelaFormulario, valor: string) =>
-    setParcelas((ps) => ps.map((p, j) => (j === i ? { ...p, [campo]: valor } : p)))
+    setParcelas((ps) =>
+      ps.map((p, j) =>
+        j !== i
+          ? p
+          : campo === 'superficie'
+            ? { ...p, superficie: valor }
+            : { ...p, [campo]: valor, uso: null, contorno: null },
+      ),
+    )
+  const [enMapa, setEnMapa] = useState(false)
+  const [consultando, setConsultando] = useState<number>()
+
+  // El municipio y la provincia de la finca, de lo consultado, si aún no los tiene
+  const completarLugar = (municipio: string | null, provincia: string | null) =>
+    setF((v) => ({
+      ...v,
+      municipio: v.municipio.trim() ? v.municipio : (municipio ?? v.municipio),
+      provincia: v.provincia.trim() ? v.provincia : (provincia ?? v.provincia),
+    }))
+
+  const anadirRecintos = (recintos: RecintoSigpac[]) => {
+    setParcelas((ps) => [...ps.filter((p) => !vacia(p)), ...recintos.map(desdeRecinto)])
+    const [primero] = recintos
+    if (primero) completarLugar(primero.nombreMunicipio, primero.nombreProvincia)
+  }
+
+  // Con la referencia SIGPAC completa se consulta el SIGPAC; si no, con la catastral, el Catastro
+  const consultar = async (i: number) => {
+    const p = parcelas[i]
+    if (!p) return
+    const sigpac = SIGPAC.map(([c]) => p[c].trim() || (c === 'agregado' || c === 'zona' ? '0' : ''))
+    setConsultando(i)
+    try {
+      if (sigpac.every(Boolean)) {
+        const r = await consultarRecinto(explotacion.id, { referencia: sigpac.join(':') })
+        setParcelas((ps) =>
+          ps.map((x, j) =>
+            j === i
+              ? {
+                  ...desdeRecinto(r),
+                  id: x.id,
+                  referenciaCatastral: x.referenciaCatastral || (r.referenciaCatastral ?? ''),
+                }
+              : x,
+          ),
+        )
+        completarLugar(r.nombreMunicipio, r.nombreProvincia)
+      } else {
+        const c = await consultarCatastro(explotacion.id, p.referenciaCatastral)
+        setParcelas((ps) =>
+          ps.map((x, j) =>
+            j === i
+              ? {
+                  ...x,
+                  referenciaCatastral: c.referenciaCatastral,
+                  superficie: c.superficie ? sinCeros(c.superficie) : x.superficie,
+                  contorno: c.contorno,
+                }
+              : x,
+          ),
+        )
+        completarLugar(c.nombreMunicipio, c.nombreProvincia)
+      }
+    } catch (error) {
+      avisar({ tipo: 'error', mensaje: (error as Error).message })
+    } finally {
+      setConsultando(undefined)
+    }
+  }
 
   const guardar = useMutation({
     mutationFn: (cuerpo: DatosFinca) =>
@@ -149,11 +264,15 @@ export function FormularioFinca({
         ...(p.id ? { id: p.id } : {}),
         provincia: p.provincia,
         municipio: p.municipio,
+        agregado: p.agregado,
+        zona: p.zona,
         poligono: p.poligono,
         parcela: p.parcela,
         recinto: p.recinto,
         referenciaCatastral: p.referenciaCatastral,
         superficie: leerHa(p.superficie) ?? 0,
+        uso: p.uso,
+        contorno: p.contorno,
       })),
     })
   }
@@ -215,6 +334,19 @@ export function FormularioFinca({
           ))}
         </Selector>
 
+        <div className={estilos.parcelaDatos}>
+          <span className={estilos.suave}>
+            Elige los recintos en el mapa o escribe su referencia.
+          </span>
+          <Boton
+            variante="secundario"
+            tamano="compacto"
+            icono={<IconoMapa aria-hidden size={18} />}
+            onClick={() => setEnMapa(true)}
+          >
+            Elegir en el mapa
+          </Boton>
+        </div>
         {parcelas.map((p, i) => (
           <fieldset key={p.id ?? `nueva-${i}`} className={estilos.parcela}>
             <legend>{parcelas.length > 1 ? `Parcela ${i + 1}` : 'Parcela'}</legend>
@@ -233,15 +365,35 @@ export function FormularioFinca({
                   etiqueta={etiqueta}
                   inputMode="numeric"
                   autoComplete="off"
+                  placeholder={campo === 'agregado' || campo === 'zona' ? '0' : undefined}
                   value={p[campo]}
                   onChange={(e) => cambiarParcela(i, campo, e.target.value)}
                   error={errores[`parcelas.${i}.${campo}`]}
                 />
               ))}
             </div>
-            <p className={estilos.suave}>
-              Referencia SIGPAC. Si no la tiene, basta con la catastral.
-            </p>
+            <div className={estilos.parcelaDatos}>
+              <span className={estilos.suave}>
+                {p.contorno
+                  ? ['En el mapa', usoSigpac(p.uso)].filter(Boolean).join(' · ')
+                  : 'Referencia SIGPAC. Si no la tiene, basta con la catastral.'}
+              </span>
+              <Boton
+                variante="texto"
+                tamano="compacto"
+                icono={<Search aria-hidden size={18} />}
+                cargando={consultando === i}
+                disabled={
+                  !(['provincia', 'municipio', 'poligono', 'parcela', 'recinto'] as const).every(
+                    (c) => p[c].trim(),
+                  ) && p.referenciaCatastral.replace(/\s/g, '').length < 14
+                }
+                aria-label={`Consultar la superficie de la parcela ${i + 1}`}
+                onClick={() => consultar(i)}
+              >
+                Consultar
+              </Boton>
+            </div>
             <div className={estilos.dosCampos}>
               <Campo
                 etiqueta="Referencia catastral"
@@ -281,6 +433,16 @@ export function FormularioFinca({
           </Boton>
           <span className={estilos.suave}>Superficie total: {hectareas(total)}</span>
         </div>
+
+        {enMapa && (
+          <Suspense fallback={null}>
+            <MapaParcelas
+              contornos={parcelas.flatMap((p) => (p.contorno ? [p.contorno] : []))}
+              alCerrar={() => setEnMapa(false)}
+              alAnadir={anadirRecintos}
+            />
+          </Suspense>
+        )}
 
         <AreaTexto
           etiqueta="Observaciones"

@@ -49,6 +49,17 @@ export const useFinca = (explotacionId: string, fincaId: string) =>
       ),
   })
 
-// "36:24:12:45:1", como la escribe el SIGPAC; null si la parcela no la tiene
+// "36:24:0:0:12:45:1": provincia, municipio, agregado, zona, polígono, parcela y recinto, como la
+// escribe el SIGPAC; null si la parcela no la tiene
 export const referenciaSigpac = (p: Parcela) =>
-  p.recinto ? [p.provincia, p.municipio, p.poligono, p.parcela, p.recinto].join(':') : null
+  p.recinto
+    ? [
+        p.provincia,
+        p.municipio,
+        p.agregado ?? '0',
+        p.zona ?? '0',
+        p.poligono,
+        p.parcela,
+        p.recinto,
+      ].join(':')
+    : null

@@ -3,6 +3,7 @@ import { REGIMENES_FINCA } from '../db/schema/index.js'
 import { EsquemaError, validacionFallida } from '../errores.js'
 import {
   CambioEstadoFinca,
+  Contorno,
   cambiarEstadoFinca,
   crearFinca,
   DatosFinca,
@@ -46,11 +47,15 @@ const FincaDetalle = Finca.extend({
       id: z.uuid(),
       provincia: z.string().nullable(),
       municipio: z.string().nullable(),
+      agregado: z.string().nullable(),
+      zona: z.string().nullable(),
       poligono: z.string().nullable(),
       parcela: z.string().nullable(),
       recinto: z.string().nullable(),
       referenciaCatastral: z.string().nullable(),
       superficie: z.number(),
+      uso: z.string().nullable().openapi({ description: 'Uso SIGPAC: PS, TA...' }),
+      contorno: Contorno.nullable(),
     }),
   ),
 }).openapi('FincaDetalle')

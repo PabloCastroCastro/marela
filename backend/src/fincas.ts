@@ -39,12 +39,47 @@ const parteSigpac = z
   )
   .nullish()
 
+// "36:24:0:0:71:9000:224": provincia, municipio, agregado, zona, polígono, parcela y recinto, como la
+// escribe el SIGPAC. Sin agregado ni zona, 0.
+type PartesSigpac = Partial<
+  Record<
+    'provincia' | 'municipio' | 'agregado' | 'zona' | 'poligono' | 'parcela' | 'recinto',
+    string | null
+  >
+>
+export const referenciaSigpac = (p: PartesSigpac) =>
+  [
+    p.provincia,
+    p.municipio,
+    p.agregado ?? '0',
+    p.zona ?? '0',
+    p.poligono,
+    p.parcela,
+    p.recinto,
+  ].join(':')
+
+// Contorno de una parcela en GeoJSON, en longitud y latitud (GH-52). Los límites solo descartan
+// datos absurdos: un recinto SIGPAC no pasa de unos miles de vértices.
+const anillo = z.array(z.array(z.number()).min(2).max(3)).min(4).max(20_000)
+export const Contorno = z
+  .discriminatedUnion('type', [
+    z.object({ type: z.literal('Polygon'), coordinates: z.array(anillo).min(1).max(100) }),
+    z.object({
+      type: z.literal('MultiPolygon'),
+      coordinates: z.array(z.array(anillo).min(1).max(100)).min(1).max(100),
+    }),
+  ])
+  .openapi('Contorno')
+
 const DatosParcela = z
   .object({
     // Con id, una parcela que ya existe; sin él, una nueva
     id: z.uuid().optional(),
     provincia: parteSigpac,
     municipio: parteSigpac,
+    // Casi siempre 0: si faltan con el resto de la referencia, se ponen a 0
+    agregado: parteSigpac,
+    zona: parteSigpac,
     poligono: parteSigpac,
     parcela: parteSigpac,
     recinto: parteSigpac,
@@ -59,6 +94,9 @@ const DatosParcela = z
       .max(HECTAREAS_MAXIMO, `Como mucho ${HECTAREAS_MAXIMO} ha`)
       .transform((ha) => Math.round(ha * 10_000) / 10_000)
       .openapi({ example: 1.2345 }),
+    // Uso SIGPAC ("PS", "TA"...) y contorno, del mapa o de la consulta por referencia (GH-52)
+    uso: z.string().trim().max(4).nullish(),
+    contorno: Contorno.nullish(),
   })
   .superRefine((p, ctx) => {
     const sigpac = [p.provincia, p.municipio, p.poligono, p.parcela, p.recinto]
@@ -95,7 +133,7 @@ export const DatosFinca = z
     const vistos = new Set<string>()
     f.parcelas.forEach((p, i) => {
       if (!p.recinto) return
-      const clave = [p.provincia, p.municipio, p.poligono, p.parcela, p.recinto].join(':')
+      const clave = referenciaSigpac(p)
       if (vistos.has(clave))
         ctx.addIssue({
           code: 'custom',
@@ -187,11 +225,15 @@ export async function verFinca(tx: Transaccion, fincaId: string) {
       id: parcelas.id,
       provincia: parcelas.provincia,
       municipio: parcelas.municipio,
+      agregado: parcelas.agregado,
+      zona: parcelas.zona,
       poligono: parcelas.poligono,
       parcela: parcelas.parcela,
       recinto: parcelas.recinto,
       referenciaCatastral: parcelas.referenciaCatastral,
       superficie: parcelas.superficie,
+      uso: parcelas.uso,
+      contorno: parcelas.contorno,
     })
     .from(parcelas)
     .where(eq(parcelas.fincaId, fincaId))
@@ -220,17 +262,13 @@ async function conErroresClaros<T>(fn: () => Promise<T>): Promise<T> {
 // Un recinto SIGPAC, en una sola finca de la explotación. La base de datos lo comprueba también;
 // aquí se hace antes para dar el error en la parcela que es.
 async function comprobarRecintos(tx: Transaccion, datos: DatosFinca, fincaId?: string) {
-  const clave = (p: {
-    provincia?: string | null
-    municipio?: string | null
-    poligono?: string | null
-    parcela?: string | null
-    recinto?: string | null
-  }) => [p.provincia, p.municipio, p.poligono, p.parcela, p.recinto].join(':')
+  const clave = referenciaSigpac
   const enOtras = await tx
     .select({
       provincia: parcelas.provincia,
       municipio: parcelas.municipio,
+      agregado: parcelas.agregado,
+      zona: parcelas.zona,
       poligono: parcelas.poligono,
       parcela: parcelas.parcela,
       recinto: parcelas.recinto,
@@ -253,10 +291,14 @@ async function comprobarRecintos(tx: Transaccion, datos: DatosFinca, fincaId?: s
 const valoresParcela = (p: DatosFinca['parcelas'][number]) => ({
   provincia: p.provincia ?? null,
   municipio: p.municipio ?? null,
+  agregado: p.recinto ? (p.agregado ?? '0') : null,
+  zona: p.recinto ? (p.zona ?? '0') : null,
   poligono: p.poligono ?? null,
   parcela: p.parcela ?? null,
   recinto: p.recinto ?? null,
   referenciaCatastral: p.referenciaCatastral ?? null,
+  uso: p.uso || null,
+  contorno: p.contorno ?? null,
   superficie: p.superficie,
 })
 

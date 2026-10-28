@@ -165,10 +165,18 @@ Decisiones (GH-23):
 
 Decisiones (GH-25):
 
-- Una finca junta una o varias parcelas, cada una con su referencia SIGPAC (provincia, municipio, polígono, parcela y recinto) o su referencia catastral, y su superficie. La superficie de la finca es la suma de la de sus parcelas.
+- Una finca junta una o varias parcelas, cada una con su referencia SIGPAC (provincia, municipio, polígono, parcela y recinto; desde GH-52, también agregado y zona) o su referencia catastral, y su superficie. La superficie de la finca es la suma de la de sus parcelas.
 - Un recinto SIGPAC está en una sola finca de la explotación, y no hay dos fincas con el mismo nombre.
 - Régimen: propiedad, arrendamiento, aparcería, cesión u otro.
 - Una finca no se borra: se desactiva y sale de la lista de activas; sus datos y su historial se conservan y se puede reactivar.
+
+Decisiones (GH-52):
+
+- Las parcelas se eligen en un mapa: la ortofoto del PNOA (IGN) con los recintos SIGPAC encima. Al tocar un recinto se añade con su referencia, superficie, uso y contorno, y con la referencia catastral de la parcela en la que está. Si la finca no tiene municipio o provincia, se rellenan.
+- También por referencia: con la SIGPAC completa se consulta el SIGPAC; si no, con la catastral, el Catastro.
+- La referencia SIGPAC tiene siete partes: provincia, municipio, agregado, zona, polígono, parcela y recinto. El agregado y la zona casi siempre son 0, y así quedan si no se escriben.
+- El mapa se centra en las parcelas que ya tiene la finca; si no tiene, en el municipio de la explotación. Con "Ir a mi ubicación", donde está el móvil.
+- Los servicios son públicos y gratuitos (SIGPAC, Catastro, CartoCiudad e IGN). Si no responden o no hay conexión, se sigue pudiendo escribir todo a mano.
 
 ### Eventos de finca
 

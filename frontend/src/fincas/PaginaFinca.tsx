@@ -11,6 +11,7 @@ import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, hectareas } from '../formato'
+import { usoSigpac } from './cartografia'
 import { CLAVE_FINCAS, REGIMENES, referenciaSigpac, useFinca } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioFinca } from './FormularioFinca'
@@ -157,15 +158,20 @@ export function PaginaFinca() {
           <ul className={estilos.parcelas} aria-label="Parcelas">
             {f.parcelas.map((p) => {
               const sigpac = referenciaSigpac(p)
+              // El uso SIGPAC y, si también la tiene, la referencia catastral
+              const detalle = [
+                usoSigpac(p.uso),
+                sigpac && p.referenciaCatastral && `Catastro ${p.referenciaCatastral}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')
               return (
                 <li key={p.id}>
                   <div>
                     <span className={estilos.referencia}>
                       {sigpac ? `SIGPAC ${sigpac}` : `Catastro ${p.referenciaCatastral}`}
                     </span>
-                    {sigpac && p.referenciaCatastral && (
-                      <span className={estilos.suave}>Catastro {p.referenciaCatastral}</span>
-                    )}
+                    {detalle && <span className={estilos.suave}>{detalle}</span>}
                   </div>
                   <span className={estilos.superficie}>{hectareas(p.superficie)}</span>
                 </li>

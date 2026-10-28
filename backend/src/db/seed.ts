@@ -533,6 +533,8 @@ await enExplotacion(
             poligono,
             parcela,
             recinto,
+            agregado: sigpac ? '0' : null,
+            zona: sigpac ? '0' : null,
             referenciaCatastral: catastral ?? null,
             superficie,
           })

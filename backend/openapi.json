@@ -1943,6 +1943,18 @@
                         "null"
                       ]
                     },
+                    "agregado": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "zona": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "poligono": {
                       "type": [
                         "string",
@@ -1969,17 +1981,31 @@
                     },
                     "superficie": {
                       "type": "number"
+                    },
+                    "uso": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Uso SIGPAC: PS, TA..."
+                    },
+                    "contorno": {
+                      "$ref": "#/components/schemas/Contorno"
                     }
                   },
                   "required": [
                     "id",
                     "provincia",
                     "municipio",
+                    "agregado",
+                    "zona",
                     "poligono",
                     "parcela",
                     "recinto",
                     "referenciaCatastral",
-                    "superficie"
+                    "superficie",
+                    "uso",
+                    "contorno"
                   ]
                 }
               }
@@ -1987,6 +2013,84 @@
             "required": [
               "parcelas"
             ]
+          }
+        ]
+      },
+      "Contorno": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Polygon"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 3
+                  },
+                  "minItems": 4,
+                  "maxItems": 20000
+                },
+                "minItems": 1,
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "MultiPolygon"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 3
+                    },
+                    "minItems": 4,
+                    "maxItems": 20000
+                  },
+                  "minItems": 1,
+                  "maxItems": 100
+                },
+                "minItems": 1,
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ]
+          },
+          {
+            "type": "null"
           }
         ]
       },
@@ -2050,6 +2154,18 @@
                     "null"
                   ]
                 },
+                "agregado": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "zona": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
                 "poligono": {
                   "type": [
                     "string",
@@ -2080,6 +2196,16 @@
                   "exclusiveMinimum": 0,
                   "maximum": 100000,
                   "example": 1.2345
+                },
+                "uso": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 4
+                },
+                "contorno": {
+                  "$ref": "#/components/schemas/Contorno"
                 }
               },
               "required": [
@@ -2919,6 +3045,135 @@
         },
         "required": [
           "fechaSalida"
+        ]
+      },
+      "RecintoSigpac": {
+        "type": "object",
+        "properties": {
+          "provincia": {
+            "type": "string"
+          },
+          "municipio": {
+            "type": "string"
+          },
+          "agregado": {
+            "type": "string"
+          },
+          "zona": {
+            "type": "string"
+          },
+          "poligono": {
+            "type": "string"
+          },
+          "parcela": {
+            "type": "string"
+          },
+          "recinto": {
+            "type": "string"
+          },
+          "superficie": {
+            "type": "number",
+            "description": "Hectáreas"
+          },
+          "uso": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Uso SIGPAC: PS, TA..."
+          },
+          "contorno": {
+            "$ref": "#/components/schemas/Contorno"
+          },
+          "referenciaCatastral": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "La de la parcela catastral en la que está, si el Catastro responde"
+          },
+          "nombreMunicipio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nombreProvincia": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "provincia",
+          "municipio",
+          "agregado",
+          "zona",
+          "poligono",
+          "parcela",
+          "recinto",
+          "superficie",
+          "uso",
+          "contorno",
+          "referenciaCatastral",
+          "nombreMunicipio",
+          "nombreProvincia"
+        ]
+      },
+      "ParcelaCatastral": {
+        "type": "object",
+        "properties": {
+          "referenciaCatastral": {
+            "type": "string"
+          },
+          "superficie": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Hectáreas"
+          },
+          "contorno": {
+            "$ref": "#/components/schemas/Contorno"
+          },
+          "nombreMunicipio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nombreProvincia": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "referenciaCatastral",
+          "superficie",
+          "contorno",
+          "nombreMunicipio",
+          "nombreProvincia"
+        ]
+      },
+      "SituacionMunicipio": {
+        "type": "object",
+        "properties": {
+          "recuadro": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            },
+            "description": "[oeste, sur, este, norte], o null si no se encuentra"
+          }
+        },
+        "required": [
+          "recuadro"
         ]
       },
       "ExplotacionPlataforma": {
@@ -7320,6 +7575,317 @@
           },
           "409": {
             "description": "Los animales ya salieron (ya_salieron)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/cartografia/recinto": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Recinto SIGPAC en un punto del mapa o con una referencia",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -19,
+              "maximum": 5,
+              "example": -8.095
+            },
+            "required": false,
+            "name": "lon",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 27,
+              "maximum": 44.5,
+              "example": 42.68
+            },
+            "required": false,
+            "name": "lat",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{1,5}(:\\d{1,5}){6}$",
+              "example": "36:24:0:0:57:9037:1",
+              "description": "Referencia SIGPAC completa"
+            },
+            "required": false,
+            "description": "Referencia SIGPAC completa",
+            "name": "referencia",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El recinto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecintoSigpac"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Consulta no válida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No hay recinto ahí o con esa referencia (recinto_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El servicio no responde (servicio_no_disponible)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/cartografia/catastro": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Superficie, municipio y contorno de una parcela catastral",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "36024A05709037"
+            },
+            "required": true,
+            "name": "referencia",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La parcela",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelaCatastral"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Consulta no válida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe esa referencia (parcela_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El servicio no responde (servicio_no_disponible)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/cartografia/municipio": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Dónde está un municipio, para centrar el mapa",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "Lalín"
+            },
+            "required": true,
+            "name": "nombre",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Su recuadro",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SituacionMunicipio"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Consulta no válida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El servicio no responde (servicio_no_disponible)",
             "content": {
               "application/json": {
                 "schema": {

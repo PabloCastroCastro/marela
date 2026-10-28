@@ -225,11 +225,22 @@ Fincas de la explotación y sus parcelas, en `src/rutas/fincas.ts` (módulo `fin
 
 - **`GET /api/explotaciones/{id}/fincas`:** lista por nombre, con búsqueda (`q`, en nombre y municipio) y filtros (`activa=true|false`, sin él todas; `seguridad=en_curso`; `pastoreo=en_curso`). Cada finca lleva su superficie (la suma de sus parcelas), su número de parcelas, el fin de su plazo de seguridad en curso (`finSeguridad`) y su pastoreo en curso (`pastoreo`).
 - **`GET /api/explotaciones/{id}/fincas/{fincaId}`:** la ficha, con sus parcelas.
-- **`POST /api/explotaciones/{id}/fincas`:** `{ nombre, municipio?, provincia?, regimen, observaciones?, parcelas: [{ provincia?, municipio?, poligono?, parcela?, recinto?, referenciaCatastral?, superficie }] }` da de alta la finca con al menos una parcela. `regimen` es `propiedad` (por defecto), `arrendamiento`, `aparceria`, `cesion` u `otro`.
+- **`POST /api/explotaciones/{id}/fincas`:** `{ nombre, municipio?, provincia?, regimen, observaciones?, parcelas: [{ provincia?, municipio?, agregado?, zona?, poligono?, parcela?, recinto?, referenciaCatastral?, superficie, uso?, contorno? }] }` da de alta la finca con al menos una parcela. `regimen` es `propiedad` (por defecto), `arrendamiento`, `aparceria`, `cesion` u `otro`.
 - **`PUT /api/explotaciones/{id}/fincas/{fincaId}`:** cambia los datos y las parcelas: las que llegan con `id` se corrigen, las nuevas se añaden y las que faltan se quitan.
 - **`PATCH /api/explotaciones/{id}/fincas/{fincaId}/estado`:** `{ activa }` desactiva o reactiva. Una finca no se borra.
 
-Reglas: cada parcela, con la referencia SIGPAC completa (provincia, municipio, polígono, parcela y recinto, solo números) o la catastral, y superficie en hectáreas mayor que 0, con cuatro decimales. El nombre no se repite en la explotación (409 `nombre_en_uso`), ni un recinto SIGPAC en dos fincas (409 `recinto_en_uso`). Los cambios quedan en el historial (migración `0017`).
+Reglas: cada parcela, con la referencia SIGPAC completa (provincia, municipio, agregado, zona, polígono, parcela y recinto, solo números; sin agregado ni zona, 0) o la catastral, y superficie en hectáreas mayor que 0, con cuatro decimales. `uso` es el uso SIGPAC (`PS`, `TA`…) y `contorno`, un polígono o multipolígono GeoJSON en longitud y latitud; los dos llegan del mapa o de la consulta por referencia. El nombre no se repite en la explotación (409 `nombre_en_uso`), ni un recinto SIGPAC en dos fincas (409 `recinto_en_uso`). Los cambios quedan en el historial (migración `0017`). La migración `0024` añade el agregado y la zona (0 en las parcelas que ya había), el uso y el contorno.
+
+### Cartografía
+
+Consultas a servicios públicos para rellenar las parcelas desde el mapa o por su referencia, en `src/rutas/cartografia.ts` (módulo `fincas`). No tocan la base de datos. Pasan por el backend, con 8 segundos de espera, para no depender de que los servicios admitan llamadas desde el navegador:
+
+- **`GET /api/explotaciones/{id}/cartografia/recinto?lon=&lat=`** o **`?referencia=36:24:0:0:57:37:2`:** el recinto SIGPAC (FEGA) en un punto o con esa referencia: sus siete partes, superficie, uso y contorno. Si responden, también la referencia catastral de la parcela en la que está (Catastro) y el nombre de su municipio y su provincia (CartoCiudad). 404 `recinto_no_encontrado`.
+- **`GET /api/explotaciones/{id}/cartografia/catastro?referencia=`:** superficie, contorno (servicio INSPIRE) y municipio de una parcela catastral. 404 `parcela_no_encontrada`.
+- **`GET /api/explotaciones/{id}/cartografia/municipio?nombre=`:** el recuadro de un municipio (CartoCiudad), para centrar el mapa.
+
+Si un servicio no responde, 502 `servicio_no_disponible`: en el frontend se sigue pudiendo escribir todo a mano.
+
 
 ### Labores
 
@@ -316,6 +327,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/labores.test.ts`: labores: siega en varias fincas con su superficie, siembra y cosecha con cantidad y unidad, validación, fincas desactivadas o de otra explotación, corrección y borrado con historial, opciones del formulario, separación por explotación y restricciones.
 - `test/pastoreos.test.ts`: pastoreos: entrada, pastoreo en curso en la ficha y en el filtro, salida, uno solo en curso por finca, validación, fincas desactivadas o de otra explotación, corrección y borrado con historial, separación por explotación y restricciones.
 - `test/aplicaciones.test.ts`: abono y fitosanitarios: abonado en varias fincas con su superficie, plazo de seguridad en la ficha y en el filtro, validación de cada tipo, fincas desactivadas o de otra explotación, anulación con historial, opciones del formulario, separación por explotación y restricciones.
+- `test/cartografia.test.ts`: cartografía: lectura de contornos WKT y GML, recinto SIGPAC en un punto y por referencia, parcela catastral, municipio, servicios caídos (con los servicios simulados) y acceso por explotación.
 - `test/fincas.test.ts`: fincas: alta con varias parcelas y superficie total, validación, nombre y recinto únicos en la explotación, edición que corrige, añade y quita parcelas con historial, desactivación y filtro, separación por explotación y restricciones.
 - `test/partos.test.ts`: partos: gemelos con el padre de la cubrición, un nacido muerto y la pesada al nacer, cierre de la gestación, padre indicado sin gestación, crotal puesto después y que no se quita, validación y todo o nada, anulación que borra los terneros, terneros con datos, separación por explotación y restricciones.
 - `test/reproduccion.test.ts`: eventos reproductivos: cubrición a varias vacas y fecha prevista de parto, inseminación con dosis externa y diagnóstico positivo, cierre por diagnóstico negativo o aborto, filtro de gestantes, solo hembras y padre macho, destete con su pesada y en el historial de la madre, anulación con historial, separación por explotación y restricciones.
