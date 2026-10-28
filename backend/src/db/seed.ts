@@ -1,5 +1,6 @@
 import { hashPassword } from 'better-auth/crypto'
 import { config } from '../config.js'
+import { hoyEnMadrid } from '../fechas.js'
 import { db, pool } from './cliente.js'
 import { enExplotacion } from './explotacion.js'
 import { migrar } from './migrar.js'
@@ -10,6 +11,7 @@ import {
   organization,
   pesos,
   type RolExplotacion,
+  tratamientos,
   user,
 } from './schema/index.js'
 
@@ -39,6 +41,7 @@ const EXPLOTACION = 3
 const MIEMBRO = 4
 const ANIMAL = 5
 const PESADA = 6
+const TRATAMIENTO = 7
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -221,6 +224,68 @@ const pesadasVeiga = [
   [7, '2026-06-20', 152, 'otro'],
 ] as const
 
+// Tratamientos: una desparasitación y una vacuna de las adultas, y la ternera con neumonía hace tres
+// días, para que haya una supresión en curso. Uno anulado, registrado en el animal equivocado.
+const haceTresDias = new Date(Date.parse(`${hoyEnMadrid()}T12:00:00Z`) - 3 * 864e5)
+  .toISOString()
+  .slice(0, 10)
+
+type TratamientoEjemplo = Omit<typeof tratamientos.$inferInsert, 'animalId'> & {
+  animal: number
+  anulado?: string
+}
+
+const tratamientosVeiga: TratamientoEjemplo[] = [
+  ...[1, 2, 3, 4, 5].map((animal) => ({
+    animal,
+    fecha: '2026-04-10',
+    producto: 'Ivermectina 1 %',
+    dosis: '1 ml por cada 50 kg',
+    via: 'subcutanea' as const,
+    motivo: 'desparasitacion' as const,
+    aplicadoPorId: sid(USUARIO, 2),
+    lote: 'L2403A',
+    diasSupresion: 49,
+  })),
+  ...[1, 2, 3].map((animal) => ({
+    animal,
+    fecha: '2026-06-05',
+    producto: 'Vacuna lengua azul serotipo 3',
+    dosis: '2 ml',
+    via: 'intramuscular' as const,
+    motivo: 'vacuna' as const,
+    diagnostico: 'Lengua azul',
+    aplicadoPorId: sid(USUARIO, 4),
+    lote: 'BTV3-0612',
+    diasSupresion: 0,
+  })),
+  {
+    animal: 7,
+    fecha: '2026-09-15',
+    producto: 'Oxitetraciclina LA',
+    dosis: '15 ml',
+    via: 'intramuscular' as const,
+    motivo: 'enfermedad' as const,
+    diagnostico: 'Neumonía',
+    aplicadoPorTexto: 'Veterinaria de la ADS',
+    diasSupresion: 28,
+    anulado: 'Registrado en el animal equivocado: era la ternera ES041503457001',
+  },
+  {
+    animal: 6,
+    fecha: haceTresDias,
+    producto: 'Oxitetraciclina LA',
+    dosis: '20 ml',
+    via: 'intramuscular' as const,
+    motivo: 'enfermedad' as const,
+    diagnostico: 'Neumonía',
+    aplicadoPorTexto: 'Veterinaria de la ADS',
+    lote: 'OX-5521',
+    diasSupresion: 28,
+    observaciones: 'Repetir a las 72 horas si sigue con fiebre',
+  },
+]
+
 await enExplotacion(
   { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
   async (tx) => {
@@ -248,6 +313,19 @@ await enExplotacion(
       await tx
         .insert(pesos)
         .values({ id: sid(PESADA, i + 1), animalId: sid(ANIMAL, animal), fecha, kg, momento })
+        .onConflictDoNothing()
+    }
+    for (const [i, { animal, anulado, ...t }] of tratamientosVeiga.entries()) {
+      await tx
+        .insert(tratamientos)
+        .values({
+          id: sid(TRATAMIENTO, i + 1),
+          animalId: sid(ANIMAL, animal),
+          ...t,
+          ...(anulado
+            ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
+            : {}),
+        })
         .onConflictDoNothing()
     }
   },

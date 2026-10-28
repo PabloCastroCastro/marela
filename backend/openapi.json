@@ -517,6 +517,14 @@
               "null"
             ]
           },
+          "finSupresion": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Día en que termina la supresión en curso, si la hay"
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -547,6 +555,7 @@
           "fechaBaja",
           "causaBaja",
           "observaciones",
+          "finSupresion",
           "creadoEn",
           "modificadoEn"
         ]
@@ -893,6 +902,304 @@
         "required": [
           "fecha",
           "kg"
+        ]
+      },
+      "Tratamiento": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string"
+          },
+          "dosis": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "via": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "intramuscular",
+              "subcutanea",
+              "intravenosa",
+              "oral",
+              "topica",
+              "intramamaria",
+              "intrauterina",
+              "otra",
+              null
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "enum": [
+              "enfermedad",
+              "vacuna",
+              "desparasitacion",
+              "otro"
+            ]
+          },
+          "diagnostico": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "aplicadoPor": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Sin él, es un nombre escrito a mano"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ]
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diasSupresion": {
+            "type": "integer"
+          },
+          "finSupresion": {
+            "type": "string",
+            "format": "date",
+            "description": "Día en que termina la supresión: la fecha más los días"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "animalId",
+          "fecha",
+          "producto",
+          "dosis",
+          "via",
+          "motivo",
+          "diagnostico",
+          "aplicadoPor",
+          "lote",
+          "diasSupresion",
+          "finSupresion",
+          "observaciones",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "OpcionesTratamiento": {
+        "type": "object",
+        "properties": {
+          "personas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "nombre": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nombre"
+              ]
+            }
+          },
+          "productos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "personas",
+          "productos"
+        ]
+      },
+      "DatosTratamiento": {
+        "type": "object",
+        "properties": {
+          "animalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Ivermectina 1 %"
+          },
+          "dosis": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "10 ml"
+          },
+          "via": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "intramuscular",
+              "subcutanea",
+              "intravenosa",
+              "oral",
+              "topica",
+              "intramamaria",
+              "intrauterina",
+              "otra",
+              null
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "enum": [
+              "enfermedad",
+              "vacuna",
+              "desparasitacion",
+              "otro"
+            ]
+          },
+          "diagnostico": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Parásitos internos"
+          },
+          "aplicadoPorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "aplicadoPorTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Veterinaria de la ADS"
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diasSupresion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 999
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "animalIds",
+          "fecha",
+          "producto",
+          "motivo",
+          "diasSupresion"
+        ]
+      },
+      "DatosAnulacion": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Registrado en el animal equivocado"
+          }
+        },
+        "required": [
+          "motivo"
         ]
       },
       "ExplotacionPlataforma": {
@@ -1830,6 +2137,19 @@
             "required": false,
             "name": "sexo",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo los animales con un periodo de supresión en curso"
+            },
+            "required": false,
+            "description": "Solo los animales con un periodo de supresión en curso",
+            "name": "supresion",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2700,6 +3020,342 @@
           },
           "404": {
             "description": "No existe la explotación, el animal o la pesada (pesada_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/tratamientos": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Tratamientos de un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo, anulados incluidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tratamiento"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tratamientos/opciones": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Personas del equipo y productos ya usados, para el formulario",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesTratamiento"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tratamientos": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar un tratamiento a uno o varios animales",
+        "description": "Crea un tratamiento por animal, todos con los mismos datos.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosTratamiento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrados, en el orden de los animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tratamiento"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, animales de otra explotación o fecha fuera de su vida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tratamientos/{tratamientoId}/anulacion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Anular un tratamiento registrado por error",
+        "description": "No se borra: queda en la ficha como anulado, con el motivo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "tratamientoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tratamiento"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el tratamiento (tratamiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado (ya_anulado)",
             "content": {
               "application/json": {
                 "schema": {

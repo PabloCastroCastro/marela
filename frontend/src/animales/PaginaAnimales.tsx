@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton } from '../componentes/Boton'
@@ -11,14 +11,20 @@ import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { edad, fecha } from '../formato'
 import estilos from './Animales.module.css'
-import { type EstadoAnimal, SEXOS, type Sexo, useAnimales } from './datos'
+import { type EstadoAnimal, identificacion, SEXOS, type Sexo, useAnimales } from './datos'
 import { FormularioAnimal } from './FormularioAnimal'
+import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaEstado } from './InsigniaEstado'
+import { InsigniaSupresion } from './InsigniaSupresion'
 
-type FiltroEstado = EstadoAnimal | 'todos'
+// "En supresión" se filtra como un estado más, aunque no lo es: se calcula de los tratamientos y el
+// animal sigue activo (GH-20)
+type FiltroEstado = EstadoAnimal | 'en_supresion' | 'todos'
 type FiltroSexo = Sexo | 'todos'
 
-// Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15)
+// Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15). Con
+// casillas (en el móvil, manteniendo pulsado un animal) se marcan varios para registrarles un
+// tratamiento a la vez (GH-20).
 export function PaginaAnimales() {
   const explotacion = useExplotacionActual()
   const navegar = useNavigate()
@@ -26,14 +32,21 @@ export function PaginaAnimales() {
   const [estado, setEstado] = useState<FiltroEstado>('activo')
   const [sexo, setSexo] = useState<FiltroSexo>('todos')
   const [anadiendo, setAnadiendo] = useState(false)
+  // null: sin modo selección
+  const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
+  const [tratando, setTratando] = useState(false)
 
   const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
   const animales = useAnimales(explotacion.id, {
     q: texto || undefined,
-    estado: estado === 'todos' ? undefined : estado,
+    estado: estado === 'todos' ? undefined : estado === 'en_supresion' ? 'activo' : estado,
     sexo: sexo === 'todos' ? undefined : sexo,
+    supresion: estado === 'en_supresion' ? 'en_curso' : undefined,
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/animales/${id}`)
+  // Solo cuentan los marcados que siguen en la lista con los filtros de ahora
+  const seleccionados = (animales.data ?? []).filter((a) => seleccion.has(a.id))
+  const desmarcar = () => setSeleccion(new Set())
 
   return (
     <section className={estilos.pagina}>
@@ -53,6 +66,7 @@ export function PaginaAnimales() {
           etiqueta="Estado"
           opciones={[
             { valor: 'activo', texto: 'Activos' },
+            { valor: 'en_supresion', texto: 'En supresión' },
             { valor: 'vendido', texto: 'Vendidos' },
             { valor: 'muerto', texto: 'Muertos' },
             { valor: 'baja', texto: 'Otras bajas' },
@@ -101,12 +115,14 @@ export function PaginaAnimales() {
         <>
           <p className={estilos.recuento} role="status">
             {animales.data.length} {animales.data.length === 1 ? 'animal' : 'animales'}
+            <span className={estilos.soloMovil}> · Mantén pulsado uno para marcar varios</span>
           </p>
           <Tabla
             etiqueta="Animales"
             filas={animales.data}
             claveFila={(a) => a.id}
             alSeleccionar={(a) => abrir(a.id)}
+            seleccion={{ claves: seleccion, alCambiar: setSeleccion, etiquetaFila: identificacion }}
             columnas={[
               {
                 clave: 'crotal',
@@ -141,7 +157,12 @@ export function PaginaAnimales() {
               {
                 clave: 'estado',
                 titulo: 'Estado',
-                valor: (a) => <InsigniaEstado estado={a.estado} />,
+                valor: (a) => (
+                  <span className={estilos.insignias}>
+                    <InsigniaEstado estado={a.estado} />
+                    {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} corta />}
+                  </span>
+                ),
                 ordenar: (a) => a.estado,
               },
             ]}
@@ -149,11 +170,36 @@ export function PaginaAnimales() {
         </>
       )}
 
-      <BotonFlotante
-        etiqueta="Añadir animal"
-        icono={<Plus aria-hidden size={26} />}
-        alPulsar={() => setAnadiendo(true)}
-      />
+      {seleccionados.length > 0 ? (
+        <div className={estilos.barraSeleccion}>
+          <p role="status">
+            {seleccionados.length === 1
+              ? '1 seleccionado'
+              : `${seleccionados.length} seleccionados`}
+          </p>
+          <div className={estilos.acciones}>
+            <Boton variante="texto" icono={<X aria-hidden size={20} />} onClick={desmarcar}>
+              Desmarcar
+            </Boton>
+            <Boton icono={<Syringe aria-hidden size={20} />} onClick={() => setTratando(true)}>
+              Tratar
+            </Boton>
+          </div>
+        </div>
+      ) : (
+        <BotonFlotante
+          etiqueta="Añadir animal"
+          icono={<Plus aria-hidden size={26} />}
+          alPulsar={() => setAnadiendo(true)}
+        />
+      )}
+      {tratando && (
+        <FormularioTratamiento
+          animales={seleccionados}
+          alCerrar={() => setTratando(false)}
+          alGuardar={desmarcar}
+        />
+      )}
       <FormularioAnimal
         abierto={anadiendo}
         alCerrar={() => setAnadiendo(false)}

@@ -72,7 +72,7 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
   }
 
   return (
-    <Tarjeta aria-labelledby="ficha-pesos" className={estilos.tarjetaPesos}>
+    <Tarjeta aria-labelledby="ficha-pesos" className={estilos.tarjetaRegistros}>
       <div className={estilos.cabeceraTarjeta}>
         <h2 id="ficha-pesos">
           <Scale aria-hidden size={20} className={estilos.iconoTitulo} />

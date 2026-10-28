@@ -83,6 +83,13 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - Periodo de supresión y fecha en que termina
 - Observaciones
 
+Decisiones (GH-20):
+
+- Se registran desde la ficha del animal o, para varios a la vez, marcándolos en el listado de animales y pulsando "Tratar". En el móvil se empieza a marcar manteniendo pulsado un animal (como en Material 3); después, tocar otro lo marca. En la tabla de escritorio, cada fila lleva su casilla. Se crea un tratamiento por animal.
+- Quién lo administra: por defecto, quien lo registra; se puede elegir otra persona del equipo o escribir un nombre.
+- La supresión termina el día de la fecha más los días de supresión. Mientras dura, la ficha y el listado lo muestran ("En supresión hasta el…"), y en el listado se filtra con "Estado: En supresión", aunque no es un estado: se calcula de los tratamientos y el animal sigue activo.
+- Un tratamiento no se corrige ni se borra: se anula con un motivo, sigue en la ficha tachado y deja de contar para la supresión. Para corregirlo, se anula y se registra de nuevo.
+
 ### Reproducción
 
 - Eventos: cubrición (monta natural), inseminación artificial, diagnóstico de gestación (ecografía o palpación), parto, aborto y destete.

@@ -184,6 +184,19 @@ Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
 
 Reglas: kilos mayores que 0 y hasta 2.000, con un decimal, y fecha no futura, entre el nacimiento y la baja del animal (trigger `comprobar_fecha_pesada`, migración `0009`).
 
+### Tratamientos
+
+Tratamientos sanitarios, en `src/rutas/tratamientos.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/tratamientos`:** los del animal, del más reciente al más antiguo, anulados incluidos.
+- **`POST /api/explotaciones/{id}/tratamientos`:** `{ animalIds, fecha, producto, motivo, diasSupresion, dosis?, via?, diagnostico?, aplicadoPorId? | aplicadoPorTexto?, lote?, observaciones? }` registra el mismo tratamiento a uno o varios animales (hasta 500): uno por animal, todos o ninguno. `motivo` es `enfermedad`, `vacuna`, `desparasitacion` u `otro`. Quien lo administra es una persona del equipo (`aplicadoPorId`) o un nombre escrito (`aplicadoPorTexto`, el veterinario).
+- **`POST /api/explotaciones/{id}/tratamientos/{tratamientoId}/anulacion`:** `{ motivo }` anula un tratamiento registrado por error (409 `ya_anulado` si ya lo está).
+- **`GET /api/explotaciones/{id}/tratamientos/opciones`:** las personas activas del equipo y los productos ya usados, para el formulario.
+
+Un tratamiento **no se corrige ni se borra**: se anula con un motivo y sigue en la ficha (trigger `proteger_tratamiento`, migración `0011`). La fecha, no futura y entre el nacimiento y la baja de cada animal, y quien lo administra, del equipo de la explotación (trigger `comprobar_tratamiento`).
+
+**Supresión:** `fin_supresion` es una columna generada, la fecha más los días de supresión: el día en que termina. Un animal está en supresión mientras alguno de sus tratamientos sin anular termine después de hoy. Las fichas de los animales llevan `finSupresion` (el más lejano, o `null`) y el listado se filtra con `?supresion=en_curso`.
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.
@@ -229,6 +242,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
 - `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
+- `test/tratamientos.test.ts`: tratamientos: registro a varios animales, quién lo administra, validación, animales y personas de otra explotación, fechas en la vida del animal, supresión en curso y su filtro, anulación con historial, opciones del formulario, separación por explotación, y que no se corrigen ni se borran.
 - `test/miembros.test.ts`: altas nuevas y existentes, roles, desactivación con y sin otras explotaciones, último administrador y restablecimiento de contraseñas (también por el propietario).
 - `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
 - `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
@@ -283,7 +297,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

@@ -43,6 +43,10 @@ const Animal = z
     fechaBaja: z.iso.date().nullable(),
     causaBaja: z.string().nullable(),
     observaciones: z.string().nullable(),
+    finSupresion: z.iso
+      .date()
+      .nullable()
+      .openapi({ description: 'Día en que termina la supresión en curso, si la hay' }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -76,6 +80,10 @@ const Filtros = z.object({
     .openapi({ description: 'Busca en el crotal, el nombre y la raza', example: 'Rubia' }),
   estado: z.enum(ESTADOS_ANIMAL).optional(),
   sexo: z.enum(SEXOS).optional(),
+  supresion: z
+    .enum(['en_curso'])
+    .optional()
+    .openapi({ description: 'Solo los animales con un periodo de supresión en curso' }),
 })
 
 export const error = (description: string) => ({

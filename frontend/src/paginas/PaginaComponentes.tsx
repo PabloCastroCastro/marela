@@ -4,6 +4,7 @@ import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
 import { BotonFlotante } from '../componentes/BotonFlotante'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
+import { Casilla } from '../componentes/Casilla'
 import { useConfirmacion } from '../componentes/Confirmacion'
 import { Cargando, Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Chips, Insignia, Tarjeta } from '../componentes/Etiquetas'
@@ -102,6 +103,7 @@ export function PaginaComponentes() {
   const [guardando, setGuardando] = useState(false)
   const [texto, setTexto] = useState('')
   const [tipo, setTipo] = useState<'todos' | Animal['tipo']>('todos')
+  const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
   const [desde, setDesde] = useState('')
 
   // El tema forzado solo dura mientras se ve el catálogo
@@ -208,6 +210,12 @@ export function PaginaComponentes() {
           </Selector>
           <AreaTexto etiqueta="Observaciones" />
           <Campo etiqueta="Desactivado" disabled defaultValue="No editable" />
+          <div>
+            <Casilla etiqueta="Sin marcar" />
+            <Casilla etiqueta="Marcada" defaultChecked />
+            <Casilla etiqueta="Algunas marcadas" indeterminada readOnly />
+            <Casilla etiqueta="Desactivada" disabled />
+          </div>
         </div>
       </section>
 
@@ -333,6 +341,10 @@ export function PaginaComponentes() {
             alCambiar={setDesde}
           />
         </BarraFiltros>
+        <p>
+          {seleccion.size} marcados. En la tabla, con las casillas; en el móvil, manteniendo pulsada
+          una tarjeta.
+        </p>
         {filtrados.length === 0 ? (
           <EstadoVacio titulo="Ningún animal coincide" descripcion="Prueba con otros filtros." />
         ) : (
@@ -341,6 +353,11 @@ export function PaginaComponentes() {
             filas={filtrados}
             claveFila={(a) => a.id}
             ordenInicial={{ clave: 'crotal', sentido: 'asc' }}
+            seleccion={{
+              claves: seleccion,
+              alCambiar: setSeleccion,
+              etiquetaFila: (a) => a.crotal,
+            }}
             alSeleccionar={(a) => avisar({ mensaje: `Abrir la ficha de ${a.nombre}` })}
             columnas={[
               {

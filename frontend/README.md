@@ -17,7 +17,7 @@ src/
   auth/             sesión, inicio de sesión, cambio de contraseña y rutas protegidas
   explotaciones/    explotaciones del usuario, elección, explotación activa y sus datos
   plataforma/       gestión de las explotaciones por el propietario
-  animales/         lista, ficha, alta, edición, bajas y pesos de animales
+  animales/         lista, ficha, alta, edición, bajas, pesos y tratamientos de animales
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
   diseno/           estructura de una explotación: cabecera, selector, cuenta y navegación adaptable
   componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)
@@ -83,12 +83,13 @@ Componentes propios en `src/componentes/`, cada uno con su `.module.css`, según
 |---|---|
 | `Boton.tsx` | `Boton` (`primario`, `secundario`, `texto`, `peligro`; `compacto`, `normal`, `grande`; `cargando`) y `BotonIcono` |
 | `Campo.tsx` | `Campo`, `CampoFecha`, `AreaTexto` y `Selector`, con etiqueta, ayuda y error |
+| `Casilla.tsx` | Casilla de verificación con área táctil de 48 px, también indeterminada |
 | `HojaInferior.tsx` | Hoja que sube desde abajo en el móvil (se cierra arrastrando el asa) y diálogo centrado desde 40rem |
 | `Confirmacion.tsx` | `useConfirmacion()`: `await confirmar({ titulo, textoConfirmar, peligrosa })` |
 | `Avisos.tsx` | `useAvisos()`: `avisar({ tipo, mensaje, accion })`; los de éxito duran 4 s y los de error se quedan |
 | `Estados.tsx` | `EstadoVacio`, `EstadoError` (con Reintentar), `Cargando` y `Esqueleto` |
 | `Etiquetas.tsx` | `Insignia`, `Chip`, `Chips` (selección única) y `Tarjeta` |
-| `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas |
+| `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas. Con `seleccion`, se marcan varias filas: casillas en la tabla y pulsación larga en las tarjetas |
 | `Filtros.tsx` | `BarraFiltros`, `Buscador` (avisa 300 ms después de dejar de escribir) y `FiltroDesplegable` ("Estado: Activos ▾": un desplegable nativo con forma de chip, marcado cuando no está en su valor por defecto) |
 | `BotonFlotante.tsx` | Acción de crear en el móvil, encima de la barra inferior; en pantalla ancha no se muestra |
 | `iconos.ts` | Iconos propios con el estilo de Lucide (`Vaca`) |

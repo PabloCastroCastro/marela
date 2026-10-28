@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { and, asc, eq, ilike, or, type SQL } from 'drizzle-orm'
+import { and, asc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { Transaccion } from './db/explotacion.js'
 import {
@@ -129,9 +129,15 @@ const columnas = {
   modificadoEn: animales.modificadoEn,
 }
 
+// Fin de la supresión en curso: el más lejano de sus tratamientos sin anular, si aún no ha llegado
+// (GH-20)
+const finSupresion = (hoy: string) =>
+  sql<string | null>`(select max(t.fin_supresion)::text from tratamientos t
+    where t.animal_id = ${animales.id} and t.anulado_en is null and t.fin_supresion > ${hoy})`
+
 function consulta(tx: Transaccion) {
   return tx
-    .select(columnas)
+    .select({ ...columnas, finSupresion: finSupresion(hoyEnMadrid()) })
     .from(animales)
     .leftJoin(madre, eq(madre.id, animales.madreId))
     .leftJoin(padre, eq(padre.id, animales.padreId))
@@ -156,6 +162,7 @@ export type FiltrosAnimales = {
   q?: string
   estado?: (typeof ESTADOS_ANIMAL)[number]
   sexo?: (typeof SEXOS)[number]
+  supresion?: 'en_curso'
 }
 
 export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) {
@@ -173,6 +180,8 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
   }
   if (filtros.estado) condiciones.push(eq(animales.estado, filtros.estado))
   if (filtros.sexo) condiciones.push(eq(animales.sexo, filtros.sexo))
+  if (filtros.supresion === 'en_curso')
+    condiciones.push(sql`${finSupresion(hoyEnMadrid())} is not null`)
   const filas = await consulta(tx)
     .where(and(...condiciones))
     .orderBy(asc(animales.crotal))

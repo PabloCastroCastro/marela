@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -336,5 +336,161 @@ describe('pesos', () => {
       await screen.findByRole('button', { name: 'Corregir la pesada del 12/04/2026' }),
     ).toBeInTheDocument()
     expect(estado.pesadas.find((p) => p.fecha === '2026-04-12')).toMatchObject({ kg: 99 })
+  })
+})
+
+describe('tratamientos', () => {
+  // Fecha de hace n días, en aaaa-mm-dd
+  const haceDias = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
+
+  const enSupresion = () =>
+    estado.tratamientos.push({
+      id: 't2',
+      animalId: 'a3',
+      fecha: haceDias(2),
+      producto: 'Oxitetraciclina LA',
+      dosis: '20 ml',
+      via: 'intramuscular',
+      motivo: 'enfermedad',
+      diagnostico: 'Neumonía',
+      aplicadoPor: { id: null, nombre: 'Veterinaria de la ADS' },
+      lote: null,
+      diasSupresion: 28,
+      observaciones: null,
+      anulacion: null,
+    })
+
+  it('muestra el historial y la supresión en curso en la ficha', async () => {
+    enSupresion()
+    simularApi(estado)
+    abrir(`${animales}/a3`)
+    const tarjeta = await screen.findByRole('region', { name: 'Tratamientos' })
+    const historial = await within(tarjeta).findByRole('list', {
+      name: 'Historial de tratamientos',
+    })
+    expect(within(historial).getByText('Oxitetraciclina LA')).toBeInTheDocument()
+    expect(within(historial).getByText(/Enfermedad · Neumonía/)).toBeInTheDocument()
+    expect(within(historial).getByText(/por Veterinaria de la ADS/)).toBeInTheDocument()
+    // En la cabecera de la ficha y en la tarjeta
+    expect(screen.getAllByText(/^En supresión hasta el/)).toHaveLength(2)
+  })
+
+  it('registra un tratamiento desde la ficha', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Tratamientos' })
+    expect(await within(tarjeta).findByText('Ivermectina 1 %')).toBeInTheDocument()
+    expect(screen.queryByText(/^En supresión/)).not.toBeInTheDocument()
+
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar tratamiento' }))
+    const hoja = screen.getByRole('dialog', { name: /Registrar tratamiento · Marela/ })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar tratamiento' }))
+    expect(within(hoja).getByText('Indica el motivo')).toBeInTheDocument()
+    expect(within(hoja).getByText(/Indica los días de supresión/)).toBeInTheDocument()
+
+    await usuario.selectOptions(within(hoja).getByLabelText(/^Motivo/), 'Enfermedad')
+    await usuario.type(within(hoja).getByLabelText(/^Producto/), 'Meloxicam')
+    await usuario.type(within(hoja).getByLabelText(/^Días de supresión/), '15')
+    expect(within(hoja).getByText(/^Termina el/)).toBeInTheDocument()
+    // Por defecto lo administra quien lo registra
+    expect(within(hoja).getByLabelText('Quién lo administra')).toHaveValue('u1')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar tratamiento' }))
+
+    expect(await screen.findByText('Tratamiento registrado')).toBeInTheDocument()
+    expect(await within(tarjeta).findByText('Meloxicam')).toBeInTheDocument()
+    expect(estado.tratamientos.at(-1)).toMatchObject({
+      animalId: 'a1',
+      producto: 'Meloxicam',
+      diasSupresion: 15,
+      aplicadoPor: { id: 'u1' },
+    })
+  })
+
+  it('anula un tratamiento con motivo, que sigue en la ficha', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Tratamientos' })
+    await usuario.click(
+      await within(tarjeta).findByRole('button', {
+        name: 'Anular el tratamiento con Ivermectina 1 % del 10/04/2026',
+      }),
+    )
+    const hoja = screen.getByRole('dialog', { name: '¿Anular el tratamiento?' })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Anular tratamiento' }))
+    expect(within(hoja).getByText('Indica por qué se anula')).toBeInTheDocument()
+
+    await usuario.type(within(hoja).getByLabelText(/^Motivo/), 'Era otra vaca')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Anular tratamiento' }))
+    expect(await screen.findByText('Tratamiento con Ivermectina 1 % anulado')).toBeInTheDocument()
+    expect(await within(tarjeta).findByText('Anulado')).toBeInTheDocument()
+    expect(within(tarjeta).getByText(/Era otra vaca/)).toBeInTheDocument()
+    expect(within(tarjeta).queryByRole('button', { name: /^Anular/ })).not.toBeInTheDocument()
+  })
+
+  it('en el móvil, mantener pulsado un animal empieza a marcar varios y los trata', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(animales)
+    const lista = await tarjetas()
+    const marela = within(lista).getByText('ES041503456789').closest('button') as HTMLElement
+    fireEvent.pointerDown(marela, { clientX: 10, clientY: 10 })
+    await waitFor(() => expect(screen.getByText('1 seleccionado')).toBeInTheDocument())
+    // Al soltar, el clic llega a la tarjeta ya en modo selección: ni abre la ficha ni la desmarca
+    fireEvent.pointerUp(marela)
+    fireEvent.click(within(lista).getByText('ES041503456789'))
+    expect(router.state.location.pathname).toBe(animales)
+    expect(screen.getByText('1 seleccionado')).toBeInTheDocument()
+
+    // Con uno marcado, tocar otro lo marca
+    await usuario.click(within(lista).getByText('ES041503457001'))
+    expect(screen.getByText('2 seleccionados')).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Tratar' }))
+    const hoja = screen.getByRole('dialog', { name: 'Tratar 2 animales' })
+    await usuario.selectOptions(within(hoja).getByLabelText(/^Motivo/), 'Vacuna')
+    await usuario.type(within(hoja).getByLabelText(/^Producto/), 'Vacuna lengua azul')
+    await usuario.type(within(hoja).getByLabelText(/^Días de supresión/), '0')
+    await usuario.selectOptions(within(hoja).getByLabelText('Quién lo administra'), 'otra')
+    await usuario.type(within(hoja).getByLabelText(/^Nombre de quien/), 'Veterinaria')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar tratamiento' }))
+
+    expect(await screen.findByText('Tratamiento registrado a 2 animales')).toBeInTheDocument()
+    expect(estado.tratamientos.slice(-2).map((t) => [t.animalId, t.aplicadoPor?.nombre])).toEqual([
+      ['a1', 'Veterinaria'],
+      ['a3', 'Veterinaria'],
+    ])
+    // Quedan desmarcados
+    expect(screen.queryByText(/seleccionados?$/)).not.toBeInTheDocument()
+  })
+
+  it('en la tabla, las casillas están siempre a la vista', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(animales)
+    await tarjetas()
+    const tabla = screen.getByRole('table', { name: 'Animales' })
+    await usuario.click(within(tabla).getByRole('checkbox', { name: 'Seleccionar todos' }))
+    expect(screen.getByText('3 seleccionados')).toBeInTheDocument()
+    await usuario.click(
+      within(tabla).getByRole('checkbox', { name: 'Seleccionar Marela · ES041503456789' }),
+    )
+    expect(screen.getByText('2 seleccionados')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Desmarcar' }))
+    expect(screen.queryByText(/seleccionados?$/)).not.toBeInTheDocument()
+  })
+
+  it('filtra los animales con supresión en curso', async () => {
+    enSupresion()
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(animales)
+    await tarjetas()
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'En supresión')
+    expect(await screen.findByText('1 animal')).toBeInTheDocument()
+    const lista = await tarjetas()
+    expect(within(lista).getByText('ES041503457001')).toBeInTheDocument()
+    expect(within(lista).getByText(/^En supresión hasta el/)).toBeInTheDocument()
   })
 })
