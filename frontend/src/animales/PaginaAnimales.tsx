@@ -1,4 +1,4 @@
-import { Heart, Plus, Syringe, X } from 'lucide-react'
+import { Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -193,11 +193,7 @@ export function PaginaAnimales() {
               icono={<X aria-hidden size={20} />}
               onClick={desmarcar}
             />
-            <Boton
-              variante="secundario"
-              icono={<Heart aria-hidden size={20} />}
-              onClick={() => setCubriendo(true)}
-            >
+            <Boton variante="secundario" onClick={() => setCubriendo(true)}>
               Cubrir
             </Boton>
             <Boton icono={<Syringe aria-hidden size={20} />} onClick={() => setTratando(true)}>

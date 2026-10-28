@@ -1,4 +1,4 @@
-import { Ban, Heart, Plus } from 'lucide-react'
+import { Ban, Plus } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { Link } from 'react-router'
 import { api, datos } from '../api/cliente'
@@ -110,10 +110,7 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
   return (
     <Tarjeta aria-labelledby="ficha-reproduccion" className={estilos.tarjetaRegistros}>
       <div className={estilos.cabeceraTarjeta}>
-        <h2 id="ficha-reproduccion">
-          <Heart aria-hidden size={20} className={estilos.iconoTitulo} />
-          Reproducción
-        </h2>
+        <h2 id="ficha-reproduccion">Reproducción</h2>
         {tipos.length > 0 && (
           <Boton
             variante="secundario"
