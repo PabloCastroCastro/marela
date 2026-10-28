@@ -160,7 +160,7 @@ export function PaginaAnimales() {
                 valor: (a) => (
                   <span className={estilos.insignias}>
                     <InsigniaEstado estado={a.estado} />
-                    {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} />}
+                    {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} corta />}
                   </span>
                 ),
                 ordenar: (a) => a.estado,
