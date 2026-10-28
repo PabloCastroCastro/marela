@@ -48,6 +48,8 @@ type PropsChips<T extends string> = {
   opciones: { valor: T; texto: string }[]
   seleccion: T
   alCambiar: (valor: T) => void
+  // En varias filas en lugar de desplazarse en horizontal, para que se vean todas las opciones
+  envolver?: boolean
 }
 
 // Grupo de chips con una sola opción seleccionada (Todos, Vacas, Terneros…)
@@ -56,10 +58,15 @@ export function Chips<T extends string>({
   opciones,
   seleccion,
   alCambiar,
+  envolver,
 }: PropsChips<T>) {
   return (
     // biome-ignore lint/a11y/useSemanticElements: un fieldset no admite el diseño en fila con desplazamiento
-    <div className={estilos.chips} role="group" aria-label={etiqueta}>
+    <div
+      className={clases(estilos.chips, envolver && estilos.envolver)}
+      role="group"
+      aria-label={etiqueta}
+    >
       {opciones.map((o) => (
         <Chip
           key={o.valor}

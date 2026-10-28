@@ -12,8 +12,8 @@ import estilos from './Animales.module.css'
 import { type AnimalDetalle, identificacion, SEXOS } from './datos'
 import { FormularioAnulacion } from './FormularioAnulacion'
 import { FormularioEvento } from './FormularioEvento'
-import { FormularioParto } from './FormularioParto'
 import { InsigniaGestacion } from './InsigniaGestacion'
+import { useRecorte } from './Recorte'
 import {
   type EventoReproductivo,
   METODOS,
@@ -43,15 +43,15 @@ type Anulando =
   | { tipo: 'evento'; evento: EventoReproductivo; titulo: string }
   | { tipo: 'parto'; parto: Parto }
 
-// Reproducción del animal en su ficha (GH-22, GH-23): la gestación en curso y el historial, con los
-// partos, los anulados y los destetes de sus hijos. En un ternero, su destete.
+// Reproducción del animal en su ficha (GH-22, GH-23): arriba, lo que viene (la gestación en curso y
+// el parto previsto); debajo, lo último del historial, con los partos, los anulados y los destetes
+// de sus hijos. En un ternero, su destete.
 export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
   const explotacion = useExplotacionActual()
   const hembra = animal.sexo === 'hembra'
   const eventos = useEventos(explotacion.id, animal.id)
   const partos = usePartos(explotacion.id, animal.id, hembra)
   const [registrando, setRegistrando] = useState(false)
-  const [pariendo, setPariendo] = useState(false)
   const [anulando, setAnulando] = useState<Anulando>()
   const lista = `${rutaExplotacion(explotacion.id)}/animales`
   // El destete, solo si aún no lo tiene
@@ -121,6 +121,13 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
     anular: () => setAnulando({ tipo: 'parto', parto: p }),
   })
 
+  // Del más reciente al más antiguo; a la vista, solo lo último
+  const entradas = [
+    ...(eventos.data ?? []).map(deEvento),
+    ...(partos.data ?? []).map(deParto),
+  ].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.creadoEn.localeCompare(a.creadoEn))
+  const recorte = useRecorte(entradas, (n) => `Ver todo el historial (${n})`)
+
   let contenido: ReactNode
   if (eventos.isPending || (hembra && partos.isPending)) {
     contenido = <Esqueleto bloques={[{ alto: '4rem' }, { alto: '4rem' }]} />
@@ -135,16 +142,12 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
       />
     )
   } else {
-    // Del más reciente al más antiguo
-    const entradas = [...eventos.data.map(deEvento), ...(partos.data ?? []).map(deParto)].sort(
-      (a, b) => b.fecha.localeCompare(a.fecha) || b.creadoEn.localeCompare(a.creadoEn),
-    )
     contenido =
       entradas.length === 0 ? (
         <p className={estilos.suave}>Sin eventos registrados</p>
       ) : (
         <ul className={estilos.tratamientos} aria-label="Historial reproductivo">
-          {entradas.map((e) => (
+          {recorte.elementos.map((e) => (
             <li key={e.clave} className={e.anulacion ? estilos.anulado : undefined}>
               <div>
                 <span className={estilos.producto}>{e.titulo}</span>
@@ -182,30 +185,16 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
     <Tarjeta aria-labelledby="ficha-reproduccion" className={estilos.tarjetaRegistros}>
       <div className={estilos.cabeceraTarjeta}>
         <h2 id="ficha-reproduccion">Reproducción</h2>
-        <div className={estilos.acciones}>
-          {hembra && animal.estado === 'activo' && (
-            <Boton
-              variante="secundario"
-              tamano="compacto"
-              icono={<Plus aria-hidden size={18} />}
-              onClick={() => setPariendo(true)}
-            >
-              Registrar parto
-            </Boton>
-          )}
-          {tipos.length > 0 && (
-            <Boton
-              variante="secundario"
-              tamano="compacto"
-              icono={<Plus aria-hidden size={18} />}
-              onClick={() => setRegistrando(true)}
-            >
-              {tipos.length === 1 && tipos[0] === 'destete'
-                ? 'Registrar destete'
-                : 'Registrar evento'}
-            </Boton>
-          )}
-        </div>
+        {tipos.length > 0 && (
+          <Boton
+            variante="secundario"
+            tamano="compacto"
+            icono={<Plus aria-hidden size={18} />}
+            onClick={() => setRegistrando(true)}
+          >
+            {tipos.length === 1 && tipos[0] === 'destete' ? 'Registrar destete' : 'Registrar'}
+          </Boton>
+        )}
       </div>
       {animal.gestacion && (
         <div>
@@ -213,6 +202,7 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
         </div>
       )}
       {contenido}
+      {recorte.boton}
       {registrando && (
         <FormularioEvento
           animales={[animal]}
@@ -220,7 +210,6 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
           alCerrar={() => setRegistrando(false)}
         />
       )}
-      {pariendo && <FormularioParto madre={animal} alCerrar={() => setPariendo(false)} />}
       {anulando?.tipo === 'evento' && (
         <FormularioAnulacion
           titulo="¿Anular el evento?"

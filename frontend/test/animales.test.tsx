@@ -542,7 +542,7 @@ describe('reproducción', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await within(tarjeta).findByText('Sin eventos registrados')).toBeInTheDocument()
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar evento' }))
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Inseminación' }))
     await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
@@ -568,7 +568,7 @@ describe('reproducción', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await screen.findAllByText(/^Parto previsto el .*, sin confirmar$/)).toHaveLength(2)
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar evento' }))
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Diagnóstico' }))
     await usuario.click(within(hoja).getByRole('button', { name: 'Palpación' }))
@@ -599,7 +599,7 @@ describe('reproducción', () => {
     const usuario = userEvent.setup()
     const router = abrir(`${animales}/a3`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
-    await usuario.click(await within(tarjeta).findByRole('button', { name: 'Registrar evento' }))
+    await usuario.click(await within(tarjeta).findByRole('button', { name: 'Registrar' }))
     const hoja = screen.getByRole('dialog', { name: /Registrar · ES041503457001/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Destete' }))
     await usuario.type(within(hoja).getByLabelText(/^Peso al destete/), '231,5')
@@ -659,8 +659,8 @@ describe('partos', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await screen.findAllByText(/^Parto previsto el/)).not.toHaveLength(0)
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar parto' }))
-    const hoja = screen.getByRole('dialog', { name: /Registrar parto · Marela/ })
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     expect(within(hoja).getByText(/El padre es el de la cubrición/)).toBeInTheDocument()
 
     await usuario.click(within(hoja).getByRole('button', { name: 'Añadir otro ternero' }))
@@ -739,5 +739,41 @@ describe('partos', () => {
     await usuario.click(within(hoja).getByRole('button', { name: 'Anular parto' }))
     expect(await screen.findByText(/^Parto del .* anulado$/)).toBeInTheDocument()
     expect(estado.animales.some((x) => x.id === 'a9')).toBe(false)
+  })
+})
+
+describe('historiales largos', () => {
+  it('muestran solo los tres últimos registros, y el resto al pedirlo', async () => {
+    for (const [i, fecha] of ['2026-01-10', '2026-02-10', '2026-03-10', '2026-04-10'].entries()) {
+      estado.tratamientos.push({
+        id: `t${i + 2}`,
+        animalId: 'a1',
+        fecha,
+        producto: `Producto ${i + 1}`,
+        dosis: null,
+        via: null,
+        motivo: 'otro',
+        diagnostico: null,
+        aplicadoPor: null,
+        lote: null,
+        diasSupresion: 0,
+        observaciones: null,
+        anulacion: null,
+      })
+    }
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Tratamientos' })
+    const lista = await within(tarjeta).findByRole('list', { name: 'Historial de tratamientos' })
+    expect(within(lista).getAllByRole('listitem')).toHaveLength(3)
+    await usuario.click(
+      within(tarjeta).getByRole('button', { name: 'Ver todos los tratamientos (5)' }),
+    )
+    expect(within(lista).getAllByRole('listitem')).toHaveLength(5)
+    expect(within(tarjeta).getByRole('button', { name: 'Ver menos' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
   })
 })

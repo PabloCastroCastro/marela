@@ -1,0 +1,28 @@
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState } from 'react'
+import { Boton } from '../componentes/Boton'
+
+// Las listas de la ficha (reproducción, tratamientos, pesadas) muestran solo lo más reciente: con
+// los años, una vaca acumula decenas de registros. El resto, con "Ver todo".
+export const VISIBLES = 3
+
+export function useRecorte<T>(lista: T[], textoTodo: (total: number) => string) {
+  const [todo, setTodo] = useState(false)
+  const recortada = lista.length > VISIBLES
+  return {
+    elementos: todo || !recortada ? lista : lista.slice(0, VISIBLES),
+    boton: recortada ? (
+      <div>
+        <Boton
+          variante="texto"
+          tamano="compacto"
+          icono={todo ? <ChevronUp aria-hidden size={18} /> : <ChevronDown aria-hidden size={18} />}
+          aria-expanded={todo}
+          onClick={() => setTodo(!todo)}
+        >
+          {todo ? 'Ver menos' : textoTodo(lista.length)}
+        </Boton>
+      </div>
+    ) : null,
+  }
+}
