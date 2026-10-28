@@ -15,6 +15,7 @@ import {
 import type { Transaccion } from './db/explotacion.js'
 import { fincas, HECTAREAS_MAXIMO, parcelas, REGIMENES_FINCA } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
+import { hoyEnMadrid } from './fechas.js'
 
 // Fincas de una explotación y sus parcelas (GH-25). Como en animales.ts, todas las funciones reciben
 // la transacción de enLaExplotacion.
@@ -131,13 +132,22 @@ const columnas = {
   ...totales,
 }
 
+// Fin del plazo de seguridad en curso: el más lejano de sus tratamientos fitosanitarios sin anular,
+// si aún no ha llegado (GH-27). Hasta ese día no se cosecha ni se pasta.
+const finSeguridad = (hoy: string) =>
+  sql<string | null>`(select max(a.fin_seguridad)::text from aplicaciones a
+    where a.finca_id = "fincas"."id" and a.anulado_en is null and a.fin_seguridad > ${hoy})`
+
+const consulta = (tx: Transaccion) =>
+  tx.select({ ...columnas, finSeguridad: finSeguridad(hoyEnMadrid()) }).from(fincas)
+
 const finca = <T extends { creadoEn: Date; modificadoEn: Date }>(f: T) => ({
   ...f,
   creadoEn: f.creadoEn.toISOString(),
   modificadoEn: f.modificadoEn.toISOString(),
 })
 
-export type FiltrosFincas = { q?: string; activa?: boolean }
+export type FiltrosFincas = { q?: string; activa?: boolean; seguridad?: 'en_curso' }
 
 export async function listarFincas(tx: Transaccion, filtros: FiltrosFincas) {
   const condiciones: (SQL | undefined)[] = []
@@ -147,9 +157,9 @@ export async function listarFincas(tx: Transaccion, filtros: FiltrosFincas) {
     condiciones.push(or(ilike(fincas.nombre, patron), ilike(fincas.municipio, patron)))
   }
   if (filtros.activa !== undefined) condiciones.push(eq(fincas.activa, filtros.activa))
-  const filas = await tx
-    .select(columnas)
-    .from(fincas)
+  if (filtros.seguridad === 'en_curso')
+    condiciones.push(sql`${finSeguridad(hoyEnMadrid())} is not null`)
+  const filas = await consulta(tx)
     .where(and(...condiciones))
     .orderBy(asc(sql`lower(${fincas.nombre})`))
   return filas.map(finca)
@@ -157,7 +167,7 @@ export async function listarFincas(tx: Transaccion, filtros: FiltrosFincas) {
 
 // Ficha completa: la finca y sus parcelas
 export async function verFinca(tx: Transaccion, fincaId: string) {
-  const [fila] = await tx.select(columnas).from(fincas).where(eq(fincas.id, fincaId))
+  const [fila] = await consulta(tx).where(eq(fincas.id, fincaId))
   if (!fila)
     throw new ErrorApi(404, 'finca_no_encontrada', 'No existe la finca en esta explotación')
   const suyas = await tx

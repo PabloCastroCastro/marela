@@ -21,7 +21,7 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
   const [anulando, setAnulando] = useState<Tratamiento>()
 
   // A la vista, solo los últimos
-  const recorte = useRecorte(tratamientos.data ?? [], (n) => `Ver todos los tratamientos (${n})`)
+  const recorte = useRecorte(tratamientos.data ?? [])
 
   let contenido: ReactNode
   if (tratamientos.isPending) {

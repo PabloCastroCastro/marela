@@ -1,4 +1,5 @@
 export * from './animales.js'
+export * from './aplicaciones.js'
 export * from './auth.js'
 export * from './fincas.js'
 export * from './labores.js'

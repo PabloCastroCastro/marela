@@ -17,7 +17,7 @@ export function TarjetaLabores({ finca }: { finca: FincaDetalle }) {
   const explotacion = useExplotacionActual()
   const labores = useLabores(explotacion.id, finca.id)
   const [corrigiendo, setCorrigiendo] = useState<Labor>()
-  const recorte = useRecorte(labores.data ?? [], (n) => `Ver todas las labores (${n})`)
+  const recorte = useRecorte(labores.data ?? [])
 
   let contenido: ReactNode
   if (labores.isPending) {

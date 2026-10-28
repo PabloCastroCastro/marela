@@ -25,6 +25,10 @@ const Finca = z
     activa: z.boolean(),
     superficie: z.number().openapi({ description: 'Hectáreas: la suma de sus parcelas' }),
     numeroParcelas: z.number().int(),
+    finSeguridad: z.iso.date().nullable().openapi({
+      description:
+        'Fin del plazo de seguridad en curso: hasta ese día no se cosecha ni se pasta (null si no hay)',
+    }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -60,6 +64,10 @@ const Filtros = z.object({
     .transform((v) => v === 'true')
     .optional()
     .openapi({ description: 'Solo las activas (true) o las desactivadas (false); sin él, todas' }),
+  seguridad: z
+    .enum(['en_curso'])
+    .optional()
+    .openapi({ description: 'Solo las que tienen un plazo de seguridad en curso' }),
 })
 
 const error = (description: string) => ({

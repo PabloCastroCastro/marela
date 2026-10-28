@@ -8,6 +8,7 @@ import { migrar } from './migrar.js'
 import {
   account,
   animales,
+  aplicaciones,
   eventosReproductivos,
   fincas,
   labores,
@@ -53,6 +54,7 @@ const PARTO = 9
 const FINCA = 10
 const PARCELA = 11
 const LABOR = 12
+const APLICACION = 13
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -594,6 +596,64 @@ const laboresVeiga: (Omit<typeof labores.$inferInsert, 'fincaId' | 'superficie'>
   },
 ]
 
+// Abonados y tratamientos fitosanitarios: purín y abono mineral en la pradera, y un herbicida contra
+// la romaza hace una semana, para que haya un plazo de seguridad en curso. Uno anulado.
+type AplicacionEjemplo = Omit<typeof aplicaciones.$inferInsert, 'fincaId' | 'superficie'> & {
+  finca: number
+  superficie?: number
+  anulado?: string
+}
+
+const aplicacionesVeiga: AplicacionEjemplo[] = [
+  {
+    finca: 1,
+    tipo: 'abono',
+    fecha: '2026-02-20',
+    producto: 'Purín de vacuno',
+    tipoAbono: 'organico',
+    dosis: 30,
+    unidadDosis: 'm3_ha',
+    aplicadoPorId: sid(USUARIO, 4),
+  },
+  {
+    finca: 1,
+    tipo: 'abono',
+    fecha: '2026-03-15',
+    producto: 'NPK 8-24-16',
+    tipoAbono: 'mineral',
+    dosis: 400,
+    unidadDosis: 'kg_ha',
+    aplicadoPorId: sid(USUARIO, 2),
+    lote: 'AG-2611',
+  },
+  {
+    finca: 1,
+    tipo: 'fitosanitario',
+    fecha: haceDias(7),
+    producto: 'Fluroxipir 20 %',
+    dosis: 1.5,
+    unidadDosis: 'l_ha',
+    superficie: 2.3456,
+    plaga: 'Romaza',
+    diasSeguridad: 28,
+    aplicadoPorTexto: 'Cooperativa do Deza',
+    ropo: '3600012345678',
+    equipo: 'Pulverizador suspendido 800 l',
+    lote: 'FX-0925',
+  },
+  {
+    finca: 2,
+    tipo: 'abono',
+    fecha: '2026-04-20',
+    producto: 'Urea 46 %',
+    tipoAbono: 'mineral',
+    dosis: 200,
+    unidadDosis: 'kg_ha',
+    aplicadoPorId: sid(USUARIO, 2),
+    anulado: 'Era en Agra de abaixo',
+  },
+]
+
 const superficieFinca = (n: number) =>
   fincasVeiga.find((f) => f.n === n)?.parcelas.reduce((t, p) => t + p.superficie, 0) ?? 0
 
@@ -608,6 +668,20 @@ await enExplotacion(
           fincaId: sid(FINCA, finca),
           superficie: superficie ?? superficieFinca(finca),
           ...l,
+        })
+        .onConflictDoNothing()
+    }
+    for (const [i, { finca, superficie, anulado, ...a }] of aplicacionesVeiga.entries()) {
+      await tx
+        .insert(aplicaciones)
+        .values({
+          id: sid(APLICACION, i + 1),
+          fincaId: sid(FINCA, finca),
+          superficie: superficie ?? superficieFinca(finca),
+          ...a,
+          ...(anulado
+            ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
+            : {}),
         })
         .onConflictDoNothing()
     }

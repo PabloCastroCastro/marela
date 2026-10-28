@@ -2,23 +2,39 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { Boton } from '../componentes/Boton'
 import { HojaInferior } from '../componentes/HojaInferior'
-import type { FincaDetalle } from './datos'
+import { TIPOS_APLICACION, type TipoAplicacion } from './aplicaciones'
+import type { Finca } from './datos'
 import estilos from './Fincas.module.css'
+import { FormularioAplicacion } from './FormularioAplicacion'
 import { FormularioLabor } from './FormularioLabor'
 import { TIPOS_LABOR, type TipoLabor } from './labores'
 
+type Opcion = TipoLabor | TipoAplicacion
+
+// En el orden del año: se siembra, se abona y se trata, y se cosecha
+const OPCIONES: Opcion[] = ['siembra', 'abono', 'fitosanitario', 'cosecha', 'otra']
+
+const TEXTOS: Record<Opcion, string> = { ...TIPOS_LABOR, ...TIPOS_APLICACION }
+
+const esAplicacion = (o: Opcion): o is TipoAplicacion => o in TIPOS_APLICACION
+
 // Acceso rápido desde la ficha de la finca a registrar lo que se hace en ella, como en la de los
-// animales: siembra, cosecha u otra labor (GH-26) y, al final, desactivarla. El abono, los
-// fitosanitarios y el pastoreo se añadirán aquí.
+// animales: siembra, cosecha u otra labor (GH-26), abono y fitosanitarios (GH-27) y, al final,
+// desactivarla. También desde el listado, para las fincas marcadas. El pastoreo se añadirá aquí.
 export function MenuRegistrarFinca({
-  finca,
+  fincas,
   alDesactivar,
+  alGuardar,
 }: {
-  finca: FincaDetalle
-  alDesactivar: () => void
+  fincas: Finca[]
+  // Solo en la ficha
+  alDesactivar?: () => void
+  // Tras registrar, por ejemplo para desmarcar las fincas del listado
+  alGuardar?: () => void
 }) {
   const [abierto, setAbierto] = useState(false)
-  const [tipo, setTipo] = useState<TipoLabor>()
+  const [opcion, setOpcion] = useState<Opcion>()
+  const cerrar = () => setOpcion(undefined)
 
   return (
     <>
@@ -31,35 +47,50 @@ export function MenuRegistrarFinca({
       </Boton>
       <HojaInferior abierta={abierto} alCerrar={() => setAbierto(false)} titulo="Registrar">
         <div className={estilos.opcionesRegistrar}>
-          {(Object.keys(TIPOS_LABOR) as TipoLabor[]).map((t) => (
+          {OPCIONES.map((o) => (
             <Boton
-              key={t}
+              key={o}
               variante="secundario"
               anchoCompleto
               onClick={() => {
                 setAbierto(false)
-                setTipo(t)
+                setOpcion(o)
               }}
             >
-              {TIPOS_LABOR[t]}
+              {TEXTOS[o]}
             </Boton>
           ))}
-          <Boton
-            variante="secundario"
-            anchoCompleto
-            className={estilos.peligro}
-            onClick={() => {
-              setAbierto(false)
-              alDesactivar()
-            }}
-          >
-            Desactivar la finca
-          </Boton>
+          {alDesactivar && (
+            <Boton
+              variante="secundario"
+              anchoCompleto
+              className={estilos.peligro}
+              onClick={() => {
+                setAbierto(false)
+                alDesactivar()
+              }}
+            >
+              Desactivar la finca
+            </Boton>
+          )}
         </div>
       </HojaInferior>
-      {tipo && (
-        <FormularioLabor fincas={[finca]} tipoInicial={tipo} alCerrar={() => setTipo(undefined)} />
-      )}
+      {opcion &&
+        (esAplicacion(opcion) ? (
+          <FormularioAplicacion
+            fincas={fincas}
+            tipoInicial={opcion}
+            alCerrar={cerrar}
+            alGuardar={alGuardar}
+          />
+        ) : (
+          <FormularioLabor
+            fincas={fincas}
+            tipoInicial={opcion}
+            alCerrar={cerrar}
+            alGuardar={alGuardar}
+          />
+        ))}
     </>
   )
 }
