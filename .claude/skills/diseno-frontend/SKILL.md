@@ -230,7 +230,7 @@ La estructura la da `src/diseno/Aplicacion.tsx`:
 
 ## 6. Componentes (`src/componentes/`)
 
-El catálogo base (GH-9) se puede ver en `/componentes` (solo en desarrollo, con selector de tema claro u oscuro); el README del frontend dice en qué archivo está cada componente. Los de la tabla que aún no existen (`Casilla`, `Opcion`, `Interruptor`, `ElementoLista`, `CabeceraSeccion`, `TarjetaCifra`, `BotonFlotante`, `AvisoSinConexion`) se crean en `src/componentes/` cuando los necesite la primera pantalla, y se añaden al catálogo.
+El catálogo base (GH-9) se puede ver en `/componentes` (solo en desarrollo, con selector de tema claro u oscuro); el README del frontend dice en qué archivo está cada componente. Los de la tabla que aún no existen (`Casilla`, `Opcion`, `Interruptor`, `ElementoLista`, `CabeceraSeccion`, `TarjetaCifra`, `AvisoSinConexion`) se crean en `src/componentes/` cuando los necesite la primera pantalla, y se añaden al catálogo.
 
 ### 6.1 Reglas comunes
 
@@ -298,7 +298,7 @@ Toda pantalla con datos resuelve **4 estados**:
 | **Inicio de sesión** | Centrada, de 400 px de ancho como máximo. Logo, "Usuario o email" y contraseña con mostrar u ocultar, y un botón primario a lo ancho. Los errores van bajo cada campo, y `autocomplete="username"` y `"current-password"`. **No hay registro**: los usuarios los crea el administrador. |
 | **Selector de explotación** | Si el usuario tiene varias explotaciones, al entrar las elige de una lista (nombre y REGA). Después puede cambiar desde la cabecera o el menú lateral. |
 | **Panel (inicio)** | Saludo breve, después de 2 a 4 TarjetaCifra (animales, partos previstos, stock bajo…), en 2 columnas en el móvil y 4 en escritorio, y luego "Pendiente" (partos próximos, fin de supresión, tratamientos) y "Actividad reciente". |
-| **Listado** (animales, almacenes, fincas…) | Cabecera con el título y "⋯", después el Buscador (crotal o nombre), los chips de filtro (Todos, Vacas, Terneros, Toros, En tratamiento…) y la lista agrupada con CabeceraSeccion. Encima de la barra inferior, el BotonFlotante. En escritorio es una Tabla con los filtros a la vista. Las listas largas se virtualizan. |
+| **Listado** (animales, almacenes, fincas…) | Cabecera con el título y "⋯", después el Buscador (crotal o nombre) a lo ancho, debajo una fila de filtros desplegables compactos (`FiltroDesplegable`: "Estado: Activos ▾", "Sexo: Todos ▾"), que se marcan cuando no están en su valor por defecto, y la lista. En escritorio, buscador y filtros en una sola fila. Encima de la barra inferior, el BotonFlotante. En escritorio es una Tabla con los filtros a la vista. Las listas largas se virtualizan. |
 | **Ficha** (detalle) | Cabecera con el título (crotal y nombre), la Insignia de estado y un menú (Editar, Anular, Dar de baja). El contenido va en Tarjetas por secciones: datos, reproducción, sanidad, pesos e historial. |
 | **Formulario** (alta, parto, peso, tratamiento…) | En una HojaInferior o en una pantalla propia si es largo. Una columna en el móvil; dos en escritorio solo para campos cortos relacionados. Lleva valores por defecto razonables, como la fecha de hoy. Guardar (primario) y Cancelar (`texto`) van fijos abajo en el móvil. Se valida al salir del campo y al enviar, y avisa si hay cambios sin guardar. |
 | **Ajustes** | Lista agrupada: Perfil, Explotación (para el administrador: usuarios y roles), Instalar app y Cuenta. "Cerrar sesión" va al final, como botón `texto` en color de peligro. |

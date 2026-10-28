@@ -564,6 +564,787 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/animales/razas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Razas para sugerir: las habituales y las que ya se usan en la explotación */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description En orden alfabético */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Animales de la explotación, con búsqueda y filtros */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Busca en el crotal, el nombre y la raza */
+                    q?: string;
+                    estado?: "activo" | "vendido" | "muerto" | "baja";
+                    sexo?: "hembra" | "macho";
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenados por crotal */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Animal"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Dar de alta un animal */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAnimal"];
+                };
+            };
+            responses: {
+                /** @description Creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnimalDetalle"];
+                    };
+                };
+                /** @description Datos no válidos, madre o padre que no corresponden (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya hay un animal con este crotal en la plataforma (crotal_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ficha de un animal */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La ficha, con sus hijos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnimalDetalle"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Editar la ficha de un animal
+         * @description Solo los campos que cambian. El estado y la baja tienen su propio flujo.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CambioAnimal"];
+                };
+            };
+            responses: {
+                /** @description La ficha actualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnimalDetalle"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Crotal en uso o cambio de sexo de un animal con hijos (crotal_en_uso, sexo_con_hijos) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/baja": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dar de baja un animal (muerte, sacrificio, robo o extravío, u otra causa)
+         * @description La venta se registra desde Finanzas.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosBaja"];
+                };
+            };
+            responses: {
+                /** @description La ficha, con la baja */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnimalDetalle"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El animal ya está de baja (ya_de_baja) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /**
+         * Deshacer una baja registrada por error
+         * @description El animal vuelve a estar activo; la baja queda en el historial de cambios.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La ficha, de nuevo activo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnimalDetalle"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pesadas de un animal */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description De la más antigua a la más reciente */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pesada"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Registrar una pesada */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosPesada"];
+                };
+            };
+            responses: {
+                /** @description Registrada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pesada"];
+                    };
+                };
+                /** @description Datos no válidos o fecha fuera de la vida del animal (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya hay una pesada al nacer, al destete o a la venta (momento_repetido) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos/{pesoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corregir una pesada */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                    pesoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosPesada"];
+                };
+            };
+            responses: {
+                /** @description Corregida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pesada"];
+                    };
+                };
+                /** @description Datos no válidos o fecha fuera de la vida del animal (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, el animal o la pesada (pesada_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya hay una pesada al nacer, al destete o a la venta (momento_repetido) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Borrar una pesada registrada por error
+         * @description Queda en el historial de cambios.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                    pesoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La pesada borrada, para poder deshacerlo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pesada"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, el animal o la pesada (pesada_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -951,6 +1732,154 @@ export interface components {
             /** @enum {string} */
             rol?: "administrador" | "empleado";
             activo?: boolean;
+        };
+        Animal: {
+            /** Format: uuid */
+            id: string;
+            crotal: string;
+            nombre: string | null;
+            raza: string;
+            /** @enum {string} */
+            sexo: "hembra" | "macho";
+            /** Format: date */
+            fechaNacimiento: string;
+            /** Format: uuid */
+            madreId: string | null;
+            madreTexto: string | null;
+            madre: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            } | null;
+            /** Format: uuid */
+            padreId: string | null;
+            padreTexto: string | null;
+            padre: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            } | null;
+            /** @enum {string} */
+            origen: "nacido" | "comprado";
+            /** Format: date */
+            fechaEntrada: string | null;
+            regaOrigen: string | null;
+            /** @enum {string} */
+            estado: "activo" | "vendido" | "muerto" | "baja";
+            /** @enum {string|null} */
+            tipoBaja: "venta" | "muerte" | "sacrificio" | "robo_extravio" | "otra" | null;
+            /** Format: date */
+            fechaBaja: string | null;
+            causaBaja: string | null;
+            observaciones: string | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        AnimalDetalle: components["schemas"]["Animal"] & {
+            hijos: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+                /** @enum {string} */
+                sexo: "hembra" | "macho";
+                /** Format: date */
+                fechaNacimiento: string;
+                /** @enum {string} */
+                estado: "activo" | "vendido" | "muerto" | "baja";
+            }[];
+        };
+        DatosAnimal: {
+            /** @example ES041503456789 */
+            crotal: string;
+            /** @example Marela */
+            nombre?: string | null;
+            /** @example Rubia Gallega */
+            raza: string;
+            /** @enum {string} */
+            sexo: "hembra" | "macho";
+            /** Format: date */
+            fechaNacimiento: string;
+            /** Format: uuid */
+            madreId?: string | null;
+            madreTexto?: string | null;
+            /** Format: uuid */
+            padreId?: string | null;
+            padreTexto?: string | null;
+            /**
+             * @default nacido
+             * @enum {string}
+             */
+            origen: "nacido" | "comprado";
+            /** Format: date */
+            fechaEntrada?: string | null;
+            regaOrigen?: string | null;
+            observaciones?: string | null;
+        };
+        DatosBaja: {
+            /** @enum {string} */
+            tipo: "muerte" | "sacrificio" | "robo_extravio" | "otra";
+            /** Format: date */
+            fecha: string;
+            /** @description Detalle; obligatorio si el tipo es "otra" */
+            causa?: string | null;
+        };
+        CambioAnimal: {
+            /** @example ES041503456789 */
+            crotal?: string;
+            /** @example Marela */
+            nombre?: string | null;
+            /** @example Rubia Gallega */
+            raza?: string;
+            /** @enum {string} */
+            sexo?: "hembra" | "macho";
+            /** Format: date */
+            fechaNacimiento?: string;
+            /** Format: uuid */
+            madreId?: string | null;
+            madreTexto?: string | null;
+            /** Format: uuid */
+            padreId?: string | null;
+            padreTexto?: string | null;
+            /**
+             * @default nacido
+             * @enum {string}
+             */
+            origen: "nacido" | "comprado";
+            /** Format: date */
+            fechaEntrada?: string | null;
+            regaOrigen?: string | null;
+            observaciones?: string | null;
+        };
+        Pesada: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            animalId: string;
+            /** Format: date */
+            fecha: string;
+            kg: number;
+            /** @enum {string} */
+            momento: "nacimiento" | "destete" | "venta" | "otro";
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosPesada: {
+            /** Format: date */
+            fecha: string;
+            /** @example 412.5 */
+            kg: number;
+            /**
+             * @default otro
+             * @enum {string}
+             */
+            momento: "nacimiento" | "destete" | "venta" | "otro";
         };
         ExplotacionPlataforma: {
             /** Format: uuid */

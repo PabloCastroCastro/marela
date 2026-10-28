@@ -1,0 +1,1505 @@
+{
+  "id": "301da9e2-c4a3-4fd8-a133-a2bcba7c1bd8",
+  "prevId": "91b13b17-4f4d-4400-8463-653af1984e99",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.animales": {
+      "name": "animales",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "crotal": {
+          "name": "crotal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raza": {
+          "name": "raza",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sexo": {
+          "name": "sexo",
+          "type": "sexo_animal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_nacimiento": {
+          "name": "fecha_nacimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "madre_id": {
+          "name": "madre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "madre_texto": {
+          "name": "madre_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "padre_id": {
+          "name": "padre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "padre_texto": {
+          "name": "padre_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "origen_animal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'nacido'"
+        },
+        "fecha_entrada": {
+          "name": "fecha_entrada",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rega_origen": {
+          "name": "rega_origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_animal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'activo'"
+        },
+        "tipo_baja": {
+          "name": "tipo_baja",
+          "type": "tipo_baja",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_baja": {
+          "name": "fecha_baja",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "causa_baja": {
+          "name": "causa_baja",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "animales_explotacion_idx": {
+          "name": "animales_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "animales_madre_idx": {
+          "name": "animales_madre_idx",
+          "columns": [
+            {
+              "expression": "madre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "animales_padre_idx": {
+          "name": "animales_padre_idx",
+          "columns": [
+            {
+              "expression": "padre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "animales_explotacion_id_organization_id_fk": {
+          "name": "animales_explotacion_id_organization_id_fk",
+          "tableFrom": "animales",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "animales_creado_por_user_id_fk": {
+          "name": "animales_creado_por_user_id_fk",
+          "tableFrom": "animales",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "animales_modificado_por_user_id_fk": {
+          "name": "animales_modificado_por_user_id_fk",
+          "tableFrom": "animales",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "animales_madre_fk": {
+          "name": "animales_madre_fk",
+          "tableFrom": "animales",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "madre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "animales_padre_fk": {
+          "name": "animales_padre_fk",
+          "tableFrom": "animales",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "padre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "animales_crotal_unique": {
+          "name": "animales_crotal_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "crotal"
+          ]
+        },
+        "animales_explotacion_id_unique": {
+          "name": "animales_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "animales_crotal_formato": {
+          "name": "animales_crotal_formato",
+          "value": "(\"animales\".\"crotal\" ~ '^ES[0-9]{12}$' or (\"animales\".\"crotal\" ~ '^[A-Z]{2}[0-9]{1,12}$' and left(\"animales\".\"crotal\", 2) <> 'ES'))"
+        },
+        "animales_raza_no_vacia": {
+          "name": "animales_raza_no_vacia",
+          "value": "btrim(\"animales\".\"raza\") <> ''"
+        },
+        "animales_nombre_no_vacio": {
+          "name": "animales_nombre_no_vacio",
+          "value": "(\"animales\".\"nombre\" is null or btrim(\"animales\".\"nombre\") <> '')"
+        },
+        "animales_madre_una": {
+          "name": "animales_madre_una",
+          "value": "\"animales\".\"madre_id\" is null or \"animales\".\"madre_texto\" is null"
+        },
+        "animales_padre_uno": {
+          "name": "animales_padre_uno",
+          "value": "\"animales\".\"padre_id\" is null or \"animales\".\"padre_texto\" is null"
+        },
+        "animales_madre_no_propia": {
+          "name": "animales_madre_no_propia",
+          "value": "\"animales\".\"madre_id\" is distinct from \"animales\".\"id\""
+        },
+        "animales_padre_no_propio": {
+          "name": "animales_padre_no_propio",
+          "value": "\"animales\".\"padre_id\" is distinct from \"animales\".\"id\""
+        },
+        "animales_origen": {
+          "name": "animales_origen",
+          "value": "(\"animales\".\"origen\" = 'nacido' and \"animales\".\"fecha_entrada\" is null and \"animales\".\"rega_origen\" is null)\n        or (\"animales\".\"origen\" = 'comprado' and \"animales\".\"fecha_entrada\" is not null\n            and \"animales\".\"rega_origen\" ~ '^ES[0-9]{12}$')"
+        },
+        "animales_baja": {
+          "name": "animales_baja",
+          "value": "(\"animales\".\"estado\"::text = 'activo' and \"animales\".\"tipo_baja\" is null and \"animales\".\"fecha_baja\" is null\n            and \"animales\".\"causa_baja\" is null)\n        or (\"animales\".\"fecha_baja\" is not null and (\"animales\".\"tipo_baja\"::text, \"animales\".\"estado\"::text) in (\n            ('venta', 'vendido'), ('muerte', 'muerto'), ('sacrificio', 'muerto'),\n            ('robo_extravio', 'baja'), ('otra', 'baja'))\n          and (\"animales\".\"tipo_baja\"::text <> 'otra' or btrim(coalesce(\"animales\".\"causa_baja\", '')) <> ''))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.historial_cambios": {
+      "name": "historial_cambios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "tabla": {
+          "name": "tabla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fila_id": {
+          "name": "fila_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operacion": {
+          "name": "operacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "usuario_actual()"
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "antes": {
+          "name": "antes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "despues": {
+          "name": "despues",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "historial_fila_idx": {
+          "name": "historial_fila_idx",
+          "columns": [
+            {
+              "expression": "tabla",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fila_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "historial_cambios_explotacion_id_organization_id_fk": {
+          "name": "historial_cambios_explotacion_id_organization_id_fk",
+          "tableFrom": "historial_cambios",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "historial_cambios_usuario_id_user_id_fk": {
+          "name": "historial_cambios_usuario_id_user_id_fk",
+          "tableFrom": "historial_cambios",
+          "tableTo": "user",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "historial_operacion": {
+          "name": "historial_operacion",
+          "value": "\"historial_cambios\".\"operacion\" in ('alta', 'cambio', 'borrado')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.account": {
+      "name": "account",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "account_user_id_idx": {
+          "name": "account_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.invitation": {
+      "name": "invitation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inviter_id": {
+          "name": "inviter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "invitation_organization_id_idx": {
+          "name": "invitation_organization_id_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "invitation_email_idx": {
+          "name": "invitation_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "invitation_organization_id_organization_id_fk": {
+          "name": "invitation_organization_id_organization_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "invitation_inviter_id_user_id_fk": {
+          "name": "invitation_inviter_id_user_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "user",
+          "columnsFrom": [
+            "inviter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.member": {
+      "name": "member",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'empleado'"
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "member_user_id_idx": {
+          "name": "member_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "member_organization_id_organization_id_fk": {
+          "name": "member_organization_id_organization_id_fk",
+          "tableFrom": "member",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "member_user_id_user_id_fk": {
+          "name": "member_user_id_user_id_fk",
+          "tableFrom": "member",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "member_organization_user_unique": {
+          "name": "member_organization_user_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "organization_id",
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "member_role_valido": {
+          "name": "member_role_valido",
+          "value": "\"member\".\"role\" in ('administrador', 'empleado')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.organization": {
+      "name": "organization",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logo": {
+          "name": "logo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rega": {
+          "name": "rega",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "municipio": {
+          "name": "municipio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provincia": {
+          "name": "provincia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "organization_slug_unique": {
+          "name": "organization_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        },
+        "organization_rega_unique": {
+          "name": "organization_rega_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "rega"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "organization_rega_formato": {
+          "name": "organization_rega_formato",
+          "value": "\"organization\".\"rega\" ~ '^ES[0-9]{12}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.session": {
+      "name": "session",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "active_organization_id": {
+          "name": "active_organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "session_user_id_idx": {
+          "name": "session_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "session_active_organization_id_organization_id_fk": {
+          "name": "session_active_organization_id_organization_id_fk",
+          "tableFrom": "session",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "active_organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user": {
+      "name": "user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_username": {
+          "name": "display_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "propietario": {
+          "name": "propietario",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "debe_cambiar_contrasena": {
+          "name": "debe_cambiar_contrasena",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        },
+        "user_username_unique": {
+          "name": "user_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verification": {
+      "name": "verification",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "verification_identifier_idx": {
+          "name": "verification_identifier_idx",
+          "columns": [
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pesos": {
+      "name": "pesos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "animal_id": {
+          "name": "animal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kg": {
+          "name": "kg",
+          "type": "numeric(5, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "momento": {
+          "name": "momento",
+          "type": "momento_pesada",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'otro'"
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "pesos_explotacion_idx": {
+          "name": "pesos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pesos_animal_idx": {
+          "name": "pesos_animal_idx",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pesos_momento_unico": {
+          "name": "pesos_momento_unico",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "momento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"pesos\".\"momento\" <> 'otro'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pesos_explotacion_id_organization_id_fk": {
+          "name": "pesos_explotacion_id_organization_id_fk",
+          "tableFrom": "pesos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "pesos_creado_por_user_id_fk": {
+          "name": "pesos_creado_por_user_id_fk",
+          "tableFrom": "pesos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pesos_modificado_por_user_id_fk": {
+          "name": "pesos_modificado_por_user_id_fk",
+          "tableFrom": "pesos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pesos_animal_fk": {
+          "name": "pesos_animal_fk",
+          "tableFrom": "pesos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "animal_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "pesos_kg": {
+          "name": "pesos_kg",
+          "value": "\"pesos\".\"kg\" > 0 and \"pesos\".\"kg\" <= 2000"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.estado_animal": {
+      "name": "estado_animal",
+      "schema": "public",
+      "values": [
+        "activo",
+        "vendido",
+        "muerto",
+        "baja"
+      ]
+    },
+    "public.origen_animal": {
+      "name": "origen_animal",
+      "schema": "public",
+      "values": [
+        "nacido",
+        "comprado"
+      ]
+    },
+    "public.sexo_animal": {
+      "name": "sexo_animal",
+      "schema": "public",
+      "values": [
+        "hembra",
+        "macho"
+      ]
+    },
+    "public.tipo_baja": {
+      "name": "tipo_baja",
+      "schema": "public",
+      "values": [
+        "venta",
+        "muerte",
+        "sacrificio",
+        "robo_extravio",
+        "otra"
+      ]
+    },
+    "public.momento_pesada": {
+      "name": "momento_pesada",
+      "schema": "public",
+      "values": [
+        "nacimiento",
+        "destete",
+        "venta",
+        "otro"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

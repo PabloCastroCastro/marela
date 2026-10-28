@@ -6,8 +6,60 @@
 .filtros {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
-  gap: var(--espacio-2) var(--espacio-3);
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+/* Chip con el texto visible y, encima y transparente, el desplegable nativo que recibe el toque */
+.desplegable {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-3) 0 var(--espacio-4);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-completo);
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-size: var(--texto-sm);
+  white-space: nowrap;
+  transition: background-color var(--duracion-corta) ease-out;
+}
+
+@media (hover: hover) {
+  .desplegable:not(.marcado):hover {
+    background: var(--color-superficie);
+  }
+}
+
+.desplegable:focus-within {
+  outline: 2px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.marcado {
+  border-color: transparent;
+  background: var(--color-primario-suave);
+  color: var(--color-sobre-primario-suave);
+}
+
+.texto strong {
+  font-weight: var(--peso-fuerte);
+}
+
+.flecha {
+  flex: none;
+}
+
+.selector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  /* 16px: con menos, iOS hace zoom al abrirlo */
+  font-size: 16px;
 }
 
 .buscador {
@@ -49,7 +101,14 @@
 
 @media (min-width: 64rem) {
   .barra {
-    grid-template-columns: minmax(16rem, 24rem) 1fr;
-    align-items: end;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espacio-3);
+  }
+
+  .buscador {
+    flex: 1 1 20rem;
+    max-width: 32rem;
   }
 }

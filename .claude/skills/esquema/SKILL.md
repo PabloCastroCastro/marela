@@ -40,7 +40,7 @@ export const animales = pgTable(
 )
 ```
 
-Las tres piezas son obligatorias:
+Las tres piezas son obligatorias, y además el trigger de historial (ver "Historial" más abajo):
 
 - **`deExplotacion()`:** la columna `explotacion_id`, que al insertar toma la explotación de la transacción.
 - **`auditoria()`:** `creado_en`, `creado_por`, `modificado_en` y `modificado_por`. La modificación solo se actualiza en los `update` de Drizzle, no en SQL a mano.
@@ -60,6 +60,18 @@ Más reglas:
   - Tablas y columnas propias en español y `snake_case` (`fecha_nacimiento`), con propiedades en `camelCase` (`fechaNacimiento`).
   - Las tablas de Better Auth conservan sus nombres en inglés.
 - **Enumerados:** `pgEnum` para valores cerrados que no van a cambiar. Si se van a configurar por explotación, mejor una tabla.
+
+## Historial
+
+Cada tabla de datos de una explotación registra sus cambios en `historial_cambios` con el trigger `registrar_cambio()`. Añádelo en una migración propia (`--custom`) tras crear la tabla:
+
+```sql
+CREATE TRIGGER <tabla>_historial
+  AFTER INSERT OR UPDATE OR DELETE ON <tabla>
+  FOR EACH ROW EXECUTE FUNCTION registrar_cambio();
+```
+
+Las reglas que relacionan filas (p. ej. que la madre sea una hembra) van en un trigger `BEFORE` que lance `RAISE EXCEPTION ... USING ERRCODE = '23514', CONSTRAINT = '<nombre>'`, y la API las comprueba antes para dar el error en su campo. Ejemplo: `comprobar_progenitores()` en `drizzle/0006_animales_triggers.sql`.
 
 ## Consultar los datos
 

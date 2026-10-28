@@ -52,6 +52,8 @@ src/
   permisos.ts     autorización por explotación y rol
   explotaciones.ts  alta, edición y desactivación de explotaciones; punto de extensión al crear
   miembros.ts     equipo de una explotación: altas, roles, desactivación y contraseñas
+  animales.ts     fichas de los animales
+  fechas.ts       fechas en la zona horaria de España
   config.ts       configuración validada
   errores.ts      formato de error común y ErrorApi
   peticiones.ts   log de cada petición
@@ -60,7 +62,7 @@ src/
   db/explotacion.ts  enExplotacion(): acceso a los datos de una explotación
   db/migrar.ts    migraciones al arrancar
   db/seed.ts      datos de ejemplo
-  rutas/          un archivo por módulo (salud, explotaciones, miembros, plataforma)
+  rutas/          un archivo por módulo (salud, explotaciones, miembros, plataforma, animales)
   scripts/        exportación del contrato OpenAPI y crear-propietario
 ```
 
@@ -151,6 +153,41 @@ Rutas:
 
 Una explotación desactivada no aparece en la lista de sus miembros, y sus rutas responden 403 `explotacion_desactivada`.
 
+## Animales
+
+Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.ts`:
+
+- **`GET /api/explotaciones/{id}/animales`:** lista ordenada por crotal, con búsqueda (`q`, en crotal, nombre y raza) y filtros (`estado`, `sexo`).
+- **`GET /api/explotaciones/{id}/animales/{animalId}`:** la ficha, con la madre y el padre resumidos (`{ id, crotal, nombre }`).
+- **`POST /api/explotaciones/{id}/animales`:** alta. El crotal se normaliza: sin espacios y en mayúsculas.
+- **`PATCH /api/explotaciones/{id}/animales/{animalId}`:** edita los datos de la ficha (solo los campos que cambian, validando la ficha completa). El estado y la baja tienen su propio flujo.
+- **`POST /api/explotaciones/{id}/animales/{animalId}/baja`:** `{ tipo, fecha, causa }` da de baja un animal activo: `muerte` o `sacrificio` (queda `muerto`), `robo_extravio` u `otra` (queda `baja`; `otra` exige la causa). La fecha no puede ser futura ni anterior al nacimiento o la entrada. La venta (`vendido`) la registra Finanzas (GH-38).
+- **`DELETE /api/explotaciones/{id}/animales/{animalId}/baja`:** deshace una baja registrada por error; el animal vuelve a estar activo y la baja queda en el historial. Una venta no se deshace aquí (409 `baja_por_venta`).
+- **`GET /api/explotaciones/{id}/animales/razas`:** razas para sugerir: las habituales y las que ya usa la explotación.
+
+Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
+
+- **Crotal:** `ES` y 12 dígitos, o el código de otro país y hasta 12 dígitos. Único en toda la plataforma (409 `crotal_en_uso`).
+- **Madre y padre:** su ficha en la explotación, o un texto libre, nunca los dos. La madre es una hembra y el padre, un macho (trigger `comprobar_progenitores`). La misma explotación la garantizan claves foráneas compuestas. Un animal con hijos no puede cambiar de sexo (409 `sexo_con_hijos`).
+- **Origen:** nacido en la explotación, o comprado con fecha de entrada y REGA de origen.
+- **Fechas:** no futuras, y la de entrada no anterior al nacimiento.
+- **Baja:** un animal activo no tiene tipo, fecha ni causa de baja; uno de baja tiene tipo y fecha, con el estado que corresponde al tipo, y causa si el tipo es `otra`.
+
+### Pesos
+
+Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/pesos`:** las pesadas, de la más antigua a la más reciente. La ganancia entre pesadas la calcula el frontend.
+- **`POST /api/explotaciones/{id}/animales/{animalId}/pesos`:** `{ fecha, kg, momento }` registra una pesada. `momento` es `nacimiento`, `destete`, `venta` u `otro` (por defecto); los tres primeros, como mucho una vez por animal (409 `momento_repetido`).
+- **`PUT /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** corrige una pesada.
+- **`DELETE /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** borra una pesada registrada por error y la devuelve, para poder deshacerlo. Queda en el historial.
+
+Reglas: kilos mayores que 0 y hasta 2.000, con un decimal, y fecha no futura, entre el nacimiento y la baja del animal (trigger `comprobar_fecha_pesada`, migración `0009`).
+
+## Historial de cambios
+
+Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.
+
 ## Equipo
 
 Rutas del administrador de la explotación (`permitir('administracion')`), en `src/rutas/miembros.ts`:
@@ -190,6 +227,8 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/api.test.ts`: salud, documentación y rutas inexistentes (con la base de datos sustituida).
 - `test/config.test.ts`: validación de la configuración.
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
+- `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
+- `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
 - `test/miembros.test.ts`: altas nuevas y existentes, roles, desactivación con y sin otras explotaciones, último administrador y restablecimiento de contraseñas (también por el propietario).
 - `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
 - `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
@@ -244,7 +283,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

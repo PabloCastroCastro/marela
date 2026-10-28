@@ -1,0 +1,70 @@
+.grafico {
+  position: relative;
+  width: 100%;
+  /* Desplazar con el dedo sobre el gráfico señala pesadas en lugar de mover la página en
+     horizontal */
+  touch-action: pan-y;
+}
+
+.grafico svg {
+  display: block;
+  overflow: visible;
+}
+
+.rejilla {
+  stroke: var(--color-borde);
+  stroke-width: 1;
+}
+
+.eje {
+  fill: var(--color-texto-suave);
+  font-size: var(--texto-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.guia {
+  stroke: var(--color-borde-fuerte);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.linea {
+  fill: none;
+  stroke: var(--color-primario);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Anillo del color del fondo, para separar el punto de la línea */
+.punto {
+  fill: var(--color-primario);
+  stroke: var(--color-fondo);
+  stroke-width: 2;
+  transition: r var(--duracion-corta) ease-out;
+}
+
+.detalle {
+  position: absolute;
+  top: 0;
+  display: grid;
+  justify-items: center;
+  padding: var(--espacio-1) var(--espacio-2);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-s);
+  background: var(--color-superficie-elevada);
+  box-shadow: var(--sombra-2);
+  font-size: var(--texto-xs);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+}
+
+.detalle strong {
+  font-size: var(--texto-sm);
+}
+
+.detalle span {
+  color: var(--color-texto-suave);
+}

@@ -1,14 +1,14 @@
-import { Search, X } from 'lucide-react'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { ChevronDown, Search, X } from 'lucide-react'
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { BotonIcono } from './Boton'
+import { clases } from './clases'
 import estilos from './Filtros.module.css'
 
-// Barra de filtros de un listado: buscador arriba y, debajo, los demás filtros (chips, fechas,
-// desplegables). En pantalla ancha, todo en una fila.
+// Barra de filtros de un listado: buscador a lo ancho y, debajo, una fila de filtros desplegables.
+// En pantalla ancha, todo en una fila.
 //
 //   <BarraFiltros buscador={<Buscador etiqueta="Buscar animal" alCambiar={setTexto} />}>
-//     <Chips etiqueta="Tipo" … />
-//     <CampoFecha etiqueta="Desde" … />
+//     <FiltroDesplegable etiqueta="Estado" opciones={…} valor={estado} porDefecto="activo" … />
 //   </BarraFiltros>
 export function BarraFiltros({
   buscador,
@@ -22,6 +22,48 @@ export function BarraFiltros({
     <div className={estilos.barra} role="search">
       {buscador}
       {children && <div className={estilos.filtros}>{children}</div>}
+    </div>
+  )
+}
+
+type PropsDesplegable<T extends string> = {
+  etiqueta: string
+  opciones: { valor: T; texto: string }[]
+  valor: T
+  // Con otro valor, el filtro se marca para que se vea que está filtrando
+  porDefecto: T
+  alCambiar: (valor: T) => void
+}
+
+// Filtro compacto con forma de chip ("Estado: Activos ▾"). Por dentro es un desplegable nativo: en el
+// móvil abre el selector del sistema, grande y cómodo con el dedo, y es accesible sin más.
+export function FiltroDesplegable<T extends string>({
+  etiqueta,
+  opciones,
+  valor,
+  porDefecto,
+  alCambiar,
+}: PropsDesplegable<T>) {
+  const id = useId()
+  const actual = opciones.find((o) => o.valor === valor)
+  return (
+    <div className={clases(estilos.desplegable, valor !== porDefecto && estilos.marcado)}>
+      <label htmlFor={id} className={estilos.texto}>
+        {etiqueta}: <strong>{actual?.texto}</strong>
+      </label>
+      <ChevronDown aria-hidden size={16} className={estilos.flecha} />
+      <select
+        id={id}
+        className={estilos.selector}
+        value={valor}
+        onChange={(e) => alCambiar(e.target.value as T)}
+      >
+        {opciones.map((o) => (
+          <option key={o.valor} value={o.valor}>
+            {o.texto}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }

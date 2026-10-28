@@ -45,15 +45,16 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Ficha del animal
 
-- Crotal / identificación oficial
-- Raza
+- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma.
+- Nombre, opcional (muchas vacas lo tienen y es como se las reconoce)
+- Raza: se elige de una lista de razas de carne habituales en España o se escribe otra
 - Sexo
 - Fecha de nacimiento
 - Madre: enlace a su ficha si está en el sistema; opcional o texto libre si no (por ejemplo, un animal comprado)
 - Padre: enlace a su ficha si es toro propio, texto libre (nombre o código) si es dosis externa
 - Origen: nacido en la explotación o comprado (con fecha de entrada y código REGA de la explotación de origen). Las compras son excepcionales (por ejemplo, un toro).
 - Estado (activo, vendido, muerto...)
-- Fecha y causa de baja (venta, muerte...)
+- Baja: tipo (venta, muerte, sacrificio en la explotación, robo o extravío, u otra causa), fecha y detalle (obligatorio si es otra causa). La muerte y el sacrificio dejan el animal como «muerto»; el robo, el extravío y otras causas, «de baja»; la venta, «vendido». Una baja registrada por error se deshace y queda en el historial; la venta se registra y se deshace desde Finanzas.
 - Fotos
 - Observaciones
 
@@ -67,8 +68,9 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Pesos
 
-- Registro de pesadas: fecha y kg.
-- Momentos habituales: al nacer, al destete y a la venta.
+- Registro de pesadas: fecha, kg y momento (al nacer, al destete, a la venta u otra pesada). Al nacer, al destete y a la venta, como mucho una vez por animal.
+- En la ficha: el último peso, la ganancia media diaria, un gráfico de la evolución y cada pesada con la ganancia desde la anterior.
+- Una pesada se corrige o se borra si se registró por error; el borrado queda en el historial.
 
 ### Tratamientos
 
@@ -211,7 +213,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ## Aspectos generales de los datos
 
-- Auditoría: cada registro guarda quién lo creó y modificó, y cuándo.
+- Auditoría: cada registro guarda quién lo creó y modificó, y cuándo. Además, cada alta, cambio o borrado queda en un historial con el estado anterior y el nuevo.
 - Las correcciones y borrados quedan registrados; en datos sanitarios (tratamientos, partos, bajas) se prefiere anular a borrar.
 
 ## Aspectos técnicos

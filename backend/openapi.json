@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API de Marela",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
@@ -346,6 +346,554 @@
             "type": "boolean"
           }
         }
+      },
+      "Animal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "crotal": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "raza": {
+            "type": "string"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "madreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "madre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "padre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ]
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activo",
+              "vendido",
+              "muerto",
+              "baja"
+            ]
+          },
+          "tipoBaja": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "venta",
+              "muerte",
+              "sacrificio",
+              "robo_extravio",
+              "otra",
+              null
+            ]
+          },
+          "fechaBaja": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "causaBaja": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "crotal",
+          "nombre",
+          "raza",
+          "sexo",
+          "fechaNacimiento",
+          "madreId",
+          "madreTexto",
+          "madre",
+          "padreId",
+          "padreTexto",
+          "padre",
+          "origen",
+          "fechaEntrada",
+          "regaOrigen",
+          "estado",
+          "tipoBaja",
+          "fechaBaja",
+          "causaBaja",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "AnimalDetalle": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Animal"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "hijos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "crotal": {
+                      "type": "string"
+                    },
+                    "nombre": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sexo": {
+                      "type": "string",
+                      "enum": [
+                        "hembra",
+                        "macho"
+                      ]
+                    },
+                    "fechaNacimiento": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "estado": {
+                      "type": "string",
+                      "enum": [
+                        "activo",
+                        "vendido",
+                        "muerto",
+                        "baja"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "crotal",
+                    "nombre",
+                    "sexo",
+                    "fechaNacimiento",
+                    "estado"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "hijos"
+            ]
+          }
+        ]
+      },
+      "DatosAnimal": {
+        "type": "object",
+        "properties": {
+          "crotal": {
+            "type": "string",
+            "example": "ES041503456789"
+          },
+          "nombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Marela"
+          },
+          "raza": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Rubia Gallega"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "madreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ],
+            "default": "nacido"
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "crotal",
+          "raza",
+          "sexo",
+          "fechaNacimiento"
+        ]
+      },
+      "DatosBaja": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "muerte",
+              "sacrificio",
+              "robo_extravio",
+              "otra"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "causa": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Detalle; obligatorio si el tipo es \"otra\""
+          }
+        },
+        "required": [
+          "tipo",
+          "fecha"
+        ]
+      },
+      "CambioAnimal": {
+        "type": "object",
+        "properties": {
+          "crotal": {
+            "type": "string",
+            "example": "ES041503456789"
+          },
+          "nombre": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Marela"
+          },
+          "raza": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Rubia Gallega"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "madreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ],
+            "default": "nacido"
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Pesada": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "kg": {
+            "type": "number"
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "nacimiento",
+              "destete",
+              "venta",
+              "otro"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "animalId",
+          "fecha",
+          "kg",
+          "momento",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosPesada": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "kg": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 2000,
+            "example": 412.5
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "nacimiento",
+              "destete",
+              "venta",
+              "otro"
+            ],
+            "default": "otro"
+          }
+        },
+        "required": [
+          "fecha",
+          "kg"
+        ]
       },
       "ExplotacionPlataforma": {
         "type": "object",
@@ -1147,6 +1695,1011 @@
           },
           "409": {
             "description": "Tiene acceso a otras explotaciones o es uno mismo (otras_explotaciones, es_usted)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/razas": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Razas para sugerir: las habituales y las que ya se usan en la explotación",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "En orden alfabético",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Animales de la explotación, con búsqueda y filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Busca en el crotal, el nombre y la raza",
+              "example": "Rubia"
+            },
+            "required": false,
+            "description": "Busca en el crotal, el nombre y la raza",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "activo",
+                "vendido",
+                "muerto",
+                "baja"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hembra",
+                "macho"
+              ]
+            },
+            "required": false,
+            "name": "sexo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados por crotal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Animal"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Dar de alta un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnimal"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, madre o padre que no corresponden (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un animal con este crotal en la plataforma (crotal_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Ficha de un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La ficha, con sus hijos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Editar la ficha de un animal",
+        "description": "Solo los campos que cambian. El estado y la baja tienen su propio flujo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioAnimal"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Crotal en uso o cambio de sexo de un animal con hijos (crotal_en_uso, sexo_con_hijos)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/baja": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Dar de baja un animal (muerte, sacrificio, robo o extravío, u otra causa)",
+        "description": "La venta se registra desde Finanzas.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosBaja"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha, con la baja",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El animal ya está de baja (ya_de_baja)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Deshacer una baja registrada por error",
+        "description": "El animal vuelve a estar activo; la baja queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La ficha, de nuevo activo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Pesadas de un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más antigua a la más reciente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pesada"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar una pesada",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPesada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pesada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o fecha fuera de la vida del animal (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos/{pesoId}": {
+      "put": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Corregir una pesada",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pesoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPesada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pesada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o fecha fuera de la vida del animal (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el animal o la pesada (pesada_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Borrar una pesada registrada por error",
+        "description": "Queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pesoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La pesada borrada, para poder deshacerlo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pesada"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el animal o la pesada (pesada_no_encontrada)",
             "content": {
               "application/json": {
                 "schema": {
