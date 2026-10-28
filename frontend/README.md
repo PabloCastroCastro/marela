@@ -18,7 +18,7 @@ src/
   explotaciones/    explotaciones del usuario, elección, explotación activa y sus datos
   plataforma/       gestión de las explotaciones por el propietario
   animales/         lista, ficha, historial, alta, edición, bajas, reproducción y partos, tratamientos y pesos de animales
-  fincas/           lista, ficha, alta, edición y desactivación de fincas con sus parcelas
+  fincas/           lista, ficha, alta, edición y desactivación de fincas con sus parcelas, y sus labores
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
   diseno/           estructura de una explotación: cabecera, selector, cuenta y navegación adaptable
   componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)

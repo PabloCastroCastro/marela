@@ -1,9 +1,9 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
-import { Boton } from '../componentes/Boton'
+import { Boton } from './Boton'
 
-// Las listas de la ficha (reproducción, tratamientos, pesadas) muestran solo lo más reciente: con
-// los años, una vaca acumula decenas de registros. El resto, con "Ver todo".
+// Las listas de las fichas (reproducción, tratamientos, pesadas, labores) muestran solo lo más
+// reciente: con los años, una vaca o una finca acumula decenas de registros. El resto, con "Ver todo".
 export const VISIBLES = 3
 
 export function useRecorte<T>(lista: T[], textoTodo: (total: number) => string) {

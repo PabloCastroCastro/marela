@@ -2482,6 +2482,350 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/labores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Siembras, cosechas y otras labores de una finca */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    fincaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description De la más reciente a la más antigua */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Labor"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/labores/opciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personas del equipo y cultivos y labores ya usados, para el formulario */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenados */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpcionesLabor"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/labores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registrar una labor en una o varias fincas
+         * @description Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosLabor"];
+                };
+            };
+            responses: {
+                /** @description Registradas */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Labor"][];
+                    };
+                };
+                /** @description Datos no válidos, fincas desactivadas o de otra explotación (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/labores/{laborId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corregir una labor */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    laborId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CambioLabor"];
+                };
+            };
+            responses: {
+                /** @description Corregida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Labor"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Borrar una labor registrada por error
+         * @description Queda en el historial de cambios.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    laborId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La labor borrada, para poder deshacerlo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Labor"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -3315,6 +3659,84 @@ export interface components {
         };
         CambioEstadoFinca: {
             activa: boolean;
+        };
+        Labor: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fincaId: string;
+            /** @enum {string} */
+            tipo: "siembra" | "cosecha" | "otra";
+            /** Format: date */
+            fecha: string;
+            cultivo: string | null;
+            labor: string | null;
+            /** @description Hectáreas */
+            superficie: number;
+            cantidad: number | null;
+            /** @enum {string|null} */
+            unidad: "kg" | "t" | "pacas" | "rolos" | "remolques" | null;
+            realizadaPor: {
+                /**
+                 * Format: uuid
+                 * @description Sin él, es un nombre escrito a mano
+                 */
+                id: string | null;
+                nombre: string;
+            } | null;
+            observaciones: string | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        OpcionesLabor: {
+            personas: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+            }[];
+            cultivos: string[];
+            labores: string[];
+        };
+        DatosLabor: {
+            /** @enum {string} */
+            tipo: "siembra" | "cosecha" | "otra";
+            /** Format: date */
+            fecha: string;
+            /** @example Maíz forrajero */
+            cultivo?: string | null;
+            /** @example Siega */
+            labor?: string | null;
+            superficie?: number | null;
+            cantidad?: number | null;
+            /** @enum {string|null} */
+            unidad?: "kg" | "t" | "pacas" | "rolos" | "remolques" | null;
+            /** Format: uuid */
+            realizadaPorId?: string | null;
+            /** @example Contratista Hermanos Rey */
+            realizadaPorTexto?: string | null;
+            observaciones?: string | null;
+            fincaIds: string[];
+        };
+        CambioLabor: {
+            /** @enum {string} */
+            tipo: "siembra" | "cosecha" | "otra";
+            /** Format: date */
+            fecha: string;
+            /** @example Maíz forrajero */
+            cultivo?: string | null;
+            /** @example Siega */
+            labor?: string | null;
+            superficie?: number | null;
+            cantidad?: number | null;
+            /** @enum {string|null} */
+            unidad?: "kg" | "t" | "pacas" | "rolos" | "remolques" | null;
+            /** Format: uuid */
+            realizadaPorId?: string | null;
+            /** @example Contratista Hermanos Rey */
+            realizadaPorTexto?: string | null;
+            observaciones?: string | null;
         };
         ExplotacionPlataforma: {
             /** Format: uuid */

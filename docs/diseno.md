@@ -197,6 +197,15 @@ Decisiones (GH-25):
 - Quién lo realiza: usuario del sistema o texto libre
 - Observaciones
 
+Decisiones (GH-26):
+
+- Desde la ficha, "Registrar" ofrece siembra, cosecha y otra labor; para registrar la misma labor en varias fincas, se marcan en el listado (manteniendo pulsada una en el móvil) y "Registrar labor". Se crea una por finca, cada una con su superficie entera.
+- La superficie, por defecto la de la finca, y nunca mayor.
+- La cantidad cosechada, con su unidad: kg, toneladas, pacas, rolos o remolques.
+- Cultivos y labores, de texto libre con sugerencias.
+- Una labor se corrige o se borra (con "Deshacer"); no es un dato sanitario. Los cambios quedan en el historial.
+- La ficha muestra las tres labores más recientes y el resto con "Ver todo".
+
 ### Pastoreo
 
 - Fecha de entrada, fecha de salida y número de animales, sin enlazar fichas.

@@ -127,6 +127,20 @@
       "when": 1793184980506,
       "tag": "0017_fincas_historial",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793191930492,
+      "tag": "0018_labores",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793191931757,
+      "tag": "0019_labores_historial",
+      "breakpoints": true
     }
   ]
 }

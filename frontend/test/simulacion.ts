@@ -167,6 +167,20 @@ export type FincaSimulada = {
   parcelas: ParcelaSimulada[]
 }
 
+export type LaborSimulada = {
+  id: string
+  fincaId: string
+  tipo: 'siembra' | 'cosecha' | 'otra'
+  fecha: string
+  cultivo: string | null
+  labor: string | null
+  superficie: number
+  cantidad: number | null
+  unidad: 'kg' | 't' | 'pacas' | 'rolos' | 'remolques' | null
+  realizadaPor: { id: string | null; nombre: string } | null
+  observaciones: string | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -187,6 +201,7 @@ export type EstadoSimulado = {
   eventos: EventoSimulado[]
   partos: PartoSimulado[]
   fincas: FincaSimulada[]
+  labores: LaborSimulada[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -292,6 +307,21 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
     ],
     eventos: [],
     partos: [],
+    labores: [
+      {
+        id: 'l1',
+        fincaId: 'f1',
+        tipo: 'cosecha',
+        fecha: '2026-05-12',
+        cultivo: 'Pradera de raigrás',
+        labor: null,
+        superficie: 3.4456,
+        cantidad: 42,
+        unidad: 'rolos',
+        realizadaPor: { id: null, nombre: 'Contratista Hermanos Rey' },
+        observaciones: null,
+      },
+    ],
     fincas: [
       {
         id: 'f1',
@@ -383,6 +413,8 @@ const PARTOS =
   /^\/api\/explotaciones\/[^/]+\/(?:animales\/([^/]+)\/partos|partos\/([^/]+)\/anulacion)$/
 const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
+// Las labores de una finca, el registro o una labor
+const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labores(?:\/([^/]+))?)$/
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
@@ -485,6 +517,75 @@ export function simularApi(estado: EstadoSimulado) {
           .map(evento),
       )
     }
+    if (ruta.endsWith('/labores/opciones')) {
+      return json({
+        personas: estado.miembros
+          .filter((m) => m.activo)
+          .map((m) => ({ id: m.usuarioId, nombre: m.nombre })),
+        cultivos: [],
+        labores: [],
+      })
+    }
+    const deLabores = ruta.match(LABORES)
+    if (deLabores) {
+      const [, fincaId, laborId] = deLabores
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      const persona = (c: {
+        realizadaPorId?: string | null
+        realizadaPorTexto?: string | null
+      }) => {
+        const m = estado.miembros.find((x) => x.usuarioId === c.realizadaPorId)
+        return m
+          ? { id: m.usuarioId, nombre: m.nombre }
+          : c.realizadaPorTexto
+            ? { id: null, nombre: c.realizadaPorTexto }
+            : null
+      }
+      const datosDe = (c: Record<string, unknown>) => ({
+        tipo: c.tipo as LaborSimulada['tipo'],
+        fecha: c.fecha as string,
+        cultivo: (c.cultivo as string) || null,
+        labor: (c.labor as string) || null,
+        cantidad: (c.cantidad as number) ?? null,
+        unidad: (c.unidad as LaborSimulada['unidad']) ?? null,
+        realizadaPor: persona(c),
+        observaciones: (c.observaciones as string) || null,
+      })
+      if (fincaId) {
+        return json(
+          estado.labores
+            .filter((l) => l.fincaId === fincaId)
+            .sort((x, y) => y.fecha.localeCompare(x.fecha))
+            .map((l) => ({ ...l, ...sello })),
+        )
+      }
+      if (!laborId && metodo === 'POST') {
+        const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
+          const f = estado.fincas.find((x) => x.id === id)
+          const nueva: LaborSimulada = {
+            id: `l${estado.labores.length + i + 1}`,
+            fincaId: id,
+            superficie: cuerpo.superficie ?? f?.parcelas.reduce((t, x) => t + x.superficie, 0) ?? 0,
+            ...datosDe(cuerpo),
+          }
+          return nueva
+        })
+        estado.labores.push(...creadas)
+        return json(
+          creadas.map((l) => ({ ...l, ...sello })),
+          201,
+        )
+      }
+      const l = estado.labores.find((x) => x.id === laborId)
+      if (!l) return errorApi(404, 'labor_no_encontrada')
+      if (metodo === 'DELETE') estado.labores = estado.labores.filter((x) => x !== l)
+      else Object.assign(l, { superficie: cuerpo.superficie, ...datosDe(cuerpo) })
+      return json({ ...l, ...sello })
+    }
+
     const deFincas = ruta.match(FINCAS)
     if (deFincas) {
       const [, fincaId, estadoFinca] = deFincas

@@ -231,6 +231,18 @@ Fincas de la explotación y sus parcelas, en `src/rutas/fincas.ts` (módulo `fin
 
 Reglas: cada parcela, con la referencia SIGPAC completa (provincia, municipio, polígono, parcela y recinto, solo números) o la catastral, y superficie en hectáreas mayor que 0, con cuatro decimales. El nombre no se repite en la explotación (409 `nombre_en_uso`), ni un recinto SIGPAC en dos fincas (409 `recinto_en_uso`). Los cambios quedan en el historial (migración `0017`).
 
+### Labores
+
+Siembras, cosechas y otras labores de las fincas, en `src/rutas/labores.ts` (mismo módulo `fincas`):
+
+- **`GET /api/explotaciones/{id}/fincas/{fincaId}/labores`:** las de una finca, de la más reciente a la más antigua.
+- **`POST /api/explotaciones/{id}/labores`:** `{ fincaIds, tipo, fecha, cultivo?, labor?, superficie?, cantidad?, unidad?, realizadaPorId? | realizadaPorTexto?, observaciones? }` registra la misma labor en una o varias fincas activas, una por finca, todas o ninguna. `tipo` es `siembra` o `cosecha` (con `cultivo`) u `otra` (con `labor`: siega, laboreo…). Sin `superficie`, la de cada finca entera; con ella, solo para una finca y sin pasar de la suya. La cosecha admite `cantidad` con su `unidad`: `kg`, `t`, `pacas`, `rolos` o `remolques`.
+- **`PUT /api/explotaciones/{id}/labores/{laborId}`:** corrige una labor.
+- **`DELETE /api/explotaciones/{id}/labores/{laborId}`:** la borra y la devuelve, para poder deshacerlo.
+- **`GET /api/explotaciones/{id}/labores/opciones`:** las personas activas del equipo y los cultivos y labores ya usados, para el formulario.
+
+No son datos sanitarios: se corrigen y se borran, y los cambios quedan en el historial (migración `0019`, que comprueba también que quien la realiza es del equipo).
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.
@@ -276,6 +288,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
 - `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
+- `test/labores.test.ts`: labores: siega en varias fincas con su superficie, siembra y cosecha con cantidad y unidad, validación, fincas desactivadas o de otra explotación, corrección y borrado con historial, opciones del formulario, separación por explotación y restricciones.
 - `test/fincas.test.ts`: fincas: alta con varias parcelas y superficie total, validación, nombre y recinto únicos en la explotación, edición que corrige, añade y quita parcelas con historial, desactivación y filtro, separación por explotación y restricciones.
 - `test/partos.test.ts`: partos: gemelos con el padre de la cubrición, un nacido muerto y la pesada al nacer, cierre de la gestación, padre indicado sin gestación, crotal puesto después y que no se quita, validación y todo o nada, anulación que borra los terneros, terneros con datos, separación por explotación y restricciones.
 - `test/reproduccion.test.ts`: eventos reproductivos: cubrición a varias vacas y fecha prevista de parto, inseminación con dosis externa y diagnóstico positivo, cierre por diagnóstico negativo o aborto, filtro de gestantes, solo hembras y padre macho, destete con su pesada y en el historial de la madre, anulación con historial, separación por explotación y restricciones.
@@ -334,7 +347,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal; y cuatro fincas con sus parcelas SIGPAC, una arrendada y otra desactivada. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal; y cuatro fincas con sus parcelas SIGPAC, una arrendada y otra desactivada, y sus labores: la pradera de Agra de abaixo, sembrada, ensilada y segada, y el maíz de Chousa do monte. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|
