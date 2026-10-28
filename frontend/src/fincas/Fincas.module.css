@@ -207,3 +207,88 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.grupo {
+  display: grid;
+  gap: var(--espacio-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo legend {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.peligro {
+  color: var(--color-peligro);
+}
+
+/* Labores de la ficha (GH-26) */
+.tarjetaRegistros {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.registros {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registros li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.registros li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tituloRegistro {
+  font-weight: var(--peso-medio);
+}
+
+.opcionesRegistrar {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+/* Barra de las fincas marcadas en el listado: abajo, encima de la navegación */
+.barraSeleccion {
+  position: sticky;
+  bottom: calc(var(--altura-navegacion) + env(safe-area-inset-bottom, 0px) + var(--espacio-2));
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: var(--espacio-2) var(--espacio-2) var(--espacio-2) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-l);
+  background: var(--color-superficie-elevada);
+  box-shadow: var(--sombra-2);
+  font-weight: var(--peso-medio);
+}
+
+/* Solo con la lista de tarjetas (el móvil); desde 40rem la tabla ya muestra las casillas */
+@media (min-width: 40rem) {
+  .soloMovil {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .barraSeleccion {
+    bottom: var(--espacio-4);
+  }
+}

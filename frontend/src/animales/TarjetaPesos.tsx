@@ -3,6 +3,7 @@ import { type ReactNode, useState } from 'react'
 import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
+import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, kilos } from '../formato'
 import estilos from './Animales.module.css'
@@ -10,7 +11,6 @@ import type { AnimalDetalle } from './datos'
 import { FormularioPesada } from './FormularioPesada'
 import { GraficoPeso } from './GraficoPeso'
 import { conGanancia, ganancia, gananciaMedia, MOMENTOS, type Pesada, usePesadas } from './pesos'
-import { useRecorte } from './Recorte'
 
 const peso = (kg: number) => kilos(kg, kg % 1 ? 1 : 0)
 

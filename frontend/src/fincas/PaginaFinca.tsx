@@ -14,8 +14,11 @@ import { fecha, hectareas } from '../formato'
 import { CLAVE_FINCAS, REGIMENES, referenciaSigpac, useFinca } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioFinca } from './FormularioFinca'
+import { MenuRegistrarFinca } from './MenuRegistrarFinca'
+import { TarjetaLabores } from './TarjetaLabores'
 
-// Ficha de una finca: sus datos y sus parcelas con las referencias SIGPAC y catastral (GH-25)
+// Ficha de una finca: sus datos y sus parcelas con las referencias SIGPAC y catastral (GH-25), y sus
+// labores, con "Registrar" para apuntar las nuevas (GH-26)
 export function PaginaFinca() {
   const explotacion = useExplotacionActual()
   const { fincaId = '' } = useParams()
@@ -89,6 +92,7 @@ export function PaginaFinca() {
           </div>
         </div>
         <div className={estilos.acciones}>
+          {f.activa && <MenuRegistrarFinca finca={f} />}
           {f.activa ? (
             <Boton
               variante="secundario"
@@ -173,6 +177,8 @@ export function PaginaFinca() {
             </p>
           )}
         </Tarjeta>
+
+        <TarjetaLabores finca={f} />
       </div>
 
       <p className={estilos.suave}>

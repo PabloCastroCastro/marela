@@ -10,6 +10,7 @@ import {
   animales,
   eventosReproductivos,
   fincas,
+  labores,
   member,
   organization,
   parcelas,
@@ -51,6 +52,7 @@ const EVENTO = 8
 const PARTO = 9
 const FINCA = 10
 const PARCELA = 11
+const LABOR = 12
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -532,6 +534,82 @@ await enExplotacion(
           })
           .onConflictDoNothing()
       }
+    }
+  },
+)
+
+// Labores (GH-26): la pradera de Agra de abaixo, sembrada, ensilada en rolos y segada; el maíz de
+// Chousa do monte, con el laboreo, la siembra y la cosecha del contratista
+const laboresVeiga: (Omit<typeof labores.$inferInsert, 'fincaId' | 'superficie'> & {
+  finca: number
+  superficie?: number
+})[] = [
+  {
+    finca: 1,
+    tipo: 'siembra',
+    fecha: '2025-10-05',
+    cultivo: 'Pradera de raigrás',
+    realizadaPorId: sid(USUARIO, 2),
+  },
+  {
+    finca: 1,
+    tipo: 'cosecha',
+    fecha: '2026-05-12',
+    cultivo: 'Pradera de raigrás',
+    cantidad: 42,
+    unidad: 'rolos',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+  },
+  {
+    finca: 1,
+    tipo: 'otra',
+    fecha: '2026-07-02',
+    labor: 'Siega',
+    superficie: 2.3456,
+    realizadaPorId: sid(USUARIO, 4),
+  },
+  {
+    finca: 2,
+    tipo: 'otra',
+    fecha: '2026-04-20',
+    labor: 'Laboreo',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+  },
+  {
+    finca: 2,
+    tipo: 'siembra',
+    fecha: '2026-05-02',
+    cultivo: 'Maíz forrajero',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+    observaciones: 'Variedad de ciclo 300',
+  },
+  {
+    finca: 2,
+    tipo: 'cosecha',
+    fecha: '2026-09-28',
+    cultivo: 'Maíz forrajero',
+    cantidad: 6,
+    unidad: 'remolques',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+  },
+]
+
+const superficieFinca = (n: number) =>
+  fincasVeiga.find((f) => f.n === n)?.parcelas.reduce((t, p) => t + p.superficie, 0) ?? 0
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    for (const [i, { finca, superficie, ...l }] of laboresVeiga.entries()) {
+      await tx
+        .insert(labores)
+        .values({
+          id: sid(LABOR, i + 1),
+          fincaId: sid(FINCA, finca),
+          superficie: superficie ?? superficieFinca(finca),
+          ...l,
+        })
+        .onConflictDoNothing()
     }
   },
 )

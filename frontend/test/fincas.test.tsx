@@ -123,3 +123,87 @@ describe('fincas', () => {
     expect(await within(hoja).findByText('Ya hay una finca con este nombre')).toBeInTheDocument()
   })
 })
+
+describe('labores', () => {
+  it('muestra las labores en la ficha y registra una siega desde "Registrar"', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Labores' })
+    const lista = await within(tarjeta).findByRole('list', { name: 'Labores' })
+    expect(within(lista).getByText('Cosecha: Pradera de raigrás')).toBeInTheDocument()
+    expect(within(lista).getByText(/42 rolos · por Contratista Hermanos Rey/)).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Registrar' }))
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: 'Registrar' })).getByRole('button', {
+        name: 'Otra labor',
+      }),
+    )
+    const hoja = screen.getByRole('dialog', { name: /Registrar · Agra de abaixo/ })
+    // Por defecto, la finca entera y quien la registra
+    expect(within(hoja).getByLabelText(/^Superficie/)).toHaveValue('3,4456')
+    expect(within(hoja).getByLabelText('Quién la realiza')).toHaveValue('u1')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await within(hoja).findByText('Indica la labor')).toBeInTheDocument()
+
+    await usuario.type(within(hoja).getByLabelText(/^Labor/), 'Siega')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Siega registrada')).toBeInTheDocument()
+    expect(await within(tarjeta).findByText('Siega')).toBeInTheDocument()
+  })
+
+  it('corrige una labor y la borra con deshacer', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Labores' })
+    await usuario.click(
+      await within(tarjeta).findByRole('button', { name: /^Corregir cosecha: pradera/ }),
+    )
+    const hoja = screen.getByRole('dialog', { name: /Corregir/ })
+    await usuario.clear(within(hoja).getByLabelText(/^Cantidad/))
+    await usuario.type(within(hoja).getByLabelText(/^Cantidad/), '45')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Labor corregida')).toBeInTheDocument()
+    expect(estado.labores[0]?.cantidad).toBe(45)
+
+    await usuario.click(
+      await within(tarjeta).findByRole('button', { name: /^Corregir cosecha: pradera/ }),
+    )
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: /Corregir/ })).getByRole('button', {
+        name: 'Borrar',
+      }),
+    )
+    expect(await screen.findByText(/borrada$/)).toBeInTheDocument()
+    expect(estado.labores).toHaveLength(0)
+    await usuario.click(screen.getByRole('button', { name: 'Deshacer' }))
+    await within(tarjeta).findByText('Cosecha: Pradera de raigrás')
+    expect(estado.labores).toHaveLength(1)
+  })
+
+  it('registra la misma labor en varias fincas marcadas en el listado', async () => {
+    estado.fincas[1] = { ...(estado.fincas[1] as (typeof estado.fincas)[number]), activa: true }
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(fincas)
+    await tarjetas()
+    await usuario.click(
+      within(screen.getByRole('table', { name: 'Fincas' })).getByRole('checkbox', {
+        name: 'Seleccionar todos',
+      }),
+    )
+    expect(screen.getByText('2 seleccionadas')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Registrar labor' }))
+    const hoja = screen.getByRole('dialog', { name: 'Registrar en 2 fincas' })
+    expect(within(hoja).queryByLabelText(/^Superficie/)).not.toBeInTheDocument()
+    await usuario.type(within(hoja).getByLabelText(/^Labor/), 'Encalado')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Encalado registrada en 2 fincas')).toBeInTheDocument()
+    expect(estado.labores.slice(-2).map((l) => [l.fincaId, l.superficie])).toEqual([
+      ['f1', 3.4456],
+      ['f2', 0.35],
+    ])
+  })
+})
