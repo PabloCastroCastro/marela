@@ -178,6 +178,15 @@ Decisiones (GH-52):
 - El mapa se centra en las parcelas que ya tiene la finca; si no tiene, en el municipio de la explotación. Con "Ir a mi ubicación", donde está el móvil.
 - Los servicios son públicos y gratuitos (SIGPAC, Catastro, CartoCiudad e IGN). Si no responden o no hay conexión, se sigue pudiendo escribir todo a mano.
 
+Decisiones (GH-91):
+
+- En Fincas, "Lista" o "Mapa", con los mismos filtros. La vista se guarda en la dirección (`?vista=mapa`), para volver a ella desde una ficha.
+- En el mapa, cada finca con el color de su estado: en plazo de seguridad (naranja, primero porque es un aviso), en pastoreo (azul) o sin nada (claro). Al tocar una se ven su nombre, superficie, municipio, régimen e insignias, y el acceso a su ficha.
+- Las fincas con parcelas escritas a mano no salen en el mapa: se avisa de cuáles son, con un enlace que abre su edición con el mapa ya abierto. En su ficha, lo mismo con "Completar en el mapa".
+- La ficha muestra un mapa pequeño con sus parcelas. No se acerca con la rueda del ratón, para no estorbar al desplazar la página.
+- El mapa de las fincas encuadra todas las que pasan el filtro, no tu posición: "Ir a mi ubicación" la marca con un punto, para saber en qué finca estás. Al elegir las parcelas de una finca sin ninguna, el mapa va a tu posición si el móvil ya dio permiso; si no, al municipio, sin pedirlo al abrir.
+- Sobre la ortofoto, los colores son fijos y vivos, los mismos en el tema claro y en el oscuro.
+
 ### Eventos de finca
 
 - Siembra, abono, fitosanitarios, cosecha, pastoreo y otras labores (siega, laboreo, riego...).

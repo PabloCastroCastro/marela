@@ -365,3 +365,14 @@ export async function cambiarEstadoFinca(tx: Transaccion, fincaId: string, activ
   await tx.update(fincas).set({ activa }).where(eq(fincas.id, fincaId))
   return verFinca(tx, fincaId)
 }
+
+// Contornos de las parcelas de todas las fincas, para el mapa de la explotación (GH-91). Las que se
+// registraron a mano no tienen.
+export async function contornosFincas(tx: Transaccion) {
+  const filas = await tx
+    .select({ fincaId: parcelas.fincaId, parcelaId: parcelas.id, contorno: parcelas.contorno })
+    .from(parcelas)
+    .where(isNotNull(parcelas.contorno))
+    .orderBy(asc(parcelas.creadoEn))
+  return filas.flatMap((f) => (f.contorno ? [{ ...f, contorno: f.contorno }] : []))
+}

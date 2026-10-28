@@ -1,10 +1,10 @@
 import { Plus, Wheat, X } from 'lucide-react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { lazy, Suspense, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 import { Boton, BotonIcono } from '../componentes/Boton'
 import { BotonFlotante } from '../componentes/BotonFlotante'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
-import { Insignia } from '../componentes/Etiquetas'
+import { Chips, Insignia } from '../componentes/Etiquetas'
 import { BarraFiltros, Buscador, FiltroDesplegable } from '../componentes/Filtros'
 import { Tabla } from '../componentes/Tabla'
 import { rutaExplotacion } from '../explotaciones/datos'
@@ -16,6 +16,9 @@ import { FormularioFinca } from './FormularioFinca'
 import { InsigniaPastoreo } from './InsigniaPastoreo'
 import { InsigniaSeguridad } from './InsigniaSeguridad'
 import { MenuRegistrarFinca } from './MenuRegistrarFinca'
+
+// Leaflet pesa: el mapa se descarga solo al elegir esa vista (GH-91)
+const MapaFincas = lazy(() => import('./MapaFincas'))
 
 // "En plazo de seguridad" (GH-27) y "En pastoreo" (GH-28) se filtran como un estado más, aunque
 // no lo son
@@ -29,6 +32,9 @@ export function PaginaFincas() {
   const navegar = useNavigate()
   const [texto, setTexto] = useState('')
   const [estado, setEstado] = useState<FiltroEstado>('true')
+  // Lista o mapa (GH-91), en la dirección para que se conserve al volver de una ficha
+  const [busqueda, setBusqueda] = useSearchParams()
+  const vista = busqueda.get('vista') === 'mapa' ? 'mapa' : 'lista'
   const [anadiendo, setAnadiendo] = useState(false)
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
 
@@ -60,6 +66,15 @@ export function PaginaFincas() {
       <BarraFiltros
         buscador={<Buscador etiqueta="Buscar por nombre o municipio" alCambiar={setTexto} />}
       >
+        <Chips
+          etiqueta="Vista"
+          opciones={[
+            { valor: 'lista', texto: 'Lista' },
+            { valor: 'mapa', texto: 'Mapa' },
+          ]}
+          seleccion={vista}
+          alCambiar={(v) => setBusqueda(v === 'mapa' ? { vista: 'mapa' } : {}, { replace: true })}
+        />
         <FiltroDesplegable
           etiqueta="Estado"
           opciones={[
@@ -102,64 +117,72 @@ export function PaginaFincas() {
           <p className={estilos.recuento} role="status">
             {fincas.data.length} {fincas.data.length === 1 ? 'finca' : 'fincas'} ·{' '}
             {hectareas(total)}
-            <span className={estilos.soloMovil}> · Mantén pulsada una para marcar varias</span>
+            {vista === 'lista' && (
+              <span className={estilos.soloMovil}> · Mantén pulsada una para marcar varias</span>
+            )}
           </p>
-          <Tabla
-            etiqueta="Fincas"
-            filas={fincas.data}
-            claveFila={(f) => f.id}
-            alSeleccionar={(f) => abrir(f.id)}
-            seleccion={{
-              claves: seleccion,
-              alCambiar: setSeleccion,
-              etiquetaFila: (f) => f.nombre,
-            }}
-            columnas={[
-              {
-                clave: 'nombre',
-                titulo: 'Nombre',
-                valor: (f) => f.nombre,
-                ordenar: (f) => f.nombre,
-                principal: true,
-              },
-              {
-                clave: 'municipio',
-                titulo: 'Municipio',
-                valor: (f) => f.municipio ?? '—',
-                ordenar: (f) => f.municipio,
-              },
-              {
-                clave: 'superficie',
-                titulo: 'Superficie',
-                valor: (f) => hectareas(f.superficie),
-                ordenar: (f) => f.superficie,
-                numerica: true,
-              },
-              {
-                clave: 'parcelas',
-                titulo: 'Parcelas',
-                valor: (f) => f.numeroParcelas,
-                ordenar: (f) => f.numeroParcelas,
-                numerica: true,
-              },
-              {
-                clave: 'regimen',
-                titulo: 'Régimen',
-                valor: (f) => (
-                  <span className={estilos.insignias}>
-                    {f.activa ? REGIMENES[f.regimen] : <Insignia>Desactivada</Insignia>}
-                    {f.finSeguridad && <InsigniaSeguridad fin={f.finSeguridad} corta />}
-                    {f.pastoreo && <InsigniaPastoreo pastoreo={f.pastoreo} corta />}
-                  </span>
-                ),
-                ordenar: (f) => (f.activa ? REGIMENES[f.regimen] : 'zz'),
-              },
-            ]}
-          />
+          {vista === 'mapa' ? (
+            <Suspense fallback={<Esqueleto bloques={[{ alto: '24rem' }]} />}>
+              <MapaFincas fincas={fincas.data} />
+            </Suspense>
+          ) : (
+            <Tabla
+              etiqueta="Fincas"
+              filas={fincas.data}
+              claveFila={(f) => f.id}
+              alSeleccionar={(f) => abrir(f.id)}
+              seleccion={{
+                claves: seleccion,
+                alCambiar: setSeleccion,
+                etiquetaFila: (f) => f.nombre,
+              }}
+              columnas={[
+                {
+                  clave: 'nombre',
+                  titulo: 'Nombre',
+                  valor: (f) => f.nombre,
+                  ordenar: (f) => f.nombre,
+                  principal: true,
+                },
+                {
+                  clave: 'municipio',
+                  titulo: 'Municipio',
+                  valor: (f) => f.municipio ?? '—',
+                  ordenar: (f) => f.municipio,
+                },
+                {
+                  clave: 'superficie',
+                  titulo: 'Superficie',
+                  valor: (f) => hectareas(f.superficie),
+                  ordenar: (f) => f.superficie,
+                  numerica: true,
+                },
+                {
+                  clave: 'parcelas',
+                  titulo: 'Parcelas',
+                  valor: (f) => f.numeroParcelas,
+                  ordenar: (f) => f.numeroParcelas,
+                  numerica: true,
+                },
+                {
+                  clave: 'regimen',
+                  titulo: 'Régimen',
+                  valor: (f) => (
+                    <span className={estilos.insignias}>
+                      {f.activa ? REGIMENES[f.regimen] : <Insignia>Desactivada</Insignia>}
+                      {f.finSeguridad && <InsigniaSeguridad fin={f.finSeguridad} corta />}
+                      {f.pastoreo && <InsigniaPastoreo pastoreo={f.pastoreo} corta />}
+                    </span>
+                  ),
+                  ordenar: (f) => (f.activa ? REGIMENES[f.regimen] : 'zz'),
+                },
+              ]}
+            />
+          )}
         </>
       )}
 
-      {seleccionadas.length > 0 ? (
+      {vista === 'lista' && seleccionadas.length > 0 ? (
         <div className={estilos.barraSeleccion}>
           <p role="status">
             {seleccionadas.length === 1
