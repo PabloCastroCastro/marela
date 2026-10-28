@@ -22,7 +22,7 @@ export function TarjetaAplicaciones({ finca }: { finca: FincaDetalle }) {
   const explotacion = useExplotacionActual()
   const aplicaciones = useAplicaciones(explotacion.id, finca.id)
   const [anulando, setAnulando] = useState<Aplicacion>()
-  const recorte = useRecorte(aplicaciones.data ?? [], (n) => `Ver todos (${n})`)
+  const recorte = useRecorte(aplicaciones.data ?? [])
 
   let contenido: ReactNode
   if (aplicaciones.isPending) {

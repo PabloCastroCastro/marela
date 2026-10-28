@@ -24,7 +24,7 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
   // La lista, de la más reciente a la más antigua y con solo las últimas a la vista: el gráfico
   // ya muestra toda la evolución
   const recientes = conGanancia(pesadas.data ?? []).toReversed()
-  const recorte = useRecorte(recientes, (n) => `Ver todas las pesadas (${n})`)
+  const recorte = useRecorte(recientes)
 
   let contenido: ReactNode
   if (pesadas.isPending) {

@@ -53,7 +53,7 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
       anular: () => setAnulando({ tipo: 'parto', parto: p }),
     })),
   ].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.creadoEn.localeCompare(a.creadoEn))
-  const recorte = useRecorte(entradas, (n) => `Ver todo el historial (${n})`)
+  const recorte = useRecorte(entradas)
 
   let contenido: ReactNode
   if (eventos.isPending || (hembra && partos.isPending)) {
