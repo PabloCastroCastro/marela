@@ -57,6 +57,20 @@
       "when": 1793124192011,
       "tag": "0007_bajas",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793132882936,
+      "tag": "0008_pesos",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793132893299,
+      "tag": "0009_pesos_triggers",
+      "breakpoints": true
     }
   ]
 }

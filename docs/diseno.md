@@ -68,8 +68,9 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Pesos
 
-- Registro de pesadas: fecha y kg.
-- Momentos habituales: al nacer, al destete y a la venta.
+- Registro de pesadas: fecha, kg y momento (al nacer, al destete, a la venta u otra pesada). Al nacer, al destete y a la venta, como mucho una vez por animal.
+- En la ficha: el último peso, la ganancia media diaria, un gráfico de la evolución y cada pesada con la ganancia desde la anterior.
+- Una pesada se corrige o se borra si se registró por error; el borrado queda en el historial.
 
 ### Tratamientos
 

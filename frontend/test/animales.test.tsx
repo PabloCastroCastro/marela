@@ -252,3 +252,89 @@ describe('bajas', () => {
     expect(within(await tarjetas()).getByText('ES041503456812')).toBeInTheDocument()
   })
 })
+
+describe('pesos', () => {
+  it('muestra el último peso, la ganancia y cada pesada en la ficha', async () => {
+    simularApi(estado)
+    abrir(`${animales}/a3`)
+    const tarjeta = await screen.findByRole('region', { name: 'Pesos' })
+    // 60 kg en 60 días
+    expect(await within(tarjeta).findByText('98 kg', { selector: 'dd' })).toBeInTheDocument()
+    expect(within(tarjeta).getByText('+1,00 kg/día', { selector: 'dd' })).toBeInTheDocument()
+    expect(within(tarjeta).getByRole('img', { name: /Evolución del peso/ })).toBeInTheDocument()
+    const filas = within(within(tarjeta).getByRole('list', { name: 'Pesadas' })).getAllByRole(
+      'listitem',
+    )
+    expect(filas.map((f) => f.textContent)).toEqual([
+      expect.stringContaining('12/04/2026 · +1,00 kg/día'),
+      expect.stringContaining('11/02/2026 · al nacer'),
+    ])
+  })
+
+  it('sin pesadas lo dice, y sin gráfico', async () => {
+    simularApi(estado)
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Pesos' })
+    expect(await within(tarjeta).findByText('Sin pesadas registradas')).toBeInTheDocument()
+    expect(within(tarjeta).queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('registra una pesada con coma decimal', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a3`)
+    await usuario.click(await screen.findByRole('button', { name: 'Añadir pesada' }))
+    const hoja = screen.getByRole('dialog', { name: /Añadir pesada/ })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar pesada' }))
+    expect(within(hoja).getByText(/Indica el peso en kg/)).toBeInTheDocument()
+
+    await usuario.type(within(hoja).getByLabelText(/^Peso/), '150,5')
+    await usuario.clear(within(hoja).getByLabelText(/^Fecha/))
+    await usuario.type(within(hoja).getByLabelText(/^Fecha/), '2026-06-11')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar pesada' }))
+
+    expect(await screen.findByText('Pesada guardada: 150,5 kg')).toBeInTheDocument()
+    expect(estado.pesadas.at(-1)).toMatchObject({ kg: 150.5, fecha: '2026-06-11', momento: 'otro' })
+  })
+
+  it('no deja repetir la pesada al nacer', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a3`)
+    await usuario.click(await screen.findByRole('button', { name: 'Añadir pesada' }))
+    const hoja = screen.getByRole('dialog', { name: /Añadir pesada/ })
+    await usuario.type(within(hoja).getByLabelText(/^Peso/), '40')
+    await usuario.selectOptions(within(hoja).getByLabelText('Momento'), 'Al nacer')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar pesada' }))
+    expect(await within(hoja).findByText('El animal ya tiene esa pesada')).toBeInTheDocument()
+  })
+
+  it('corrige una pesada, la borra y lo deshace desde el aviso', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a3`)
+    await usuario.click(
+      await screen.findByRole('button', { name: 'Corregir la pesada del 12/04/2026' }),
+    )
+    let hoja = screen.getByRole('dialog', { name: /Corregir pesada/ })
+    const kg = within(hoja).getByLabelText(/^Peso/)
+    expect(kg).toHaveValue('98')
+    await usuario.clear(kg)
+    await usuario.type(kg, '99')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar pesada' }))
+    expect(await screen.findByText('Pesada corregida: 99 kg')).toBeInTheDocument()
+    expect(estado.pesadas.find((p) => p.id === 'p2')?.kg).toBe(99)
+
+    await usuario.click(screen.getByRole('button', { name: 'Corregir la pesada del 12/04/2026' }))
+    hoja = screen.getByRole('dialog', { name: /Corregir pesada/ })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Borrar' }))
+    expect(await screen.findByText('Pesada del 12/04/2026 borrada')).toBeInTheDocument()
+    expect(estado.pesadas.some((p) => p.fecha === '2026-04-12')).toBe(false)
+
+    await usuario.click(screen.getByRole('button', { name: 'Deshacer' }))
+    expect(
+      await screen.findByRole('button', { name: 'Corregir la pesada del 12/04/2026' }),
+    ).toBeInTheDocument()
+    expect(estado.pesadas.find((p) => p.fecha === '2026-04-12')).toMatchObject({ kg: 99 })
+  })
+})

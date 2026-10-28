@@ -8,6 +8,7 @@ import {
   animales,
   member,
   organization,
+  pesos,
   type RolExplotacion,
   user,
 } from './schema/index.js'
@@ -37,6 +38,7 @@ const CUENTA = 2
 const EXPLOTACION = 3
 const MIEMBRO = 4
 const ANIMAL = 5
+const PESADA = 6
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -206,6 +208,19 @@ const animalesVeiga: AnimalEjemplo[] = [
   },
 ]
 
+// Pesadas: [animal, fecha, kg, momento]
+const pesadasVeiga = [
+  [1, '2025-10-02', 612, 'otro'],
+  [1, '2026-10-01', 640, 'otro'],
+  [6, '2026-02-11', 38, 'nacimiento'],
+  [6, '2026-04-15', 102, 'otro'],
+  [6, '2026-06-20', 171, 'otro'],
+  [6, '2026-08-28', 236, 'destete'],
+  [6, '2026-10-10', 281.5, 'otro'],
+  [7, '2026-03-03', 41, 'nacimiento'],
+  [7, '2026-06-20', 152, 'otro'],
+] as const
+
 await enExplotacion(
   { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
   async (tx) => {
@@ -227,6 +242,12 @@ await enExplotacion(
           fechaEntrada: a.comprado?.entrada ?? null,
           regaOrigen: a.comprado?.rega ?? null,
         })
+        .onConflictDoNothing()
+    }
+    for (const [i, [animal, fecha, kg, momento]] of pesadasVeiga.entries()) {
+      await tx
+        .insert(pesos)
+        .values({ id: sid(PESADA, i + 1), animalId: sid(ANIMAL, animal), fecha, kg, momento })
         .onConflictDoNothing()
     }
   },

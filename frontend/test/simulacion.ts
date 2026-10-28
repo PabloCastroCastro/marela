@@ -86,6 +86,14 @@ export const animalSimulado = (
   ...cambios,
 })
 
+export type PesadaSimulada = {
+  id: string
+  animalId: string
+  fecha: string
+  kg: number
+  momento: 'nacimiento' | 'destete' | 'venta' | 'otro'
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -101,6 +109,7 @@ export type EstadoSimulado = {
   plataforma: ExplotacionDePlataforma[]
   miembros: MiembroSimulado[]
   animales: AnimalSimulado[]
+  pesadas: PesadaSimulada[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -200,6 +209,10 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         causaBaja: 'Venta',
       }),
     ],
+    pesadas: [
+      { id: 'p1', animalId: 'a3', fecha: '2026-02-11', kg: 38, momento: 'nacimiento' },
+      { id: 'p2', animalId: 'a3', fecha: '2026-04-12', kg: 98, momento: 'otro' },
+    ],
     ...cambios,
   }
 }
@@ -212,6 +225,7 @@ const DETALLE = /^\/api\/explotaciones\/([^/]+)$/
 const EQUIPO = /^\/api\/explotaciones\/([^/]+)\/miembros(?:\/([^/]+))?(?:\/([^/]+))?$/
 const ANIMALES = /^\/api\/explotaciones\/([^/]+)\/animales(?:\/([^/]+))?$/
 const BAJA = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/baja$/
+const PESOS = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/pesos(?:\/([^/]+))?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -223,8 +237,9 @@ export function simularApi(estado: EstadoSimulado) {
         : new Request(new URL(String(entrada), 'http://localhost'), opciones)
     const ruta = new URL(peticion.url).pathname
     const metodo = peticion.method
-    const cuerpo =
-      metodo === 'POST' || metodo === 'PATCH' ? await peticion.json().catch(() => ({})) : {}
+    const cuerpo = ['POST', 'PUT', 'PATCH'].includes(metodo)
+      ? await peticion.json().catch(() => ({}))
+      : {}
 
     if (ruta === '/api/auth/get-session') {
       return json(estado.conSesion ? { user: estado.usuario, session: {} } : null)
@@ -280,6 +295,55 @@ export function simularApi(estado: EstadoSimulado) {
         provincia: e.provincia ?? null,
         modulos: MODULOS[e.rol],
       })
+    }
+
+    const dePesos = ruta.match(PESOS)
+    if (dePesos) {
+      const [, animalId = '', pesoId] = dePesos
+      if (!estado.animales.some((x) => x.id === animalId)) {
+        return errorApi(404, 'animal_no_encontrado')
+      }
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      if (metodo === 'GET') {
+        return json(
+          estado.pesadas
+            .filter((p) => p.animalId === animalId)
+            .sort((x, y) => x.fecha.localeCompare(y.fecha))
+            .map((p) => ({ ...p, ...sello })),
+        )
+      }
+      const repetido =
+        cuerpo.momento !== 'otro' &&
+        estado.pesadas.some(
+          (p) => p.animalId === animalId && p.momento === cuerpo.momento && p.id !== pesoId,
+        )
+      if (metodo !== 'DELETE' && repetido) {
+        return errorApi(409, 'momento_repetido', [
+          { campo: 'momento', mensaje: 'El animal ya tiene esa pesada' },
+        ])
+      }
+      if (metodo === 'POST') {
+        const nueva = {
+          id: `p${estado.pesadas.length + 1}`,
+          animalId,
+          fecha: cuerpo.fecha as string,
+          kg: cuerpo.kg as number,
+          momento: (cuerpo.momento ?? 'otro') as PesadaSimulada['momento'],
+        }
+        estado.pesadas.push(nueva)
+        return json({ ...nueva, ...sello }, 201)
+      }
+      const p = estado.pesadas.find((x) => x.id === pesoId && x.animalId === animalId)
+      if (!p) return errorApi(404, 'pesada_no_encontrada')
+      if (metodo === 'DELETE') {
+        estado.pesadas = estado.pesadas.filter((x) => x !== p)
+      } else {
+        Object.assign(p, { fecha: cuerpo.fecha, kg: cuerpo.kg, momento: cuerpo.momento })
+      }
+      return json({ ...p, ...sello })
     }
 
     const deBaja = ruta.match(BAJA)

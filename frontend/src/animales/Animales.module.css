@@ -141,6 +141,73 @@
   white-space: pre-line;
 }
 
+.tarjetaPesos {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.cabeceraTarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.tarjetas .cabeceraTarjeta h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  margin-bottom: 0;
+}
+
+.iconoTitulo {
+  color: var(--color-acento);
+}
+
+.cifrasPeso {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-3) var(--espacio-6);
+  margin: 0;
+}
+
+.cifrasPeso dt {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.cifrasPeso dd {
+  margin: 0;
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+  font-variant-numeric: tabular-nums;
+}
+
+.pesadas {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pesadas li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  min-height: 56px;
+  border-top: 1px solid var(--color-borde);
+}
+
+.pesadas li > div {
+  display: grid;
+}
+
+.pesadas .cifra {
+  font-weight: var(--peso-medio);
+}
+
 .formulario {
   display: grid;
   gap: var(--espacio-4);
