@@ -1856,6 +1856,14 @@
           "numeroParcelas": {
             "type": "integer"
           },
+          "finSeguridad": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Fin del plazo de seguridad en curso: hasta ese día no se cosecha ni se pasta (null si no hay)"
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -1875,6 +1883,7 @@
           "activa",
           "superficie",
           "numeroParcelas",
+          "finSeguridad",
           "creadoEn",
           "modificadoEn"
         ]
@@ -2401,6 +2410,354 @@
         "required": [
           "tipo",
           "fecha"
+        ]
+      },
+      "Aplicacion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "abono",
+              "fitosanitario"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string"
+          },
+          "tipoAbono": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "mineral",
+              "organico",
+              null
+            ]
+          },
+          "dosis": {
+            "type": "number"
+          },
+          "unidadDosis": {
+            "type": "string",
+            "enum": [
+              "kg_ha",
+              "t_ha",
+              "l_ha",
+              "m3_ha"
+            ]
+          },
+          "superficie": {
+            "type": "number",
+            "description": "Hectáreas tratadas"
+          },
+          "aplicadoPor": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Sin él, es un nombre escrito a mano"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ]
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "plaga": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diasSeguridad": {
+            "type": "integer"
+          },
+          "finSeguridad": {
+            "type": "string",
+            "format": "date",
+            "description": "Día en que termina el plazo de seguridad (la fecha más los días): desde él se puede cosechar o pastar"
+          },
+          "ropo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "equipo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fincaId",
+          "tipo",
+          "fecha",
+          "producto",
+          "tipoAbono",
+          "dosis",
+          "unidadDosis",
+          "superficie",
+          "aplicadoPor",
+          "lote",
+          "plaga",
+          "diasSeguridad",
+          "finSeguridad",
+          "ropo",
+          "equipo",
+          "observaciones",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "OpcionesAplicacion": {
+        "type": "object",
+        "properties": {
+          "personas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "nombre": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nombre"
+              ]
+            }
+          },
+          "abonos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fitosanitarios": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plagas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "equipos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "personas",
+          "abonos",
+          "fitosanitarios",
+          "plagas",
+          "equipos"
+        ]
+      },
+      "DatosAplicacion": {
+        "type": "object",
+        "properties": {
+          "fincaIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 200
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "abono",
+              "fitosanitario"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Purín de vacuno"
+          },
+          "tipoAbono": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "mineral",
+              "organico",
+              null
+            ]
+          },
+          "dosis": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "unidadDosis": {
+            "type": "string",
+            "enum": [
+              "kg_ha",
+              "t_ha",
+              "l_ha",
+              "m3_ha"
+            ]
+          },
+          "superficie": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "aplicadoPorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "aplicadoPorTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Cooperativa do Deza"
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "plaga": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Romaza"
+          },
+          "diasSeguridad": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 999
+          },
+          "ropo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "3600012345678"
+          },
+          "equipo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Pulverizador suspendido 800 l"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "fincaIds",
+          "tipo",
+          "fecha",
+          "producto",
+          "dosis",
+          "unidadDosis"
         ]
       },
       "ExplotacionPlataforma": {
@@ -5194,6 +5551,19 @@
             "description": "Solo las activas (true) o las desactivadas (false); sin él, todas",
             "name": "activa",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo las que tienen un plazo de seguridad en curso"
+            },
+            "required": false,
+            "description": "Solo las que tienen un plazo de seguridad en curso",
+            "name": "seguridad",
+            "in": "query"
           }
         ],
         "responses": {
@@ -5985,6 +6355,343 @@
           },
           "404": {
             "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/aplicaciones": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Abonados y tratamientos fitosanitarios de una finca",
+        "description": "También los anulados, con su anulación.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Aplicacion"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/aplicaciones/opciones": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Personas del equipo y productos, plagas y equipos ya usados, para el formulario",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesAplicacion"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/aplicaciones": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar un abonado o tratamiento fitosanitario en una o varias fincas",
+        "description": "Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAplicacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Aplicacion"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, fincas desactivadas o de otra explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/aplicaciones/{aplicacionId}/anulacion": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Anular un abonado o tratamiento registrado por error",
+        "description": "No se borra: queda en la ficha como anulado, con el motivo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "aplicacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Aplicacion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado (ya_anulado)",
             "content": {
               "application/json": {
                 "schema": {

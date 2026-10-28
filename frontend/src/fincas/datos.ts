@@ -19,7 +19,7 @@ export const REGIMENES: Record<Regimen, string> = {
 // Todas las consultas de fincas cuelgan de esta clave, para refrescarlas juntas tras un cambio
 export const CLAVE_FINCAS = ['fincas'] as const
 
-export type FiltrosFincas = { q?: string; activa?: 'true' | 'false' }
+export type FiltrosFincas = { q?: string; activa?: 'true' | 'false'; seguridad?: 'en_curso' }
 
 export const useFincas = (explotacionId: string, filtros: FiltrosFincas = {}) =>
   useQuery({

@@ -181,6 +181,27 @@ export type LaborSimulada = {
   observaciones: string | null
 }
 
+export type AplicacionSimulada = {
+  id: string
+  fincaId: string
+  tipo: 'abono' | 'fitosanitario'
+  fecha: string
+  producto: string
+  tipoAbono: 'mineral' | 'organico' | null
+  dosis: number
+  unidadDosis: 'kg_ha' | 't_ha' | 'l_ha' | 'm3_ha'
+  superficie: number
+  aplicadoPor: { id: string | null; nombre: string } | null
+  lote: string | null
+  plaga: string | null
+  diasSeguridad: number
+  finSeguridad: string
+  ropo: string | null
+  equipo: string | null
+  observaciones: string | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -202,6 +223,7 @@ export type EstadoSimulado = {
   partos: PartoSimulado[]
   fincas: FincaSimulada[]
   labores: LaborSimulada[]
+  aplicaciones: AplicacionSimulada[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -322,6 +344,28 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         observaciones: null,
       },
     ],
+    aplicaciones: [
+      {
+        id: 'ap1',
+        fincaId: 'f1',
+        tipo: 'abono',
+        fecha: '2026-02-20',
+        producto: 'Purín de vacuno',
+        tipoAbono: 'organico',
+        dosis: 30,
+        unidadDosis: 'm3_ha',
+        superficie: 3.4456,
+        aplicadoPor: null,
+        lote: null,
+        plaga: null,
+        diasSeguridad: 0,
+        finSeguridad: '2026-02-20',
+        ropo: null,
+        equipo: null,
+        observaciones: null,
+        anulacion: null,
+      },
+    ],
     fincas: [
       {
         id: 'f1',
@@ -413,6 +457,10 @@ const PARTOS =
   /^\/api\/explotaciones\/[^/]+\/(?:animales\/([^/]+)\/partos|partos\/([^/]+)\/anulacion)$/
 const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
+// Los abonados y tratamientos de una finca, el registro o la anulación de uno
+const APLICACIONES =
+  /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/aplicaciones|aplicaciones(?:\/([^/]+)\/anulacion)?)$/
+
 // Las labores de una finca, el registro o una labor
 const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labores(?:\/([^/]+))?)$/
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
@@ -586,13 +634,97 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...l, ...sello })
     }
 
+    if (ruta.endsWith('/aplicaciones/opciones')) {
+      return json({
+        personas: estado.miembros
+          .filter((m) => m.activo)
+          .map((m) => ({ id: m.usuarioId, nombre: m.nombre })),
+        abonos: [],
+        fitosanitarios: [],
+        plagas: [],
+        equipos: [],
+      })
+    }
+    const deAplicaciones = ruta.match(APLICACIONES)
+    if (deAplicaciones) {
+      const [, fincaId, aplicacionId] = deAplicaciones
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      if (fincaId) {
+        return json(
+          estado.aplicaciones
+            .filter((a) => a.fincaId === fincaId)
+            .sort((x, y) => y.fecha.localeCompare(x.fecha))
+            .map((a) => ({ ...a, ...sello })),
+        )
+      }
+      if (!aplicacionId && metodo === 'POST') {
+        const m = estado.miembros.find((x) => x.usuarioId === cuerpo.aplicadoPorId)
+        const fito = cuerpo.tipo === 'fitosanitario'
+        const dias = fito ? (cuerpo.diasSeguridad as number) : 0
+        const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
+          const f = estado.fincas.find((x) => x.id === id)
+          const nueva: AplicacionSimulada = {
+            id: `ap${estado.aplicaciones.length + i + 1}`,
+            fincaId: id,
+            tipo: cuerpo.tipo,
+            fecha: cuerpo.fecha,
+            producto: cuerpo.producto,
+            tipoAbono: fito ? null : cuerpo.tipoAbono,
+            dosis: cuerpo.dosis,
+            unidadDosis: cuerpo.unidadDosis,
+            superficie: cuerpo.superficie ?? f?.parcelas.reduce((t, x) => t + x.superficie, 0) ?? 0,
+            aplicadoPor: m
+              ? { id: m.usuarioId, nombre: m.nombre }
+              : cuerpo.aplicadoPorTexto
+                ? { id: null, nombre: cuerpo.aplicadoPorTexto }
+                : null,
+            lote: cuerpo.lote || null,
+            plaga: fito ? cuerpo.plaga : null,
+            diasSeguridad: dias,
+            finSeguridad: new Date(Date.parse(`${cuerpo.fecha}T00:00:00Z`) + dias * 864e5)
+              .toISOString()
+              .slice(0, 10),
+            ropo: (fito && cuerpo.ropo) || null,
+            equipo: (fito && cuerpo.equipo) || null,
+            observaciones: cuerpo.observaciones || null,
+            anulacion: null,
+          }
+          return nueva
+        })
+        estado.aplicaciones.push(...creadas)
+        return json(
+          creadas.map((a) => ({ ...a, ...sello })),
+          201,
+        )
+      }
+      const a = estado.aplicaciones.find((x) => x.id === aplicacionId)
+      if (!a) return errorApi(404, 'aplicacion_no_encontrada')
+      a.anulacion = {
+        en: '2026-10-02T10:00:00.000Z',
+        por: estado.usuario.name,
+        motivo: cuerpo.motivo,
+      }
+      return json({ ...a, ...sello })
+    }
+
     const deFincas = ruta.match(FINCAS)
     if (deFincas) {
       const [, fincaId, estadoFinca] = deFincas
+      const hoy = new Date().toISOString().slice(0, 10)
+      const finSeguridad = (f: FincaSimulada) =>
+        estado.aplicaciones
+          .filter((a) => a.fincaId === f.id && !a.anulacion && a.finSeguridad > hoy)
+          .map((a) => a.finSeguridad)
+          .sort()
+          .at(-1) ?? null
       const ficha = (f: FincaSimulada) => ({
         ...f,
         superficie: f.parcelas.reduce((t, x) => t + x.superficie, 0),
         numeroParcelas: f.parcelas.length,
+        finSeguridad: finSeguridad(f),
         creadoEn: '2026-10-01T10:00:00.000Z',
         modificadoEn: '2026-10-01T10:00:00.000Z',
       })
@@ -615,6 +747,7 @@ export function simularApi(estado: EstadoSimulado) {
         return json(
           estado.fincas
             .filter((f) => !q.get('activa') || String(f.activa) === q.get('activa'))
+            .filter((f) => !q.get('seguridad') || finSeguridad(f))
             .filter((f) => !texto || `${f.nombre} ${f.municipio}`.toLowerCase().includes(texto))
             .map(ficha),
         )

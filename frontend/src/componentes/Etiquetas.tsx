@@ -46,7 +46,8 @@ type PropsChips<T extends string> = {
   // Nombre del grupo para los lectores de pantalla
   etiqueta: string
   opciones: { valor: T; texto: string }[]
-  seleccion: T
+  // Ninguna, mientras no se elija
+  seleccion: T | undefined
   alCambiar: (valor: T) => void
   // En varias filas en lugar de desplazarse en horizontal, para que se vean todas las opciones
   envolver?: boolean

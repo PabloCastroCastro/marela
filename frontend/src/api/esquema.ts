@@ -2142,6 +2142,8 @@ export interface paths {
                     q?: string;
                     /** @description Solo las activas (true) o las desactivadas (false); sin él, todas */
                     activa?: "true" | "false";
+                    /** @description Solo las que tienen un plazo de seguridad en curso */
+                    seguridad?: "en_curso";
                 };
                 header?: never;
                 path: {
@@ -2821,6 +2823,312 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/aplicaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Abonados y tratamientos fitosanitarios de una finca
+         * @description También los anulados, con su anulación.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    fincaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Del más reciente al más antiguo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Aplicacion"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/aplicaciones/opciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personas del equipo y productos, plagas y equipos ya usados, para el formulario */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenados */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpcionesAplicacion"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/aplicaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registrar un abonado o tratamiento fitosanitario en una o varias fincas
+         * @description Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAplicacion"];
+                };
+            };
+            responses: {
+                /** @description Registrados */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Aplicacion"][];
+                    };
+                };
+                /** @description Datos no válidos, fincas desactivadas o de otra explotación (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/aplicaciones/{aplicacionId}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular un abonado o tratamiento registrado por error
+         * @description No se borra: queda en la ficha como anulado, con el motivo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    aplicacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAnulacion"];
+                };
+            };
+            responses: {
+                /** @description Anulado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Aplicacion"];
+                    };
+                };
+                /** @description Falta el motivo (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya está anulado (ya_anulado) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3612,6 +3920,11 @@ export interface components {
             /** @description Hectáreas: la suma de sus parcelas */
             superficie: number;
             numeroParcelas: number;
+            /**
+             * Format: date
+             * @description Fin del plazo de seguridad en curso: hasta ese día no se cosecha ni se pasta (null si no hay)
+             */
+            finSeguridad: string | null;
             /** Format: date-time */
             creadoEn: string;
             /** Format: date-time */
@@ -3736,6 +4049,92 @@ export interface components {
             realizadaPorId?: string | null;
             /** @example Contratista Hermanos Rey */
             realizadaPorTexto?: string | null;
+            observaciones?: string | null;
+        };
+        Aplicacion: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fincaId: string;
+            /** @enum {string} */
+            tipo: "abono" | "fitosanitario";
+            /** Format: date */
+            fecha: string;
+            producto: string;
+            /** @enum {string|null} */
+            tipoAbono: "mineral" | "organico" | null;
+            dosis: number;
+            /** @enum {string} */
+            unidadDosis: "kg_ha" | "t_ha" | "l_ha" | "m3_ha";
+            /** @description Hectáreas tratadas */
+            superficie: number;
+            aplicadoPor: {
+                /**
+                 * Format: uuid
+                 * @description Sin él, es un nombre escrito a mano
+                 */
+                id: string | null;
+                nombre: string;
+            } | null;
+            lote: string | null;
+            plaga: string | null;
+            diasSeguridad: number;
+            /**
+             * Format: date
+             * @description Día en que termina el plazo de seguridad (la fecha más los días): desde él se puede cosechar o pastar
+             */
+            finSeguridad: string;
+            ropo: string | null;
+            equipo: string | null;
+            observaciones: string | null;
+            anulacion: {
+                /** Format: date-time */
+                en: string;
+                por: string;
+                motivo: string;
+            } | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        OpcionesAplicacion: {
+            personas: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+            }[];
+            abonos: string[];
+            fitosanitarios: string[];
+            plagas: string[];
+            equipos: string[];
+        };
+        DatosAplicacion: {
+            fincaIds: string[];
+            /** @enum {string} */
+            tipo: "abono" | "fitosanitario";
+            /** Format: date */
+            fecha: string;
+            /** @example Purín de vacuno */
+            producto: string;
+            /** @enum {string|null} */
+            tipoAbono?: "mineral" | "organico" | null;
+            dosis: number;
+            /** @enum {string} */
+            unidadDosis: "kg_ha" | "t_ha" | "l_ha" | "m3_ha";
+            superficie?: number | null;
+            /** Format: uuid */
+            aplicadoPorId?: string | null;
+            /** @example Cooperativa do Deza */
+            aplicadoPorTexto?: string | null;
+            lote?: string | null;
+            /** @example Romaza */
+            plaga?: string | null;
+            diasSeguridad?: number | null;
+            /** @example 3600012345678 */
+            ropo?: string | null;
+            /** @example Pulverizador suspendido 800 l */
+            equipo?: string | null;
             observaciones?: string | null;
         };
         ExplotacionPlataforma: {

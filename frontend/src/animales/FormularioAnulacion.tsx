@@ -10,7 +10,7 @@ import estilos from './Animales.module.css'
 import { CLAVE_ANIMALES } from './datos'
 
 // Anular un dato sanitario o reproductivo registrado por error (GH-20, GH-22): no se borra, queda
-// en la ficha con el motivo
+// en la ficha con el motivo. También para los abonados y tratamientos de las fincas (GH-27).
 export function FormularioAnulacion({
   titulo,
   descripcion,
@@ -18,6 +18,7 @@ export function FormularioAnulacion({
   ayuda,
   mensajeExito,
   anular,
+  clave = CLAVE_ANIMALES,
   alCerrar,
 }: {
   // Una pregunta: "¿Anular el tratamiento?"
@@ -27,6 +28,8 @@ export function FormularioAnulacion({
   ayuda: string
   mensajeExito: string
   anular: (motivo: string) => Promise<unknown>
+  // Las consultas que se refrescan al anular: por defecto, las de animales
+  clave?: readonly string[]
   alCerrar: () => void
 }) {
   const explotacion = useExplotacionActual()
@@ -38,7 +41,7 @@ export function FormularioAnulacion({
   const mutacion = useMutation({
     mutationFn: () => anular(motivo),
     onSuccess: async () => {
-      await cliente.invalidateQueries({ queryKey: [...CLAVE_ANIMALES, explotacion.id] })
+      await cliente.invalidateQueries({ queryKey: [...clave, explotacion.id] })
       avisar({ tipo: 'exito', mensaje: mensajeExito })
       alCerrar()
     },

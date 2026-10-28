@@ -141,6 +141,20 @@
       "when": 1793191931757,
       "tag": "0019_labores_historial",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793199517155,
+      "tag": "0020_aplicaciones",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793199518471,
+      "tag": "0021_aplicaciones_triggers",
+      "breakpoints": true
     }
   ]
 }

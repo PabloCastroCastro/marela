@@ -1,4 +1,4 @@
-import { Plus, Tractor, Wheat, X } from 'lucide-react'
+import { Plus, Wheat, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -13,13 +13,15 @@ import { hectareas } from '../formato'
 import { REGIMENES, useFincas } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioFinca } from './FormularioFinca'
-import { FormularioLabor } from './FormularioLabor'
+import { InsigniaSeguridad } from './InsigniaSeguridad'
+import { MenuRegistrarFinca } from './MenuRegistrarFinca'
 
-type FiltroEstado = 'true' | 'false' | 'todas'
+// "En plazo de seguridad" se filtra como un estado más, aunque no lo es (GH-27)
+type FiltroEstado = 'true' | 'false' | 'en_plazo' | 'todas'
 
 // Fincas de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-25). En el móvil,
 // tarjetas; en pantalla ancha, tabla. Con casillas (en el móvil, manteniendo pulsada una finca) se
-// marcan varias para registrarles la misma labor (GH-26).
+// marcan varias para registrarles la misma labor (GH-26), abonado o tratamiento (GH-27).
 export function PaginaFincas() {
   const explotacion = useExplotacionActual()
   const navegar = useNavigate()
@@ -27,12 +29,12 @@ export function PaginaFincas() {
   const [estado, setEstado] = useState<FiltroEstado>('true')
   const [anadiendo, setAnadiendo] = useState(false)
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
-  const [registrando, setRegistrando] = useState(false)
 
   const filtrado = texto !== '' || estado !== 'true'
   const fincas = useFincas(explotacion.id, {
     q: texto || undefined,
-    activa: estado === 'todas' ? undefined : estado,
+    activa: estado === 'todas' || estado === 'en_plazo' ? undefined : estado,
+    seguridad: estado === 'en_plazo' ? 'en_curso' : undefined,
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/fincas/${id}`)
   const total = (fincas.data ?? []).reduce((s, f) => s + f.superficie, 0)
@@ -58,6 +60,7 @@ export function PaginaFincas() {
           etiqueta="Estado"
           opciones={[
             { valor: 'true', texto: 'Activas' },
+            { valor: 'en_plazo', texto: 'En plazo de seguridad' },
             { valor: 'false', texto: 'Desactivadas' },
             { valor: 'todas', texto: 'Todas' },
           ]}
@@ -137,7 +140,12 @@ export function PaginaFincas() {
               {
                 clave: 'regimen',
                 titulo: 'Régimen',
-                valor: (f) => (f.activa ? REGIMENES[f.regimen] : <Insignia>Desactivada</Insignia>),
+                valor: (f) => (
+                  <span className={estilos.insignias}>
+                    {f.activa ? REGIMENES[f.regimen] : <Insignia>Desactivada</Insignia>}
+                    {f.finSeguridad && <InsigniaSeguridad fin={f.finSeguridad} corta />}
+                  </span>
+                ),
                 ordenar: (f) => (f.activa ? REGIMENES[f.regimen] : 'zz'),
               },
             ]}
@@ -158,9 +166,7 @@ export function PaginaFincas() {
               icono={<X aria-hidden size={20} />}
               onClick={desmarcar}
             />
-            <Boton icono={<Tractor aria-hidden size={20} />} onClick={() => setRegistrando(true)}>
-              Registrar labor
-            </Boton>
+            <MenuRegistrarFinca fincas={seleccionadas} alGuardar={desmarcar} />
           </div>
         </div>
       ) : (
@@ -168,13 +174,6 @@ export function PaginaFincas() {
           etiqueta="Añadir finca"
           icono={<Plus aria-hidden size={26} />}
           alPulsar={() => setAnadiendo(true)}
-        />
-      )}
-      {registrando && (
-        <FormularioLabor
-          fincas={seleccionadas}
-          alCerrar={() => setRegistrando(false)}
-          alGuardar={desmarcar}
         />
       )}
       {anadiendo && (

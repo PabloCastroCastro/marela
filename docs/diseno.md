@@ -187,6 +187,15 @@ Decisiones (GH-25):
 - Equipo de aplicación (opcional, solo fitosanitarios)
 - Número de lote del producto
 
+Decisiones (GH-27):
+
+- Se registran desde "Registrar" en la ficha o, para varias fincas, marcándolas en el listado, como las labores: uno por finca, cada uno con su superficie entera.
+- El abono es mineral (NPK, urea…) u orgánico (purín, estiércol…).
+- La dosis, con su unidad: kg/ha, t/ha, l/ha o m³/ha.
+- Mientras un fitosanitario tenga el plazo de seguridad en curso, la finca lo avisa en su ficha y en el listado ("Plazo de seguridad hasta el…"), y se puede filtrar en Estado ("En plazo de seguridad"), como la supresión de los animales. La fecha que se muestra es la de la aplicación más los días del plazo.
+- Como los tratamientos de los animales, no se corrigen ni se borran: se anulan con un motivo y siguen a la vista, tachados. Uno anulado deja de contar para el plazo de seguridad.
+- "Registrar" en la ficha ofrece, en el orden del año, siembra, abono, fitosanitario, cosecha y otra labor; y al final, desactivar la finca.
+
 ### Siembra, cosecha y otras labores
 
 - Fecha
@@ -199,7 +208,7 @@ Decisiones (GH-25):
 
 Decisiones (GH-26):
 
-- Desde la ficha, "Registrar" ofrece siembra, cosecha y otra labor; para registrar la misma labor en varias fincas, se marcan en el listado (manteniendo pulsada una en el móvil) y "Registrar labor". Se crea una por finca, cada una con su superficie entera.
+- Desde la ficha, "Registrar" ofrece siembra, cosecha y otra labor; para registrar la misma labor en varias fincas, se marcan en el listado (manteniendo pulsada una en el móvil) y "Registrar" (GH-27: el mismo menú que en la ficha). Se crea una por finca, cada una con su superficie entera.
 - La superficie, por defecto la de la finca, y nunca mayor.
 - La cantidad cosechada, con su unidad: kg, toneladas, pacas, rolos o remolques.
 - Cultivos y labores, de texto libre con sugerencias.

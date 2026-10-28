@@ -14,11 +14,14 @@ import { fecha, hectareas } from '../formato'
 import { CLAVE_FINCAS, REGIMENES, referenciaSigpac, useFinca } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioFinca } from './FormularioFinca'
+import { InsigniaSeguridad } from './InsigniaSeguridad'
 import { MenuRegistrarFinca } from './MenuRegistrarFinca'
+import { TarjetaAplicaciones } from './TarjetaAplicaciones'
 import { TarjetaLabores } from './TarjetaLabores'
 
 // Ficha de una finca: sus datos y sus parcelas con las referencias SIGPAC y catastral (GH-25), y sus
-// labores, con "Registrar" para apuntar las nuevas (GH-26)
+// labores (GH-26) y sus abonados y tratamientos fitosanitarios (GH-27), con "Registrar" para apuntar
+// los nuevos
 export function PaginaFinca() {
   const explotacion = useExplotacionActual()
   const { fincaId = '' } = useParams()
@@ -89,12 +92,13 @@ export function PaginaFinca() {
           <div className={estilos.subtitulo}>
             <span className={estilos.cifra}>{hectareas(f.superficie)}</span>
             {!f.activa && <Insignia icono={<PowerOff aria-hidden />}>Desactivada</Insignia>}
+            {f.finSeguridad && <InsigniaSeguridad fin={f.finSeguridad} />}
           </div>
         </div>
         <div className={estilos.acciones}>
           {f.activa ? (
             <MenuRegistrarFinca
-              finca={f}
+              fincas={[f]}
               alDesactivar={async () => {
                 const ok = await confirmar({
                   titulo: `¿Desactivar ${f.nombre}?`,
@@ -173,6 +177,7 @@ export function PaginaFinca() {
           )}
         </Tarjeta>
 
+        <TarjetaAplicaciones finca={f} />
         <TarjetaLabores finca={f} />
       </div>
 
