@@ -11,6 +11,7 @@ import type { AnimalDetalle } from './datos'
 import { FormularioAnulacion } from './FormularioAnulacion'
 import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaSupresion } from './InsigniaSupresion'
+import { useRecorte } from './Recorte'
 import { MOTIVOS_TRATAMIENTO, type Tratamiento, useTratamientos, VIAS } from './tratamientos'
 
 // Tratamientos del animal en su ficha: la supresión en curso y el historial, con los anulados
@@ -20,6 +21,9 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
   const tratamientos = useTratamientos(explotacion.id, animal.id)
   const [registrando, setRegistrando] = useState(false)
   const [anulando, setAnulando] = useState<Tratamiento>()
+
+  // A la vista, solo los últimos
+  const recorte = useRecorte(tratamientos.data ?? [], (n) => `Ver todos los tratamientos (${n})`)
 
   let contenido: ReactNode
   if (tratamientos.isPending) {
@@ -36,7 +40,7 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
   } else {
     contenido = (
       <ul className={estilos.tratamientos} aria-label="Historial de tratamientos">
-        {tratamientos.data.map((t) => (
+        {recorte.elementos.map((t) => (
           <li key={t.id} className={t.anulacion ? estilos.anulado : undefined}>
             <div>
               <span className={estilos.producto}>{t.producto}</span>
@@ -103,6 +107,7 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
         </div>
       )}
       {contenido}
+      {recorte.boton}
       {registrando && (
         <FormularioTratamiento animales={[animal]} alCerrar={() => setRegistrando(false)} />
       )}

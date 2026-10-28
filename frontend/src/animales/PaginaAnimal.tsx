@@ -15,6 +15,7 @@ import { FormularioAnimal } from './FormularioAnimal'
 import { FormularioBaja, useDeshacerBaja } from './FormularioBaja'
 import { InsigniaEstado } from './InsigniaEstado'
 import { InsigniaGestacion } from './InsigniaGestacion'
+import { InsigniaSinCrotal } from './InsigniaSinCrotal'
 import { InsigniaSupresion } from './InsigniaSupresion'
 import { TarjetaPesos } from './TarjetaPesos'
 import { TarjetaReproduccion } from './TarjetaReproduccion'
@@ -70,10 +71,15 @@ export function PaginaAnimal() {
       {volver}
       <div className={estilos.titulo}>
         <div className={estilos.cabeceraFicha}>
-          <h1>{a.nombre ?? a.crotal}</h1>
+          <h1>
+            {a.nombre ?? a.crotal ?? `${a.sexo === 'hembra' ? 'Ternera' : 'Ternero'} sin crotal`}
+          </h1>
           <div className={estilos.subtitulo}>
-            {a.nombre && <span className={estilos.cifra}>{a.crotal}</span>}
+            {a.nombre && a.crotal && <span className={estilos.cifra}>{a.crotal}</span>}
             <InsigniaEstado estado={a.estado} />
+            {!a.crotal && a.estado === 'activo' && (
+              <InsigniaSinCrotal nacimiento={a.fechaNacimiento} />
+            )}
             {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} />}
             {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} />}
           </div>
@@ -136,7 +142,11 @@ export function PaginaAnimal() {
           <h2 id="ficha-datos">Datos</h2>
           <dl className={estilos.datos}>
             <Dato titulo="Crotal">
-              <span className={estilos.cifra}>{a.crotal}</span>
+              {a.crotal ? (
+                <span className={estilos.cifra}>{a.crotal}</span>
+              ) : (
+                <span className={estilos.suave}>Sin crotal: se pone desde Editar</span>
+              )}
             </Dato>
             <Dato titulo="Raza">{a.raza}</Dato>
             <Dato titulo="Sexo">{SEXOS[a.sexo]}</Dato>

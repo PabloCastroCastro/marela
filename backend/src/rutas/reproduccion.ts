@@ -17,7 +17,11 @@ import { comunes, error, json, ParametrosAnimal } from './animales.js'
 
 // Eventos reproductivos (GH-22)
 
-const Resumen = z.object({ id: z.uuid(), crotal: z.string(), nombre: z.string().nullable() })
+const Resumen = z.object({
+  id: z.uuid(),
+  crotal: z.string().nullable(),
+  nombre: z.string().nullable(),
+})
 
 const EventoReproductivo = z
   .object({

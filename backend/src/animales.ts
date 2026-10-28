@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { and, asc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
+import { and, asc, eq, ilike, isNull, or, type SQL, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { Transaccion } from './db/explotacion.js'
 import {
@@ -42,17 +42,20 @@ const textoOpcional = z
   .nullish()
 
 const CamposAnimal = z.object({
+  // Opcional: un ternero puede darse de alta antes de crotalarlo (GH-23)
   crotal: z
     .string()
-    .transform((c) => c.replace(/\s+/g, '').toUpperCase())
+    .transform((c) => c.replace(/\s+/g, '').toUpperCase() || null)
     .pipe(
       z
         .string()
         .regex(
           FORMATO_CROTAL,
           'El crotal son las letras ES y 12 dígitos (o el código de otro país y hasta 12 dígitos)',
-        ),
+        )
+        .nullable(),
     )
+    .nullish()
     .openapi({ example: 'ES041503456789' }),
   nombre: textoOpcional.openapi({ example: 'Marela' }),
   raza: z.string().trim().min(1, 'La raza es obligatoria').openapi({ example: 'Rubia Gallega' }),
@@ -125,6 +128,7 @@ const columnas = {
   tipoBaja: animales.tipoBaja,
   causaBaja: animales.causaBaja,
   observaciones: animales.observaciones,
+  partoId: animales.partoId,
   creadoEn: animales.creadoEn,
   modificadoEn: animales.modificadoEn,
 }
@@ -155,8 +159,8 @@ type Fila = Awaited<ReturnType<typeof consulta>>[number]
 function ficha({ madreCrotal, madreNombre, padreCrotal, padreNombre, ...a }: Fila) {
   return {
     ...a,
-    madre: a.madreId ? { id: a.madreId, crotal: madreCrotal ?? '', nombre: madreNombre } : null,
-    padre: a.padreId ? { id: a.padreId, crotal: padreCrotal ?? '', nombre: padreNombre } : null,
+    madre: a.madreId ? { id: a.madreId, crotal: madreCrotal, nombre: madreNombre } : null,
+    padre: a.padreId ? { id: a.padreId, crotal: padreCrotal, nombre: padreNombre } : null,
     creadoEn: a.creadoEn.toISOString(),
     modificadoEn: a.modificadoEn.toISOString(),
   }
@@ -170,6 +174,7 @@ export type FiltrosAnimales = {
   sexo?: (typeof SEXOS)[number]
   supresion?: 'en_curso'
   gestacion?: 'en_curso'
+  crotal?: 'sin'
 }
 
 export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) {
@@ -189,6 +194,7 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
   if (filtros.sexo) condiciones.push(eq(animales.sexo, filtros.sexo))
   if (filtros.supresion === 'en_curso')
     condiciones.push(sql`${finSupresion(hoyEnMadrid())} is not null`)
+  if (filtros.crotal === 'sin') condiciones.push(isNull(animales.crotal))
   if (filtros.gestacion === 'en_curso')
     condiciones.push(sql`exists (select from gestacion(${animales.id}))`)
   const filas = await consulta(tx)
@@ -198,7 +204,8 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
       ...(filtros.gestacion === 'en_curso'
         ? [sql`(select g.fecha_prevista_parto from gestacion(${animales.id}) g) nulls last`]
         : []),
-      asc(animales.crotal),
+      // Los que aún no tienen crotal, al final
+      sql`${animales.crotal} nulls last`,
     )
   return filas.map(ficha)
 }
@@ -246,7 +253,7 @@ async function comprobarProgenitores(tx: Transaccion, datos: DatosAnimal, animal
 }
 
 const valores = (d: DatosAnimal) => ({
-  crotal: d.crotal,
+  crotal: d.crotal ?? null,
   nombre: d.nombre ?? null,
   raza: d.raza,
   sexo: d.sexo,
@@ -300,6 +307,10 @@ export async function editarAnimal(tx: Transaccion, animalId: string, cambios: o
       'Los datos enviados no son válidos',
       r.error.issues.map((i) => ({ campo: i.path.join('.'), mensaje: i.message })),
     )
+  }
+  if (actual.crotal && !r.data.crotal) {
+    const mensaje = 'El crotal no se puede quitar'
+    throw new ErrorApi(400, 'validacion', mensaje, [{ campo: 'crotal', mensaje }])
   }
   await comprobarProgenitores(tx, r.data, animalId)
   await conErroresClaros(() =>

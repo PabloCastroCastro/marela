@@ -144,7 +144,7 @@ function evento({
     ...e,
     padreId,
     animal: { id: e.animalId, crotal: animalCrotal, nombre: animalNombre },
-    padre: padreId ? { id: padreId, crotal: padreCrotal ?? '', nombre: padreNombre } : null,
+    padre: padreId ? { id: padreId, crotal: padreCrotal, nombre: padreNombre } : null,
     anulacion: anuladoEn
       ? { en: anuladoEn.toISOString(), por: anuladoPorNombre ?? '', motivo: motivoAnulacion ?? '' }
       : null,
@@ -178,7 +178,8 @@ const invalido = (campo: string, mensaje: string) =>
   new ErrorApi(400, 'validacion', mensaje, [{ campo, mensaje }])
 
 // "de ES041503456789" o "de ES041503456789, ES041503456790"
-const deCrotales = (crotales: string[]) => crotales.join(', ')
+const deCrotales = (crotales: (string | null)[]) =>
+  crotales.map((c) => c ?? 'un ternero sin crotal').join(', ')
 
 // Los animales son de la explotación (la Row-Level Security solo deja ver los suyos), hembras si el
 // evento es suyo, y la fecha, de su vida en ella. El padre es un macho de la explotación. La base de

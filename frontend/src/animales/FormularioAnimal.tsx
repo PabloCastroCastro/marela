@@ -56,7 +56,7 @@ const VACIO: Formulario = {
 }
 
 const desdeAnimal = (a: AnimalDetalle): Formulario => ({
-  crotal: a.crotal,
+  crotal: a.crotal ?? '',
   nombre: a.nombre ?? '',
   raza: a.raza,
   sexo: a.sexo,
@@ -171,13 +171,17 @@ export function FormularioAnimal({ abierto, alCerrar, animal, alGuardar }: Props
         )}
         <Campo
           etiqueta="Crotal"
-          ayuda="ES y 12 dígitos"
+          ayuda={
+            animal?.crotal
+              ? 'ES y 12 dígitos'
+              : 'ES y 12 dígitos. Si aún no lo tiene, déjalo vacío y ponlo en los 20 días siguientes al nacimiento'
+          }
           autoCapitalize="characters"
           spellCheck={false}
           value={f.crotal}
           onChange={(e) => cambiar('crotal', e.target.value.toUpperCase())}
           error={errores.crotal}
-          required
+          required={Boolean(animal?.crotal)}
         />
         <Campo
           etiqueta="Nombre"
@@ -303,7 +307,7 @@ function Progenitor({
   etiqueta: string
   valor: string
   texto: string
-  candidatos: { id: string; crotal: string; nombre: string | null }[]
+  candidatos: { id: string; crotal: string | null; nombre: string | null }[]
   textoOtro: string
   alCambiar: (valor: string) => void
   alCambiarTexto: (texto: string) => void

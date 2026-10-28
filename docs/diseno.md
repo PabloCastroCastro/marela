@@ -45,7 +45,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Ficha del animal
 
-- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma.
+- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma. Opcional mientras se le pone a un ternero, en los 20 días siguientes a su nacimiento: hasta entonces la ficha avisa del plazo, y en el listado se filtran con "Estado: Sin crotal" (GH-23). Una vez puesto, no se puede quitar.
 - Nombre, opcional (muchas vacas lo tienen y es como se las reconoce)
 - Raza: se elige de una lista de razas de carne habituales en España o se escribe otra
 - Sexo
@@ -109,6 +109,15 @@ Decisiones (GH-22):
 - La cubrición y la inseminación se registran a varias vacas a la vez marcándolas en el listado y pulsando "Cubrir"; el resto de eventos, desde la ficha.
 - El destete es del ternero y se registra en su ficha, con su peso opcional, que se guarda también como su pesada al destete. Sale además en el historial de la madre.
 - Un evento no se corrige ni se borra: se anula con un motivo, sigue en el historial tachado y deja de contar para la gestación.
+
+Decisiones (GH-23):
+
+- El parto es un tipo más en "Registrar" de la tarjeta de reproducción, junto a los eventos; a una gestante se le ofrece primero. Se registra con uno a cuatro terneros, y crea sus fichas en la misma transacción. El padre es el de la cubrición o inseminación de la gestación en curso; si no la hay, se elige en el formulario.
+- El crotal de cada ternero es opcional (ver "Animales"); la raza, por defecto la de la madre; el peso al nacer, opcional, se guarda como su pesada al nacer.
+- Los nacidos muertos quedan con estado "muerto" y baja por muerte, con la causa "Nacido muerto".
+- El parto cierra la gestación en curso, como el aborto o el diagnóstico negativo.
+- Las listas de la ficha (reproducción, tratamientos y pesadas) muestran los 3 registros más recientes y el resto con "Ver todo"; arriba de la de reproducción, lo que viene: la gestación y el parto previsto.
+- Un parto no se corrige ni se borra: se anula con un motivo, y se borran las fichas de sus terneros, que quedan en el historial de cambios. No se puede si alguno tiene ya otros datos (pesadas aparte de la del nacimiento, tratamientos, eventos o hijos).
 
 ## Comida
 

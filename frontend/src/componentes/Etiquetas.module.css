@@ -48,6 +48,11 @@
   scrollbar-width: none;
 }
 
+.envolver {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
 /* El chip mide 32 px, pero el área táctil llega a 48 px con el margen vertical */
 .chip {
   display: inline-flex;

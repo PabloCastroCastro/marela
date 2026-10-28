@@ -45,7 +45,7 @@ export type ExplotacionDePlataforma = {
 // Animales de A Veiga
 export type AnimalSimulado = {
   id: string
-  crotal: string
+  crotal: string | null
   nombre: string | null
   raza: string
   sexo: 'hembra' | 'macho'
@@ -62,10 +62,11 @@ export type AnimalSimulado = {
   fechaBaja: string | null
   causaBaja: string | null
   observaciones: string | null
+  partoId?: string | null
 }
 
 export const animalSimulado = (
-  cambios: Partial<AnimalSimulado> & { id: string; crotal: string },
+  cambios: Partial<AnimalSimulado> & { id: string; crotal: string | null },
 ): AnimalSimulado => ({
   nombre: null,
   raza: 'Rubia Gallega',
@@ -83,6 +84,7 @@ export const animalSimulado = (
   fechaBaja: null,
   causaBaja: null,
   observaciones: null,
+  partoId: null,
   ...cambios,
 })
 
@@ -132,6 +134,17 @@ export type EventoSimulado = {
 const masDias = (fecha: string, dias: number) =>
   new Date(Date.parse(`${fecha}T00:00:00Z`) + dias * 86_400_000).toISOString().slice(0, 10)
 
+export type PartoSimulado = {
+  id: string
+  madreId: string
+  fecha: string
+  tipo: 'normal' | 'con_ayuda' | 'cesarea'
+  padreId: string | null
+  padreTexto: string | null
+  observaciones: string | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -150,6 +163,7 @@ export type EstadoSimulado = {
   pesadas: PesadaSimulada[]
   tratamientos: TratamientoSimulado[]
   eventos: EventoSimulado[]
+  partos: PartoSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -254,6 +268,7 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
       { id: 'p2', animalId: 'a3', fecha: '2026-04-12', kg: 98, momento: 'otro' },
     ],
     eventos: [],
+    partos: [],
     tratamientos: [
       {
         id: 't1',
@@ -286,6 +301,9 @@ const BAJA = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/baja$/
 const PESOS = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/pesos(?:\/([^/]+))?$/
 const TRATAMIENTOS_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/tratamientos$/
 const REPRODUCCION_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/reproduccion$/
+// Los partos de una vaca (GET y POST) o la anulación de uno
+const PARTOS =
+  /^\/api\/explotaciones\/[^/]+\/(?:animales\/([^/]+)\/partos|partos\/([^/]+)\/anulacion)$/
 const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
@@ -388,6 +406,113 @@ export function simularApi(estado: EstadoSimulado) {
           .sort((x, y) => y.fecha.localeCompare(x.fecha))
           .map(evento),
       )
+    }
+    const deParto = ruta.match(PARTOS)
+    if (deParto) {
+      const [, madreId, partoId] = deParto
+      const parto = (x: PartoSimulado) => ({
+        ...x,
+        padre: resumenAnimal(x.padreId),
+        terneros: estado.animales
+          .filter((t) => t.partoId === x.id)
+          .map((t) => ({
+            id: t.id,
+            crotal: t.crotal,
+            nombre: t.nombre,
+            sexo: t.sexo,
+            estado: t.estado,
+          })),
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      if (partoId) {
+        const x = estado.partos.find((y) => y.id === partoId)
+        if (!x) return errorApi(404, 'parto_no_encontrado')
+        estado.animales = estado.animales.filter((t) => t.partoId !== x.id)
+        x.anulacion = {
+          en: '2026-10-20T10:00:00.000Z',
+          por: estado.usuario.name,
+          motivo: cuerpo.motivo,
+        }
+        return json(parto(x))
+      }
+      if (metodo === 'GET') {
+        return json(
+          estado.partos
+            .filter((x) => x.madreId === madreId)
+            .sort((x, y) => y.fecha.localeCompare(x.fecha))
+            .map(parto),
+        )
+      }
+      const terneros = cuerpo.terneros as {
+        crotal?: string
+        sexo: 'hembra' | 'macho'
+        estado: string
+        raza: string
+        peso?: number | null
+      }[]
+      const repetido = terneros.findIndex(
+        (t) => t.crotal && estado.animales.some((x) => x.crotal === t.crotal),
+      )
+      if (repetido >= 0) {
+        return errorApi(409, 'crotal_en_uso', [
+          { campo: `terneros.${repetido}.crotal`, mensaje: 'Ya hay un animal con este crotal' },
+        ])
+      }
+      // El padre, como en el backend: el de la última cubrición o inseminación de la madre
+      const cubricion = estado.eventos
+        .filter(
+          (e) =>
+            e.animalId === madreId &&
+            !e.anulacion &&
+            (e.tipo === 'cubricion' || e.tipo === 'inseminacion'),
+        )
+        .sort((x, y) => x.fecha.localeCompare(y.fecha))
+        .at(-1)
+      const nuevo: PartoSimulado = {
+        id: `pa${estado.partos.length + 1}`,
+        madreId: madreId ?? '',
+        fecha: cuerpo.fecha,
+        tipo: cuerpo.tipo ?? 'normal',
+        padreId: cubricion ? cubricion.padreId : (cuerpo.padreId ?? null),
+        padreTexto: cubricion ? cubricion.padreTexto : (cuerpo.padreTexto ?? null),
+        observaciones: cuerpo.observaciones || null,
+        anulacion: null,
+      }
+      estado.partos.push(nuevo)
+      for (const t of terneros) {
+        const muerto = t.estado === 'muerto'
+        const ternero = animalSimulado({
+          id: `a${estado.animales.length + 1}`,
+          crotal: t.crotal || null,
+          raza: t.raza,
+          sexo: t.sexo,
+          fechaNacimiento: cuerpo.fecha,
+          madreId: madreId ?? null,
+          padreId: nuevo.padreId,
+          padreTexto: nuevo.padreTexto,
+          partoId: nuevo.id,
+          ...(muerto
+            ? {
+                estado: 'muerto',
+                tipoBaja: 'muerte',
+                fechaBaja: cuerpo.fecha,
+                causaBaja: 'Nacido muerto',
+              }
+            : {}),
+        })
+        estado.animales.push(ternero)
+        if (t.peso != null) {
+          estado.pesadas.push({
+            id: `p${estado.pesadas.length + 1}`,
+            animalId: ternero.id,
+            fecha: cuerpo.fecha,
+            kg: t.peso,
+            momento: 'nacimiento',
+          })
+        }
+      }
+      return json(parto(nuevo), 201)
     }
     const enReproduccion = ruta.match(REPRODUCCION)
     if (enReproduccion) {
@@ -609,6 +734,9 @@ export function simularApi(estado: EstadoSimulado) {
               (e) => e.tipo === 'aborto' || (e.tipo === 'diagnostico' && e.resultado === 'vacia'),
             )
             .map((e) => e.fecha)
+            .concat(
+              estado.partos.filter((x) => x.madreId === a.id && !x.anulacion).map((x) => x.fecha),
+            )
             .sort()
             .at(-1) ?? ''
         const cubricion = vivos
@@ -655,7 +783,7 @@ export function simularApi(estado: EstadoSimulado) {
           })),
       })
       const validar = (datos: AnimalSimulado) => {
-        if (!/^ES[0-9]{12}$/.test(datos.crotal)) {
+        if (datos.crotal && !/^ES[0-9]{12}$/.test(datos.crotal)) {
           return errorApi(400, 'validacion', [
             { campo: 'crotal', mensaje: 'El crotal son las letras ES y 12 dígitos' },
           ])
@@ -677,6 +805,7 @@ export function simularApi(estado: EstadoSimulado) {
             .filter((a) => !q.get('sexo') || a.sexo === q.get('sexo'))
             .filter((a) => !q.get('supresion') || supresion(a) !== null)
             .filter((a) => !q.get('gestacion') || gestacion(a) !== null)
+            .filter((a) => !q.get('crotal') || a.crotal === null)
             .filter(
               (a) =>
                 !texto ||

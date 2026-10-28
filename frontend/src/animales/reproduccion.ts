@@ -59,14 +59,51 @@ export const useEventos = (explotacionId: string, animalId: string) =>
 export const masDias = (fecha: string, dias: number) =>
   new Date(Date.parse(`${fecha}T00:00:00Z`) + dias * 86_400_000).toISOString().slice(0, 10)
 
-// Qué eventos se pueden registrar a un animal: los de hembra a las hembras y el destete a los
-// terneros (con madre) que aún no lo tienen
+// Lo que se registra desde la ficha: los eventos y el parto (GH-23), que tiene su propia tabla
+export type TipoRegistro = TipoEvento | 'parto'
+
+export const TIPOS_REGISTRO: Record<TipoRegistro, string> = { ...TIPOS_EVENTO, parto: 'Parto' }
+
+// Qué se puede registrar a un animal: a las hembras, sus eventos y el parto; a los terneros (con
+// madre), el destete. A una gestante, primero lo que le toca: el parto y el diagnóstico.
 export function tiposPara(animal: {
   sexo: 'hembra' | 'macho'
   madreId?: string | null
   madreTexto?: string | null
+  gestacion?: unknown
 }) {
-  const tipos: TipoEvento[] = animal.sexo === 'hembra' ? [...EVENTOS_DE_HEMBRA] : []
+  const tipos: TipoRegistro[] =
+    animal.sexo !== 'hembra'
+      ? []
+      : animal.gestacion
+        ? ['parto', 'diagnostico', 'aborto', 'cubricion', 'inseminacion']
+        : ['cubricion', 'inseminacion', 'diagnostico', 'parto', 'aborto']
   if (animal.madreId || animal.madreTexto) tipos.push('destete')
   return tipos
 }
+
+// Partos (GH-23)
+export type Parto = components['schemas']['Parto']
+export type DatosParto = components['schemas']['DatosParto']
+export type TipoParto = Parto['tipo']
+
+export const TIPOS_PARTO: Record<TipoParto, string> = {
+  normal: 'Normal',
+  con_ayuda: 'Con ayuda',
+  cesarea: 'Cesárea',
+}
+
+export const clavePartos = (explotacionId: string, animalId: string) =>
+  [...CLAVE_ANIMALES, explotacionId, 'partos', animalId] as const
+
+export const usePartos = (explotacionId: string, animalId: string, activo = true) =>
+  useQuery({
+    queryKey: clavePartos(explotacionId, animalId),
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/animales/{animalId}/partos', {
+          params: { path: { explotacionId, animalId } },
+        }),
+      ),
+    enabled: activo,
+  })

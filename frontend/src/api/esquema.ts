@@ -646,6 +646,8 @@ export interface paths {
                     sexo?: "hembra" | "macho";
                     /** @description Solo los animales con un periodo de supresión en curso */
                     supresion?: "en_curso";
+                    /** @description Solo los animales que aún no tienen crotal */
+                    crotal?: "sin";
                     /** @description Solo las hembras con una gestación en curso, por fecha prevista de parto */
                     gestacion?: "en_curso";
                 };
@@ -1893,6 +1895,238 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/partos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Partos de una vaca */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Del más reciente al más antiguo, anulados incluidos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Parto"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Registrar un parto y crear las fichas de sus terneros
+         * @description Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado "muerto". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosParto"];
+                };
+            };
+            responses: {
+                /** @description Registrado, con sus terneros */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Parto"];
+                    };
+                };
+                /** @description Datos no válidos, madre que no es hembra o fecha fuera de su vida (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El crotal de un ternero ya está en uso (crotal_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/partos/{partoId}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular un parto registrado por error
+         * @description Queda en el historial como anulado y se borran las fichas de sus terneros, que quedan en el historial de cambios. No se puede si algún ternero tiene ya otros datos.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    partoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAnulacionParto"];
+                };
+            };
+            responses: {
+                /** @description Anulado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Parto"];
+                    };
+                };
+                /** @description Falta el motivo (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el parto (parto_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya está anulado, o algún ternero tiene pesadas, tratamientos, eventos o hijos (ya_anulado, terneros_con_datos) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -2284,7 +2518,8 @@ export interface components {
         Animal: {
             /** Format: uuid */
             id: string;
-            crotal: string;
+            /** @description Sin crotal solo mientras se le pone, en los 20 días siguientes al nacimiento */
+            crotal: string | null;
             nombre: string | null;
             raza: string;
             /** @enum {string} */
@@ -2297,7 +2532,7 @@ export interface components {
             madre: {
                 /** Format: uuid */
                 id: string;
-                crotal: string;
+                crotal: string | null;
                 nombre: string | null;
             } | null;
             /** Format: uuid */
@@ -2306,7 +2541,7 @@ export interface components {
             padre: {
                 /** Format: uuid */
                 id: string;
-                crotal: string;
+                crotal: string | null;
                 nombre: string | null;
             } | null;
             /** @enum {string} */
@@ -2322,6 +2557,11 @@ export interface components {
             fechaBaja: string | null;
             causaBaja: string | null;
             observaciones: string | null;
+            /**
+             * Format: uuid
+             * @description Parto en que nació, si se registró
+             */
+            partoId: string | null;
             /**
              * Format: date
              * @description Día en que termina la supresión en curso, si la hay
@@ -2348,7 +2588,7 @@ export interface components {
             hijos: {
                 /** Format: uuid */
                 id: string;
-                crotal: string;
+                crotal: string | null;
                 nombre: string | null;
                 /** @enum {string} */
                 sexo: "hembra" | "macho";
@@ -2360,7 +2600,7 @@ export interface components {
         };
         DatosAnimal: {
             /** @example ES041503456789 */
-            crotal: string;
+            crotal?: string | null;
             /** @example Marela */
             nombre?: string | null;
             /** @example Rubia Gallega */
@@ -2395,7 +2635,7 @@ export interface components {
         };
         CambioAnimal: {
             /** @example ES041503456789 */
-            crotal?: string;
+            crotal?: string | null;
             /** @example Marela */
             nombre?: string | null;
             /** @example Rubia Gallega */
@@ -2534,7 +2774,7 @@ export interface components {
             animal: {
                 /** Format: uuid */
                 id: string;
-                crotal: string;
+                crotal: string | null;
                 nombre: string | null;
             };
             /** Format: uuid */
@@ -2542,7 +2782,7 @@ export interface components {
             padre: {
                 /** Format: uuid */
                 id: string;
-                crotal: string;
+                crotal: string | null;
                 nombre: string | null;
             } | null;
             padreTexto: string | null;
@@ -2585,6 +2825,78 @@ export interface components {
             observaciones?: string | null;
         };
         DatosAnulacionEvento: {
+            /** @example Registrado en la vaca equivocada */
+            motivo: string;
+        };
+        Parto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            madreId: string;
+            /** Format: date */
+            fecha: string;
+            /** @enum {string} */
+            tipo: "normal" | "con_ayuda" | "cesarea";
+            /** Format: uuid */
+            padreId: string | null;
+            padre: {
+                /** Format: uuid */
+                id: string;
+                crotal: string | null;
+                nombre: string | null;
+            } | null;
+            padreTexto: string | null;
+            observaciones: string | null;
+            /** @description Sus fichas; vacío si el parto está anulado, porque se borran */
+            terneros: {
+                /** Format: uuid */
+                id: string;
+                crotal: string | null;
+                nombre: string | null;
+                /** @enum {string} */
+                sexo: "hembra" | "macho";
+                /** @enum {string} */
+                estado: "activo" | "vendido" | "muerto" | "baja";
+            }[];
+            anulacion: {
+                /** Format: date-time */
+                en: string;
+                por: string;
+                motivo: string;
+            } | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosParto: {
+            /** Format: date */
+            fecha: string;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            tipo: "normal" | "con_ayuda" | "cesarea";
+            /** Format: uuid */
+            padreId?: string | null;
+            padreTexto?: string | null;
+            observaciones?: string | null;
+            terneros: {
+                /** @description Opcional: se le puede poner en los 20 días siguientes */
+                crotal?: string | null;
+                /** @enum {string} */
+                sexo: "hembra" | "macho";
+                /**
+                 * @default vivo
+                 * @enum {string}
+                 */
+                estado: "vivo" | "muerto";
+                raza: string;
+                /** @description Peso al nacer, en kg */
+                peso?: number | null;
+            }[];
+        };
+        DatosAnulacionParto: {
             /** @example Registrado en la vaca equivocada */
             motivo: string;
         };
