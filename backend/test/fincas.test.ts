@@ -138,6 +138,7 @@ describe('fincas', () => {
       parcelas: [{ ...recinto(), agregado: '1', zona: '2', uso: 'PS', contorno }, recinto()],
     })
     const finca = (await res.json()) as {
+      id: string
       parcelas: { agregado: string; zona: string; uso: string | null; contorno: unknown }[]
     }
     expect(finca.parcelas.map((p) => [p.agregado, p.zona, p.uso])).toEqual([
@@ -146,6 +147,16 @@ describe('fincas', () => {
       ['0', '0', null],
     ])
     expect(finca.parcelas[0]?.contorno).toEqual(contorno)
+    // Para el mapa de la explotación, solo las parcelas con contorno (GH-91)
+    const todos = (await (
+      await pedir('GET', `/explotaciones/${a}/fincas/contornos`, ana.cookie)
+    ).json()) as { fincaId: string; contorno: unknown }[]
+    const suyos = todos.filter((c) => c.fincaId === finca.id)
+    expect(suyos).toEqual([expect.objectContaining({ contorno })])
+    const deB = await pedir('GET', `/explotaciones/${b}/fincas/contornos`, carla.cookie)
+    expect(((await deB.json()) as { fincaId: string }[]).some((c) => c.fincaId === finca.id)).toBe(
+      false,
+    )
     const malo = await alta({ parcelas: [{ ...recinto(), contorno: { type: 'Point' } }] })
     expect(await campos(malo)).toContain('parcelas.0.contorno.type')
   })

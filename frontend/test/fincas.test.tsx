@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -46,6 +46,36 @@ vi.mock('../src/fincas/MapaParcelas', () => ({
     </button>
   ),
 }))
+
+// Leaflet tampoco: los mapas de las fincas (GH-91) dibujan en un mapa falso que guarda, por finca,
+// lo que pasa al tocarla
+const toquesMapa = vi.hoisted(() => new Map<string, () => void>())
+vi.mock('../src/fincas/leaflet', () => {
+  const grupo = () => {
+    const g = {
+      on: (_: string, alTocar: () => void) => {
+        g.alTocar = alTocar
+        return g
+      },
+      bindTooltip: (nombre: string) => {
+        toquesMapa.set(nombre, () => g.alTocar())
+        return g
+      },
+      addTo: () => g,
+      remove: () => g,
+      alTocar: (): void => undefined,
+    }
+    return g
+  }
+  return {
+    COLORES: { finca: '#fff', elegida: '#ff0', pastoreo: '#00f', plazo: '#f80' },
+    crearMapa: () => ({ mapa: { on: () => undefined }, desmontar: () => undefined }),
+    capaContorno: () => ({ addTo: () => ({}) }),
+    encuadrar: () => undefined,
+    centrarEnMunicipio: () => undefined,
+    L: { featureGroup: grupo, DomEvent: { stopPropagation: () => undefined } },
+  }
+})
 
 function abrir(ruta: string) {
   const router = createMemoryRouter(rutas, { initialEntries: [ruta] })
@@ -561,5 +591,81 @@ describe('parcelas desde el mapa o por referencia', () => {
     await usuario.click(within(segunda).getByRole('button', { name: /^Consultar/ }))
     await waitFor(() => expect(within(segunda).getByLabelText(/^Superficie/)).toHaveValue('0,7295'))
     expect(within(hoja).getByText('Superficie total: 1,9641 ha')).toBeInTheDocument()
+  })
+})
+
+describe('mapa de las fincas', () => {
+  const contorno = {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [-8.096, 42.679],
+        [-8.095, 42.679],
+        [-8.095, 42.68],
+        [-8.096, 42.679],
+      ],
+    ],
+  }
+
+  it('dibuja las fincas con contorno, muestra la elegida y avisa de las que faltan', async () => {
+    const [agra, leira] = estado.fincas
+    if (!agra?.parcelas[0] || !leira) throw new Error('Faltan fincas')
+    agra.parcelas[0].contorno = contorno
+    leira.activa = true
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(fincas)
+    await tarjetas()
+    await usuario.click(screen.getByRole('button', { name: 'Mapa' }))
+    expect(router.state.location.search).toBe('?vista=mapa')
+    expect(await screen.findByRole('list', { name: 'Leyenda del mapa' })).toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Fincas' })).not.toBeInTheDocument()
+
+    // Leira vella no tiene contorno: se avisa, con el enlace para completarla
+    expect(
+      await screen.findByText(
+        /^1 finca no sale en el mapa porque sus parcelas se escribieron a mano/,
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Leira vella: completar en el mapa' })).toHaveAttribute(
+      'href',
+      `${fincas}/f2?completar=mapa`,
+    )
+
+    act(() => toquesMapa.get('Agra de abaixo')?.())
+    const elegida = await screen.findByRole('region', { name: 'Agra de abaixo' })
+    expect(within(elegida).getByText(/^3,4456 ha · Lalín/)).toBeInTheDocument()
+    expect(within(elegida).getByRole('link', { name: 'Abrir la ficha' })).toHaveAttribute(
+      'href',
+      `${fincas}/f1`,
+    )
+
+    // Los filtros se aplican también al mapa
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'En pastoreo')
+    expect(await screen.findByText(/^Ninguna finca coincide/)).toBeInTheDocument()
+  })
+
+  it('en la ficha, sin contorno, ofrece completar las parcelas en el mapa', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const parcelas = await screen.findByRole('region', { name: 'Parcelas' })
+    expect(
+      within(parcelas).getByText('Sus parcelas no salen en el mapa: se escribieron a mano.'),
+    ).toBeInTheDocument()
+    await usuario.click(within(parcelas).getByRole('button', { name: 'Completar en el mapa' }))
+    // La edición se abre con el mapa ya abierto
+    expect(screen.getByRole('dialog', { name: 'Editar Agra de abaixo' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Elegir el recinto de prueba' }),
+    ).toBeInTheDocument()
+  })
+
+  it('llega a la edición con el mapa abierto desde el aviso del mapa', async () => {
+    simularApi(estado)
+    abrir(`${fincas}/f1?completar=mapa`)
+    expect(
+      await screen.findByRole('button', { name: 'Elegir el recinto de prueba' }),
+    ).toBeInTheDocument()
   })
 })

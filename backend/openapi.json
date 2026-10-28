@@ -1914,6 +1914,81 @@
           "modificadoEn"
         ]
       },
+      "Contorno": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Polygon"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 3
+                  },
+                  "minItems": 4,
+                  "maxItems": 20000
+                },
+                "minItems": 1,
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "MultiPolygon"
+                ]
+              },
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 3
+                    },
+                    "minItems": 4,
+                    "maxItems": 20000
+                  },
+                  "minItems": 1,
+                  "maxItems": 100
+                },
+                "minItems": 1,
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "type",
+              "coordinates"
+            ]
+          }
+        ]
+      },
       "FincaDetalle": {
         "allOf": [
           {
@@ -2013,84 +2088,6 @@
             "required": [
               "parcelas"
             ]
-          }
-        ]
-      },
-      "Contorno": {
-        "oneOf": [
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "Polygon"
-                ]
-              },
-              "coordinates": {
-                "type": "array",
-                "items": {
-                  "type": "array",
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    },
-                    "minItems": 2,
-                    "maxItems": 3
-                  },
-                  "minItems": 4,
-                  "maxItems": 20000
-                },
-                "minItems": 1,
-                "maxItems": 100
-              }
-            },
-            "required": [
-              "type",
-              "coordinates"
-            ]
-          },
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "MultiPolygon"
-                ]
-              },
-              "coordinates": {
-                "type": "array",
-                "items": {
-                  "type": "array",
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "array",
-                      "items": {
-                        "type": "number"
-                      },
-                      "minItems": 2,
-                      "maxItems": 3
-                    },
-                    "minItems": 4,
-                    "maxItems": 20000
-                  },
-                  "minItems": 1,
-                  "maxItems": 100
-                },
-                "minItems": 1,
-                "maxItems": 100
-              }
-            },
-            "required": [
-              "type",
-              "coordinates"
-            ]
-          },
-          {
-            "type": "null"
           }
         ]
       },
@@ -6124,6 +6121,93 @@
           },
           "409": {
             "description": "Ya hay una finca con ese nombre o el recinto SIGPAC está en otra finca (nombre_en_uso, recinto_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/contornos": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Contornos de las parcelas de todas las fincas, para el mapa",
+        "description": "Solo los de las parcelas elegidas en el mapa o consultadas por referencia.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "En el orden de alta de las parcelas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fincaId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "parcelaId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "contorno": {
+                        "$ref": "#/components/schemas/Contorno"
+                      }
+                    },
+                    "required": [
+                      "fincaId",
+                      "parcelaId",
+                      "contorno"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la finca (finca_no_encontrada)",
             "content": {
               "application/json": {
                 "schema": {

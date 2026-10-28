@@ -5,6 +5,7 @@ import { hoyEnMadrid } from '../fechas.js'
 import { db, pool } from './cliente.js'
 import { enExplotacion } from './explotacion.js'
 import { migrar } from './migrar.js'
+import { RECINTOS_EJEMPLO } from './recintos-ejemplo.js'
 import {
   account,
   animales,
@@ -474,29 +475,20 @@ const fincasVeiga = [
     n: 1,
     nombre: 'Agra de abaixo',
     regimen: 'propiedad' as const,
-    parcelas: [
-      { sigpac: ['36', '24', '12', '45', '1'], superficie: 2.3456 },
-      { sigpac: ['36', '24', '12', '46', '1'], superficie: 1.1 },
-    ],
+    parcelas: [{ recinto: '36:24:0:0:159:82:1' }, { recinto: '36:24:0:0:159:18:1' }],
   },
   {
     n: 2,
     nombre: 'Chousa do monte',
     regimen: 'arrendamiento' as const,
     observaciones: 'Arrendada a Manuel Rey hasta 2030',
-    parcelas: [
-      {
-        sigpac: ['36', '24', '15', '102', '2'],
-        catastral: '36024A015001020000KP',
-        superficie: 4.5,
-      },
-    ],
+    parcelas: [{ recinto: '36:24:0:0:123:413:1' }],
   },
   {
     n: 3,
     nombre: 'Prado da fonte',
     regimen: 'propiedad' as const,
-    parcelas: [{ sigpac: ['36', '24', '12', '80', '3'], superficie: 0.8721 }],
+    parcelas: [{ recinto: '36:24:0:0:159:96:1' }],
   },
   {
     n: 4,
@@ -516,29 +508,34 @@ await enExplotacion(
         .insert(fincas)
         .values({ id: sid(FINCA, n), municipio: 'Lalín', provincia: 'Pontevedra', ...f })
         .onConflictDoNothing()
-      for (const { sigpac, catastral, superficie } of suyas as {
-        sigpac?: string[]
+      for (const parcela of suyas as {
+        recinto?: string
         catastral?: string
-        superficie: number
+        superficie?: number
       }[]) {
         numero += 1
-        const [provincia, municipio, poligono, parcela, recinto] = sigpac ?? []
+        // Las de recintos reales, con su contorno; las demás, solo con la referencia catastral
+        const real = parcela.recinto ? RECINTOS_EJEMPLO[parcela.recinto] : undefined
+        const [provincia, municipio, agregado, zona, poligono, numeroParcela, recinto] =
+          parcela.recinto?.split(':') ?? []
+        const valores = {
+          provincia,
+          municipio,
+          agregado,
+          zona,
+          poligono,
+          parcela: numeroParcela,
+          recinto,
+          referenciaCatastral: real?.catastral ?? parcela.catastral ?? null,
+          superficie: real?.superficie ?? parcela.superficie ?? 0,
+          uso: real?.uso ?? null,
+          contorno: real?.contorno ?? null,
+        }
         await tx
           .insert(parcelas)
-          .values({
-            id: sid(PARCELA, numero),
-            fincaId: sid(FINCA, n),
-            provincia,
-            municipio,
-            poligono,
-            parcela,
-            recinto,
-            agregado: sigpac ? '0' : null,
-            zona: sigpac ? '0' : null,
-            referenciaCatastral: catastral ?? null,
-            superficie,
-          })
-          .onConflictDoNothing()
+          .values({ id: sid(PARCELA, numero), fincaId: sid(FINCA, n), ...valores })
+          // Se actualizan: las de bases cargadas antes de GH-91 no tenían recintos reales
+          .onConflictDoUpdate({ target: parcelas.id, set: valores })
       }
     }
   },
@@ -571,7 +568,7 @@ const laboresVeiga: (Omit<typeof labores.$inferInsert, 'fincaId' | 'superficie'>
     tipo: 'otra',
     fecha: '2026-07-02',
     labor: 'Siega',
-    superficie: 2.3456,
+    superficie: 0.6512,
     realizadaPorId: sid(USUARIO, 4),
   },
   {
@@ -637,7 +634,7 @@ const aplicacionesVeiga: AplicacionEjemplo[] = [
     producto: 'Fluroxipir 20 %',
     dosis: 1.5,
     unidadDosis: 'l_ha',
-    superficie: 2.3456,
+    superficie: 0.6512,
     plaga: 'Romaza',
     diasSeguridad: 28,
     aplicadoPorTexto: 'Cooperativa do Deza',
@@ -672,8 +669,13 @@ const pastoreosVeiga: (Omit<typeof pastoreos.$inferInsert, 'fincaId'> & { finca:
   { finca: 1, fechaEntrada: '2026-03-02', fechaSalida: '2026-03-20', animales: 8 },
 ]
 
+// La de un recinto real, la suya; la de las demás parcelas, la escrita
+const superficieParcela = (p: { recinto?: string; superficie?: number }) =>
+  (p.recinto ? RECINTOS_EJEMPLO[p.recinto]?.superficie : p.superficie) ?? 0
 const superficieFinca = (n: number) =>
-  fincasVeiga.find((f) => f.n === n)?.parcelas.reduce((t, p) => t + p.superficie, 0) ?? 0
+  fincasVeiga
+    .find((f) => f.n === n)
+    ?.parcelas.reduce((t, p) => t + superficieParcela(p as { recinto?: string }), 0) ?? 0
 
 await enExplotacion(
   { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },

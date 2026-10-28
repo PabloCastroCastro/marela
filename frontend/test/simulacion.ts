@@ -748,6 +748,15 @@ export function simularApi(estado: EstadoSimulado) {
       })
     }
     if (ruta.endsWith('/cartografia/municipio')) return json({ recuadro: null })
+    if (ruta.endsWith('/fincas/contornos')) {
+      return json(
+        estado.fincas.flatMap((f) =>
+          f.parcelas.flatMap((p) =>
+            p.contorno ? [{ fincaId: f.id, parcelaId: p.id, contorno: p.contorno }] : [],
+          ),
+        ),
+      )
+    }
     if (ruta.endsWith('/aplicaciones/opciones')) {
       return json({
         personas: estado.miembros

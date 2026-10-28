@@ -63,3 +63,16 @@ export const referenciaSigpac = (p: Parcela) =>
         p.recinto,
       ].join(':')
     : null
+
+// Contornos de las parcelas de todas las fincas, para el mapa (GH-91)
+export const useContornos = (explotacionId: string, activo = true) =>
+  useQuery({
+    queryKey: [...CLAVE_FINCAS, explotacionId, 'contornos'],
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/fincas/contornos', {
+          params: { path: { explotacionId } },
+        }),
+      ),
+    enabled: activo,
+  })

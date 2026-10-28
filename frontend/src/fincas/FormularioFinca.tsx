@@ -99,10 +99,13 @@ const desdeFinca = (f: FincaDetalle) => ({
 // Alta o edición de una finca con sus parcelas (GH-25)
 export function FormularioFinca({
   finca,
+  abrirMapa = false,
   alCerrar,
   alGuardar,
 }: {
   finca?: FincaDetalle
+  // Con el mapa ya abierto, para completar las parcelas escritas a mano (GH-91)
+  abrirMapa?: boolean
   alCerrar: () => void
   alGuardar?: (f: FincaDetalle) => void
 }) {
@@ -152,7 +155,7 @@ export function FormularioFinca({
             : { ...p, [campo]: valor, uso: null, contorno: null },
       ),
     )
-  const [enMapa, setEnMapa] = useState(false)
+  const [enMapa, setEnMapa] = useState(abrirMapa)
   const [consultando, setConsultando] = useState<number>()
 
   // El municipio y la provincia de la finca, de lo consultado, si aún no los tiene
@@ -272,7 +275,7 @@ export function FormularioFinca({
         referenciaCatastral: p.referenciaCatastral,
         superficie: leerHa(p.superficie) ?? 0,
         uso: p.uso,
-        contorno: p.contorno,
+        contorno: p.contorno ?? undefined,
       })),
     })
   }

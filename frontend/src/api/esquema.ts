@@ -2272,6 +2272,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/fincas/contornos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contornos de las parcelas de todas las fincas, para el mapa
+         * @description Solo los de las parcelas elegidas en el mapa o consultadas por referencia.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description En el orden de alta de las parcelas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            fincaId: string;
+                            /** Format: uuid */
+                            parcelaId: string;
+                            contorno: components["schemas"]["Contorno"];
+                        }[];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la finca (finca_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/fincas/{fincaId}": {
         parameters: {
             query?: never;
@@ -4583,6 +4657,15 @@ export interface components {
             /** Format: date-time */
             modificadoEn: string;
         };
+        Contorno: {
+            /** @enum {string} */
+            type: "Polygon";
+            coordinates: number[][][];
+        } | {
+            /** @enum {string} */
+            type: "MultiPolygon";
+            coordinates: number[][][][];
+        };
         FincaDetalle: components["schemas"]["Finca"] & {
             parcelas: {
                 /** Format: uuid */
@@ -4601,15 +4684,6 @@ export interface components {
                 contorno: components["schemas"]["Contorno"];
             }[];
         };
-        Contorno: {
-            /** @enum {string} */
-            type: "Polygon";
-            coordinates: number[][][];
-        } | {
-            /** @enum {string} */
-            type: "MultiPolygon";
-            coordinates: number[][][][];
-        } | null;
         DatosFinca: {
             /** @example Agra de abaixo */
             nombre: string;
