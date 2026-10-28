@@ -18,6 +18,7 @@ src/
   explotaciones/    explotaciones del usuario, elección, explotación activa y sus datos
   plataforma/       gestión de las explotaciones por el propietario
   animales/         lista, ficha, historial, alta, edición, bajas, reproducción y partos, tratamientos y pesos de animales
+  fincas/           lista, ficha, alta, edición y desactivación de fincas con sus parcelas, sus labores, su abonado y fitosanitarios, y sus pastoreos
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
   diseno/           estructura de una explotación: cabecera, selector, cuenta y navegación adaptable
   componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)
@@ -64,7 +65,7 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 | `/cambiar-contrasena` | Cambio de contraseña; obligatorio, sin poder ir a otra pantalla, mientras sea temporal |
 | `/` | Abre la única explotación o la última usada en este dispositivo; si no, a elegir |
 | `/explotaciones` | Elegir explotación (con una sola, entra directamente) |
-| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales` (lista) y `animales/:animalId` (ficha), `animales/:animalId/historial`, `comida`, `fincas`, `finanzas`, y para el administrador `datos` (los de la explotación) y `equipo` (personas, roles, desactivación y contraseñas) |
+| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales` (lista) y `animales/:animalId` (ficha), `animales/:animalId/historial`, `comida`, `fincas` (lista) y `fincas/:fincaId` (ficha), `finanzas`, y para el administrador `datos` (los de la explotación) y `equipo` (personas, roles, desactivación y contraseñas) |
 | `/plataforma` | Gestión por el propietario de la plataforma: lista de explotaciones, alta con su primer administrador, desactivar o reactivar, y restablecer la contraseña de cualquier usuario |
 
 - **Rutas protegidas:** todas menos `/entrar` exigen sesión (`RutaProtegida`). Sin ella llevan al inicio de sesión y, al entrar, se vuelve a donde se estaba. Si una consulta responde 401 (sesión caducada), la sesión se da por cerrada y pasa lo mismo.

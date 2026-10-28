@@ -780,9 +780,7 @@ describe('historiales largos', () => {
     const tarjeta = await screen.findByRole('region', { name: 'Tratamientos' })
     const lista = await within(tarjeta).findByRole('list', { name: 'Historial de tratamientos' })
     expect(within(lista).getAllByRole('listitem')).toHaveLength(3)
-    await usuario.click(
-      within(tarjeta).getByRole('button', { name: 'Ver todos los tratamientos (5)' }),
-    )
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Ver todos (5)' }))
     expect(within(lista).getAllByRole('listitem')).toHaveLength(5)
     expect(within(tarjeta).getByRole('button', { name: 'Ver menos' })).toHaveAttribute(
       'aria-expanded',

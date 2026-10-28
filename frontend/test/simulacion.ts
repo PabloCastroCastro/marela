@@ -145,6 +145,72 @@ export type PartoSimulado = {
   anulacion: { en: string; por: string; motivo: string } | null
 }
 
+export type ParcelaSimulada = {
+  id: string
+  provincia: string | null
+  municipio: string | null
+  poligono: string | null
+  parcela: string | null
+  recinto: string | null
+  referenciaCatastral: string | null
+  superficie: number
+}
+
+export type FincaSimulada = {
+  id: string
+  nombre: string
+  municipio: string | null
+  provincia: string | null
+  regimen: 'propiedad' | 'arrendamiento' | 'aparceria' | 'cesion' | 'otro'
+  observaciones: string | null
+  activa: boolean
+  parcelas: ParcelaSimulada[]
+}
+
+export type LaborSimulada = {
+  id: string
+  fincaId: string
+  tipo: 'siembra' | 'cosecha' | 'otra'
+  fecha: string
+  cultivo: string | null
+  labor: string | null
+  superficie: number
+  cantidad: number | null
+  unidad: 'kg' | 't' | 'pacas' | 'rolos' | 'remolques' | null
+  realizadaPor: { id: string | null; nombre: string } | null
+  observaciones: string | null
+}
+
+export type AplicacionSimulada = {
+  id: string
+  fincaId: string
+  tipo: 'abono' | 'fitosanitario'
+  fecha: string
+  producto: string
+  tipoAbono: 'mineral' | 'organico' | null
+  dosis: number
+  unidadDosis: 'kg_ha' | 't_ha' | 'l_ha' | 'm3_ha'
+  superficie: number
+  aplicadoPor: { id: string | null; nombre: string } | null
+  lote: string | null
+  plaga: string | null
+  diasSeguridad: number
+  finSeguridad: string
+  ropo: string | null
+  equipo: string | null
+  observaciones: string | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
+export type PastoreoSimulado = {
+  id: string
+  fincaId: string
+  fechaEntrada: string
+  fechaSalida: string | null
+  animales: number
+  observaciones: string | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -164,6 +230,10 @@ export type EstadoSimulado = {
   tratamientos: TratamientoSimulado[]
   eventos: EventoSimulado[]
   partos: PartoSimulado[]
+  fincas: FincaSimulada[]
+  labores: LaborSimulada[]
+  aplicaciones: AplicacionSimulada[]
+  pastoreos: PastoreoSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -269,6 +339,98 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
     ],
     eventos: [],
     partos: [],
+    labores: [
+      {
+        id: 'l1',
+        fincaId: 'f1',
+        tipo: 'cosecha',
+        fecha: '2026-05-12',
+        cultivo: 'Pradera de raigrás',
+        labor: null,
+        superficie: 3.4456,
+        cantidad: 42,
+        unidad: 'rolos',
+        realizadaPor: { id: null, nombre: 'Contratista Hermanos Rey' },
+        observaciones: null,
+      },
+    ],
+    pastoreos: [],
+    aplicaciones: [
+      {
+        id: 'ap1',
+        fincaId: 'f1',
+        tipo: 'abono',
+        fecha: '2026-02-20',
+        producto: 'Purín de vacuno',
+        tipoAbono: 'organico',
+        dosis: 30,
+        unidadDosis: 'm3_ha',
+        superficie: 3.4456,
+        aplicadoPor: null,
+        lote: null,
+        plaga: null,
+        diasSeguridad: 0,
+        finSeguridad: '2026-02-20',
+        ropo: null,
+        equipo: null,
+        observaciones: null,
+        anulacion: null,
+      },
+    ],
+    fincas: [
+      {
+        id: 'f1',
+        nombre: 'Agra de abaixo',
+        municipio: 'Lalín',
+        provincia: 'Pontevedra',
+        regimen: 'propiedad',
+        observaciones: null,
+        activa: true,
+        parcelas: [
+          {
+            id: 'pc1',
+            provincia: '36',
+            municipio: '24',
+            poligono: '12',
+            parcela: '45',
+            recinto: '1',
+            referenciaCatastral: null,
+            superficie: 2.3456,
+          },
+          {
+            id: 'pc2',
+            provincia: '36',
+            municipio: '24',
+            poligono: '12',
+            parcela: '46',
+            recinto: '1',
+            referenciaCatastral: null,
+            superficie: 1.1,
+          },
+        ],
+      },
+      {
+        id: 'f2',
+        nombre: 'Leira vella',
+        municipio: 'Lalín',
+        provincia: 'Pontevedra',
+        regimen: 'cesion',
+        observaciones: null,
+        activa: false,
+        parcelas: [
+          {
+            id: 'pc3',
+            provincia: null,
+            municipio: null,
+            poligono: null,
+            parcela: null,
+            recinto: null,
+            referenciaCatastral: '36024A012000950000KS',
+            superficie: 0.35,
+          },
+        ],
+      },
+    ],
     tratamientos: [
       {
         id: 't1',
@@ -306,6 +468,18 @@ const PARTOS =
   /^\/api\/explotaciones\/[^/]+\/(?:animales\/([^/]+)\/partos|partos\/([^/]+)\/anulacion)$/
 const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
+
+// Los pastoreos de una finca, la entrada, un pastoreo o su salida
+const PASTOREOS =
+  /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/pastoreos|pastoreos(?:\/([^/]+)(\/salida)?)?)$/
+
+// Los abonados y tratamientos de una finca, el registro o la anulación de uno
+const APLICACIONES =
+  /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/aplicaciones|aplicaciones(?:\/([^/]+)\/anulacion)?)$/
+
+// Las labores de una finca, el registro o una labor
+const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labores(?:\/([^/]+))?)$/
+const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -407,6 +581,290 @@ export function simularApi(estado: EstadoSimulado) {
           .map(evento),
       )
     }
+    if (ruta.endsWith('/labores/opciones')) {
+      return json({
+        personas: estado.miembros
+          .filter((m) => m.activo)
+          .map((m) => ({ id: m.usuarioId, nombre: m.nombre })),
+        cultivos: [],
+        labores: [],
+      })
+    }
+    const deLabores = ruta.match(LABORES)
+    if (deLabores) {
+      const [, fincaId, laborId] = deLabores
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      const persona = (c: {
+        realizadaPorId?: string | null
+        realizadaPorTexto?: string | null
+      }) => {
+        const m = estado.miembros.find((x) => x.usuarioId === c.realizadaPorId)
+        return m
+          ? { id: m.usuarioId, nombre: m.nombre }
+          : c.realizadaPorTexto
+            ? { id: null, nombre: c.realizadaPorTexto }
+            : null
+      }
+      const datosDe = (c: Record<string, unknown>) => ({
+        tipo: c.tipo as LaborSimulada['tipo'],
+        fecha: c.fecha as string,
+        cultivo: (c.cultivo as string) || null,
+        labor: (c.labor as string) || null,
+        cantidad: (c.cantidad as number) ?? null,
+        unidad: (c.unidad as LaborSimulada['unidad']) ?? null,
+        realizadaPor: persona(c),
+        observaciones: (c.observaciones as string) || null,
+      })
+      if (fincaId) {
+        return json(
+          estado.labores
+            .filter((l) => l.fincaId === fincaId)
+            .sort((x, y) => y.fecha.localeCompare(x.fecha))
+            .map((l) => ({ ...l, ...sello })),
+        )
+      }
+      if (!laborId && metodo === 'POST') {
+        const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
+          const f = estado.fincas.find((x) => x.id === id)
+          const nueva: LaborSimulada = {
+            id: `l${estado.labores.length + i + 1}`,
+            fincaId: id,
+            superficie: cuerpo.superficie ?? f?.parcelas.reduce((t, x) => t + x.superficie, 0) ?? 0,
+            ...datosDe(cuerpo),
+          }
+          return nueva
+        })
+        estado.labores.push(...creadas)
+        return json(
+          creadas.map((l) => ({ ...l, ...sello })),
+          201,
+        )
+      }
+      const l = estado.labores.find((x) => x.id === laborId)
+      if (!l) return errorApi(404, 'labor_no_encontrada')
+      if (metodo === 'DELETE') estado.labores = estado.labores.filter((x) => x !== l)
+      else Object.assign(l, { superficie: cuerpo.superficie, ...datosDe(cuerpo) })
+      return json({ ...l, ...sello })
+    }
+
+    const dePastoreos = ruta.match(PASTOREOS)
+    if (dePastoreos) {
+      const [, fincaId, pastoreoId, salida] = dePastoreos
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      const enCurso = (id: string, excepto?: string) =>
+        estado.pastoreos.some((p) => p.fincaId === id && !p.fechaSalida && p.id !== excepto)
+      const ocupada = errorApi(409, 'pastoreo_en_curso')
+      if (fincaId) {
+        return json(
+          estado.pastoreos
+            .filter((p) => p.fincaId === fincaId)
+            .sort(
+              (x, y) =>
+                Number(Boolean(x.fechaSalida)) - Number(Boolean(y.fechaSalida)) ||
+                y.fechaEntrada.localeCompare(x.fechaEntrada),
+            )
+            .map((p) => ({ ...p, ...sello })),
+        )
+      }
+      if (!pastoreoId && metodo === 'POST') {
+        if (!cuerpo.fechaSalida && enCurso(cuerpo.fincaId)) return ocupada
+        const nuevo: PastoreoSimulado = {
+          id: `ps${estado.pastoreos.length + 1}`,
+          fincaId: cuerpo.fincaId,
+          fechaEntrada: cuerpo.fechaEntrada,
+          fechaSalida: cuerpo.fechaSalida || null,
+          animales: cuerpo.animales,
+          observaciones: cuerpo.observaciones || null,
+        }
+        estado.pastoreos.push(nuevo)
+        return json({ ...nuevo, ...sello }, 201)
+      }
+      const p = estado.pastoreos.find((x) => x.id === pastoreoId)
+      if (!p) return errorApi(404, 'pastoreo_no_encontrado')
+      if (salida) p.fechaSalida = cuerpo.fechaSalida
+      else if (metodo === 'DELETE') estado.pastoreos = estado.pastoreos.filter((x) => x !== p)
+      else {
+        if (!cuerpo.fechaSalida && enCurso(p.fincaId, p.id)) return ocupada
+        Object.assign(p, {
+          fechaEntrada: cuerpo.fechaEntrada,
+          fechaSalida: cuerpo.fechaSalida || null,
+          animales: cuerpo.animales,
+          observaciones: cuerpo.observaciones || null,
+        })
+      }
+      return json({ ...p, ...sello })
+    }
+
+    if (ruta.endsWith('/aplicaciones/opciones')) {
+      return json({
+        personas: estado.miembros
+          .filter((m) => m.activo)
+          .map((m) => ({ id: m.usuarioId, nombre: m.nombre })),
+        abonos: [],
+        fitosanitarios: [],
+        plagas: [],
+        equipos: [],
+      })
+    }
+    const deAplicaciones = ruta.match(APLICACIONES)
+    if (deAplicaciones) {
+      const [, fincaId, aplicacionId] = deAplicaciones
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      if (fincaId) {
+        return json(
+          estado.aplicaciones
+            .filter((a) => a.fincaId === fincaId)
+            .sort((x, y) => y.fecha.localeCompare(x.fecha))
+            .map((a) => ({ ...a, ...sello })),
+        )
+      }
+      if (!aplicacionId && metodo === 'POST') {
+        const m = estado.miembros.find((x) => x.usuarioId === cuerpo.aplicadoPorId)
+        const fito = cuerpo.tipo === 'fitosanitario'
+        const dias = fito ? (cuerpo.diasSeguridad as number) : 0
+        const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
+          const f = estado.fincas.find((x) => x.id === id)
+          const nueva: AplicacionSimulada = {
+            id: `ap${estado.aplicaciones.length + i + 1}`,
+            fincaId: id,
+            tipo: cuerpo.tipo,
+            fecha: cuerpo.fecha,
+            producto: cuerpo.producto,
+            tipoAbono: fito ? null : cuerpo.tipoAbono,
+            dosis: cuerpo.dosis,
+            unidadDosis: cuerpo.unidadDosis,
+            superficie: cuerpo.superficie ?? f?.parcelas.reduce((t, x) => t + x.superficie, 0) ?? 0,
+            aplicadoPor: m
+              ? { id: m.usuarioId, nombre: m.nombre }
+              : cuerpo.aplicadoPorTexto
+                ? { id: null, nombre: cuerpo.aplicadoPorTexto }
+                : null,
+            lote: cuerpo.lote || null,
+            plaga: fito ? cuerpo.plaga : null,
+            diasSeguridad: dias,
+            finSeguridad: new Date(Date.parse(`${cuerpo.fecha}T00:00:00Z`) + dias * 864e5)
+              .toISOString()
+              .slice(0, 10),
+            ropo: (fito && cuerpo.ropo) || null,
+            equipo: (fito && cuerpo.equipo) || null,
+            observaciones: cuerpo.observaciones || null,
+            anulacion: null,
+          }
+          return nueva
+        })
+        estado.aplicaciones.push(...creadas)
+        return json(
+          creadas.map((a) => ({ ...a, ...sello })),
+          201,
+        )
+      }
+      const a = estado.aplicaciones.find((x) => x.id === aplicacionId)
+      if (!a) return errorApi(404, 'aplicacion_no_encontrada')
+      a.anulacion = {
+        en: '2026-10-02T10:00:00.000Z',
+        por: estado.usuario.name,
+        motivo: cuerpo.motivo,
+      }
+      return json({ ...a, ...sello })
+    }
+
+    const deFincas = ruta.match(FINCAS)
+    if (deFincas) {
+      const [, fincaId, estadoFinca] = deFincas
+      const hoy = new Date().toISOString().slice(0, 10)
+      const finSeguridad = (f: FincaSimulada) =>
+        estado.aplicaciones
+          .filter((a) => a.fincaId === f.id && !a.anulacion && a.finSeguridad > hoy)
+          .map((a) => a.finSeguridad)
+          .sort()
+          .at(-1) ?? null
+      const pastoreoEnCurso = (f: FincaSimulada) => {
+        const p = estado.pastoreos.find((x) => x.fincaId === f.id && !x.fechaSalida)
+        return p ? { id: p.id, desde: p.fechaEntrada, animales: p.animales } : null
+      }
+      const ficha = (f: FincaSimulada) => ({
+        ...f,
+        superficie: f.parcelas.reduce((t, x) => t + x.superficie, 0),
+        numeroParcelas: f.parcelas.length,
+        finSeguridad: finSeguridad(f),
+        pastoreo: pastoreoEnCurso(f),
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      const conIds = (ps: (Omit<ParcelaSimulada, 'id'> & { id?: string })[]) =>
+        ps.map((x, i) => ({
+          provincia: x.provincia || null,
+          municipio: x.municipio || null,
+          poligono: x.poligono || null,
+          parcela: x.parcela || null,
+          recinto: x.recinto || null,
+          referenciaCatastral: x.referenciaCatastral || null,
+          superficie: x.superficie,
+          id: x.id ?? `pc${Date.now()}${i}`,
+        }))
+      const repetida = (nombre: string, id?: string) =>
+        estado.fincas.some((f) => f.nombre.toLowerCase() === nombre.toLowerCase() && f.id !== id)
+      if (!fincaId && metodo === 'GET') {
+        const q = new URL(peticion.url).searchParams
+        const texto = (q.get('q') ?? '').toLowerCase()
+        return json(
+          estado.fincas
+            .filter((f) => !q.get('activa') || String(f.activa) === q.get('activa'))
+            .filter((f) => !q.get('seguridad') || finSeguridad(f))
+            .filter((f) => !q.get('pastoreo') || pastoreoEnCurso(f))
+            .filter((f) => !texto || `${f.nombre} ${f.municipio}`.toLowerCase().includes(texto))
+            .map(ficha),
+        )
+      }
+      if (!fincaId && metodo === 'POST') {
+        if (repetida(cuerpo.nombre)) {
+          return errorApi(409, 'nombre_en_uso', [
+            { campo: 'nombre', mensaje: 'Ya hay una finca con este nombre' },
+          ])
+        }
+        const nueva: FincaSimulada = {
+          id: `f${estado.fincas.length + 1}`,
+          nombre: cuerpo.nombre,
+          municipio: cuerpo.municipio || null,
+          provincia: cuerpo.provincia || null,
+          regimen: cuerpo.regimen,
+          observaciones: cuerpo.observaciones || null,
+          activa: true,
+          parcelas: conIds(cuerpo.parcelas),
+        }
+        estado.fincas.push(nueva)
+        return json(ficha(nueva), 201)
+      }
+      const f = estado.fincas.find((x) => x.id === fincaId)
+      if (!f) return errorApi(404, 'finca_no_encontrada')
+      if (estadoFinca) f.activa = cuerpo.activa
+      else if (metodo === 'PUT') {
+        if (repetida(cuerpo.nombre, f.id)) {
+          return errorApi(409, 'nombre_en_uso', [
+            { campo: 'nombre', mensaje: 'Ya hay una finca con este nombre' },
+          ])
+        }
+        Object.assign(f, {
+          nombre: cuerpo.nombre,
+          municipio: cuerpo.municipio || null,
+          provincia: cuerpo.provincia || null,
+          regimen: cuerpo.regimen,
+          observaciones: cuerpo.observaciones || null,
+          parcelas: conIds(cuerpo.parcelas),
+        })
+      }
+      return json(ficha(f))
+    }
+
     const deParto = ruta.match(PARTOS)
     if (deParto) {
       const [, madreId, partoId] = deParto

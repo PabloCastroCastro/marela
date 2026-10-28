@@ -219,6 +219,55 @@ Un tratamiento **no se corrige ni se borra**: se anula con un motivo y sigue en 
 
 **Supresión:** `fin_supresion` es una columna generada, la fecha más los días de supresión: el día en que termina. Un animal está en supresión mientras alguno de sus tratamientos sin anular termine después de hoy. Las fichas de los animales llevan `finSupresion` (el más lejano, o `null`) y el listado se filtra con `?supresion=en_curso`.
 
+## Fincas
+
+Fincas de la explotación y sus parcelas, en `src/rutas/fincas.ts` (módulo `fincas`):
+
+- **`GET /api/explotaciones/{id}/fincas`:** lista por nombre, con búsqueda (`q`, en nombre y municipio) y filtros (`activa=true|false`, sin él todas; `seguridad=en_curso`; `pastoreo=en_curso`). Cada finca lleva su superficie (la suma de sus parcelas), su número de parcelas, el fin de su plazo de seguridad en curso (`finSeguridad`) y su pastoreo en curso (`pastoreo`).
+- **`GET /api/explotaciones/{id}/fincas/{fincaId}`:** la ficha, con sus parcelas.
+- **`POST /api/explotaciones/{id}/fincas`:** `{ nombre, municipio?, provincia?, regimen, observaciones?, parcelas: [{ provincia?, municipio?, poligono?, parcela?, recinto?, referenciaCatastral?, superficie }] }` da de alta la finca con al menos una parcela. `regimen` es `propiedad` (por defecto), `arrendamiento`, `aparceria`, `cesion` u `otro`.
+- **`PUT /api/explotaciones/{id}/fincas/{fincaId}`:** cambia los datos y las parcelas: las que llegan con `id` se corrigen, las nuevas se añaden y las que faltan se quitan.
+- **`PATCH /api/explotaciones/{id}/fincas/{fincaId}/estado`:** `{ activa }` desactiva o reactiva. Una finca no se borra.
+
+Reglas: cada parcela, con la referencia SIGPAC completa (provincia, municipio, polígono, parcela y recinto, solo números) o la catastral, y superficie en hectáreas mayor que 0, con cuatro decimales. El nombre no se repite en la explotación (409 `nombre_en_uso`), ni un recinto SIGPAC en dos fincas (409 `recinto_en_uso`). Los cambios quedan en el historial (migración `0017`).
+
+### Labores
+
+Siembras, cosechas y otras labores de las fincas, en `src/rutas/labores.ts` (mismo módulo `fincas`):
+
+- **`GET /api/explotaciones/{id}/fincas/{fincaId}/labores`:** las de una finca, de la más reciente a la más antigua.
+- **`POST /api/explotaciones/{id}/labores`:** `{ fincaIds, tipo, fecha, cultivo?, labor?, superficie?, cantidad?, unidad?, realizadaPorId? | realizadaPorTexto?, observaciones? }` registra la misma labor en una o varias fincas activas, una por finca, todas o ninguna. `tipo` es `siembra` o `cosecha` (con `cultivo`) u `otra` (con `labor`: siega, laboreo…). Sin `superficie`, la de cada finca entera; con ella, solo para una finca y sin pasar de la suya. La cosecha admite `cantidad` con su `unidad`: `kg`, `t`, `pacas`, `rolos` o `remolques`.
+- **`PUT /api/explotaciones/{id}/labores/{laborId}`:** corrige una labor.
+- **`DELETE /api/explotaciones/{id}/labores/{laborId}`:** la borra y la devuelve, para poder deshacerlo.
+- **`GET /api/explotaciones/{id}/labores/opciones`:** las personas activas del equipo y los cultivos y labores ya usados, para el formulario.
+
+No son datos sanitarios: se corrigen y se borran, y los cambios quedan en el historial (migración `0019`, que comprueba también que quien la realiza es del equipo).
+
+### Abono y fitosanitarios
+
+Abonados y tratamientos fitosanitarios de las fincas, en `src/rutas/aplicaciones.ts` (mismo módulo `fincas`):
+
+- **`GET /api/explotaciones/{id}/fincas/{fincaId}/aplicaciones`:** los de una finca, del más reciente al más antiguo, también los anulados.
+- **`POST /api/explotaciones/{id}/aplicaciones`:** `{ fincaIds, tipo, fecha, producto, tipoAbono?, dosis, unidadDosis, superficie?, aplicadoPorId? | aplicadoPorTexto?, lote?, plaga?, diasSeguridad?, ropo?, equipo?, observaciones? }` registra el mismo abonado o tratamiento en una o varias fincas activas, uno por finca, todos o ninguno. `tipo` es `abono` (con `tipoAbono`: `mineral` u `organico`) o `fitosanitario` (con `plaga` y `diasSeguridad`; `ropo` y `equipo`, opcionales). La dosis es por hectárea, en `kg_ha`, `t_ha`, `l_ha` o `m3_ha`. La superficie, como en las labores.
+- **`POST /api/explotaciones/{id}/aplicaciones/{aplicacionId}/anulacion`:** `{ motivo }` lo anula (409 `ya_anulado` si ya lo está).
+- **`GET /api/explotaciones/{id}/aplicaciones/opciones`:** las personas activas del equipo y los abonos, fitosanitarios, plagas y equipos ya usados, para el formulario.
+
+Como los tratamientos de los animales, no se corrigen ni se borran: se anulan con un motivo, y los cambios quedan en el historial (migración `0021`, que lo impide en la base de datos y comprueba que quien lo aplica es del equipo).
+
+**Plazo de seguridad:** `fin_seguridad` es una columna generada, la fecha más los días del plazo: el día en que termina, desde el que se puede cosechar o pastar. Una finca está en plazo mientras alguno de sus fitosanitarios sin anular termine después de hoy. Las fincas llevan `finSeguridad` (el más lejano, o `null`) y el listado se filtra con `?seguridad=en_curso`.
+
+### Pastoreo
+
+Pastoreos de las fincas, en `src/rutas/pastoreos.ts` (mismo módulo `fincas`):
+
+- **`GET /api/explotaciones/{id}/fincas/{fincaId}/pastoreos`:** los de una finca, el que está en curso primero y luego del más reciente al más antiguo.
+- **`POST /api/explotaciones/{id}/pastoreos`:** `{ fincaId, fechaEntrada, fechaSalida?, animales, observaciones? }` registra la entrada de los animales en una finca activa; con `fechaSalida`, un pastoreo que ya terminó.
+- **`PUT /api/explotaciones/{id}/pastoreos/{pastoreoId}`:** lo corrige.
+- **`PATCH /api/explotaciones/{id}/pastoreos/{pastoreoId}/salida`:** `{ fechaSalida }` registra la salida (409 `ya_salieron` si ya la tiene).
+- **`DELETE /api/explotaciones/{id}/pastoreos/{pastoreoId}`:** lo borra y lo devuelve, para poder deshacerlo.
+
+Solo el número de animales, sin enlazar sus fichas. Una finca no tiene dos pastoreos en curso (sin salida) a la vez: 409 `pastoreo_en_curso`, y el índice único parcial `pastoreos_en_curso_unico` en la base de datos. Como las labores, se corrigen y se borran, y los cambios quedan en el historial (migración `0023`). Las fincas llevan su pastoreo en curso (`pastoreo`: `{ id, desde, animales }`, o `null`) y el listado se filtra con `?pastoreo=en_curso`.
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.
@@ -264,6 +313,10 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
 - `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
+- `test/labores.test.ts`: labores: siega en varias fincas con su superficie, siembra y cosecha con cantidad y unidad, validación, fincas desactivadas o de otra explotación, corrección y borrado con historial, opciones del formulario, separación por explotación y restricciones.
+- `test/pastoreos.test.ts`: pastoreos: entrada, pastoreo en curso en la ficha y en el filtro, salida, uno solo en curso por finca, validación, fincas desactivadas o de otra explotación, corrección y borrado con historial, separación por explotación y restricciones.
+- `test/aplicaciones.test.ts`: abono y fitosanitarios: abonado en varias fincas con su superficie, plazo de seguridad en la ficha y en el filtro, validación de cada tipo, fincas desactivadas o de otra explotación, anulación con historial, opciones del formulario, separación por explotación y restricciones.
+- `test/fincas.test.ts`: fincas: alta con varias parcelas y superficie total, validación, nombre y recinto únicos en la explotación, edición que corrige, añade y quita parcelas con historial, desactivación y filtro, separación por explotación y restricciones.
 - `test/partos.test.ts`: partos: gemelos con el padre de la cubrición, un nacido muerto y la pesada al nacer, cierre de la gestación, padre indicado sin gestación, crotal puesto después y que no se quita, validación y todo o nada, anulación que borra los terneros, terneros con datos, separación por explotación y restricciones.
 - `test/reproduccion.test.ts`: eventos reproductivos: cubrición a varias vacas y fecha prevista de parto, inseminación con dosis externa y diagnóstico positivo, cierre por diagnóstico negativo o aborto, filtro de gestantes, solo hembras y padre macho, destete con su pesada y en el historial de la madre, anulación con historial, separación por explotación y restricciones.
 - `test/tratamientos.test.ts`: tratamientos: registro a varios animales, quién lo administra, validación, animales y personas de otra explotación, fechas en la vida del animal, supresión en curso y su filtro, anulación con historial, opciones del formulario, separación por explotación, y que no se corrigen ni se borran.
@@ -321,7 +374,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal; y cuatro fincas con sus parcelas SIGPAC, una arrendada y otra desactivada, y sus labores: la pradera de Agra de abaixo, sembrada, ensilada y segada, y el maíz de Chousa do monte; y sus abonados y tratamientos: purín y NPK en Agra de abaixo, con un herbicida de hace una semana en plazo de seguridad, y una urea anulada en Chousa do monte; y sus pastoreos: las vacas con sus crías en Prado da fonte desde hace diez días, en curso, y antes en Chousa do monte. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

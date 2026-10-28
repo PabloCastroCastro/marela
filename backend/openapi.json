@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API de Marela",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
@@ -1806,6 +1806,1119 @@
         },
         "required": [
           "motivo"
+        ]
+      },
+      "Finca": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "municipio": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provincia": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "regimen": {
+            "type": "string",
+            "enum": [
+              "propiedad",
+              "arrendamiento",
+              "aparceria",
+              "cesion",
+              "otro"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "activa": {
+            "type": "boolean"
+          },
+          "superficie": {
+            "type": "number",
+            "description": "Hectáreas: la suma de sus parcelas"
+          },
+          "numeroParcelas": {
+            "type": "integer"
+          },
+          "finSeguridad": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Fin del plazo de seguridad en curso: hasta ese día no se cosecha ni se pasta (null si no hay)"
+          },
+          "pastoreo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "animales": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "desde",
+              "animales"
+            ],
+            "description": "Pastoreo en curso: desde cuándo y cuántos animales (null si no hay)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "municipio",
+          "provincia",
+          "regimen",
+          "observaciones",
+          "activa",
+          "superficie",
+          "numeroParcelas",
+          "finSeguridad",
+          "pastoreo",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "FincaDetalle": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Finca"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "parcelas": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "provincia": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "municipio": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "poligono": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "parcela": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "recinto": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "referenciaCatastral": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "superficie": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "provincia",
+                    "municipio",
+                    "poligono",
+                    "parcela",
+                    "recinto",
+                    "referenciaCatastral",
+                    "superficie"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "parcelas"
+            ]
+          }
+        ]
+      },
+      "DatosFinca": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Agra de abaixo"
+          },
+          "municipio": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Lalín"
+          },
+          "provincia": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Pontevedra"
+          },
+          "regimen": {
+            "type": "string",
+            "enum": [
+              "propiedad",
+              "arrendamiento",
+              "aparceria",
+              "cesion",
+              "otro"
+            ],
+            "default": "propiedad"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parcelas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "provincia": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "municipio": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "poligono": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "parcela": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "recinto": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "referenciaCatastral": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "example": "36038A012000450000XY"
+                },
+                "superficie": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 100000,
+                  "example": 1.2345
+                }
+              },
+              "required": [
+                "superficie"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "nombre",
+          "parcelas"
+        ]
+      },
+      "CambioEstadoFinca": {
+        "type": "object",
+        "properties": {
+          "activa": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "activa"
+        ]
+      },
+      "Labor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "siembra",
+              "cosecha",
+              "otra"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cultivo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "superficie": {
+            "type": "number",
+            "description": "Hectáreas"
+          },
+          "cantidad": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unidad": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "kg",
+              "t",
+              "pacas",
+              "rolos",
+              "remolques",
+              null
+            ]
+          },
+          "realizadaPor": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Sin él, es un nombre escrito a mano"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fincaId",
+          "tipo",
+          "fecha",
+          "cultivo",
+          "labor",
+          "superficie",
+          "cantidad",
+          "unidad",
+          "realizadaPor",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "OpcionesLabor": {
+        "type": "object",
+        "properties": {
+          "personas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "nombre": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nombre"
+              ]
+            }
+          },
+          "cultivos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "labores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "personas",
+          "cultivos",
+          "labores"
+        ]
+      },
+      "DatosLabor": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "siembra",
+              "cosecha",
+              "otra"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cultivo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Maíz forrajero"
+          },
+          "labor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Siega"
+          },
+          "superficie": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "cantidad": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "unidad": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "kg",
+              "t",
+              "pacas",
+              "rolos",
+              "remolques",
+              null
+            ]
+          },
+          "realizadaPorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "realizadaPorTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Contratista Hermanos Rey"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fincaIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "tipo",
+          "fecha",
+          "fincaIds"
+        ]
+      },
+      "CambioLabor": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "siembra",
+              "cosecha",
+              "otra"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cultivo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Maíz forrajero"
+          },
+          "labor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Siega"
+          },
+          "superficie": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "cantidad": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0
+          },
+          "unidad": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "kg",
+              "t",
+              "pacas",
+              "rolos",
+              "remolques",
+              null
+            ]
+          },
+          "realizadaPorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "realizadaPorTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Contratista Hermanos Rey"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "tipo",
+          "fecha"
+        ]
+      },
+      "Aplicacion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "abono",
+              "fitosanitario"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string"
+          },
+          "tipoAbono": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "mineral",
+              "organico",
+              null
+            ]
+          },
+          "dosis": {
+            "type": "number"
+          },
+          "unidadDosis": {
+            "type": "string",
+            "enum": [
+              "kg_ha",
+              "t_ha",
+              "l_ha",
+              "m3_ha"
+            ]
+          },
+          "superficie": {
+            "type": "number",
+            "description": "Hectáreas tratadas"
+          },
+          "aplicadoPor": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Sin él, es un nombre escrito a mano"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ]
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "plaga": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diasSeguridad": {
+            "type": "integer"
+          },
+          "finSeguridad": {
+            "type": "string",
+            "format": "date",
+            "description": "Día en que termina el plazo de seguridad (la fecha más los días): desde él se puede cosechar o pastar"
+          },
+          "ropo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "equipo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fincaId",
+          "tipo",
+          "fecha",
+          "producto",
+          "tipoAbono",
+          "dosis",
+          "unidadDosis",
+          "superficie",
+          "aplicadoPor",
+          "lote",
+          "plaga",
+          "diasSeguridad",
+          "finSeguridad",
+          "ropo",
+          "equipo",
+          "observaciones",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "OpcionesAplicacion": {
+        "type": "object",
+        "properties": {
+          "personas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "nombre": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nombre"
+              ]
+            }
+          },
+          "abonos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fitosanitarios": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plagas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "equipos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "personas",
+          "abonos",
+          "fitosanitarios",
+          "plagas",
+          "equipos"
+        ]
+      },
+      "DatosAplicacion": {
+        "type": "object",
+        "properties": {
+          "fincaIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 200
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "abono",
+              "fitosanitario"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Purín de vacuno"
+          },
+          "tipoAbono": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "mineral",
+              "organico",
+              null
+            ]
+          },
+          "dosis": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "unidadDosis": {
+            "type": "string",
+            "enum": [
+              "kg_ha",
+              "t_ha",
+              "l_ha",
+              "m3_ha"
+            ]
+          },
+          "superficie": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "aplicadoPorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "aplicadoPorTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Cooperativa do Deza"
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "plaga": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Romaza"
+          },
+          "diasSeguridad": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 999
+          },
+          "ropo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "3600012345678"
+          },
+          "equipo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Pulverizador suspendido 800 l"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "fincaIds",
+          "tipo",
+          "fecha",
+          "producto",
+          "dosis",
+          "unidadDosis"
+        ]
+      },
+      "Pastoreo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fechaEntrada": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaSalida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Sin ella, sigue en curso"
+          },
+          "animales": {
+            "type": "integer"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fincaId",
+          "fechaEntrada",
+          "fechaSalida",
+          "animales",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosPastoreo": {
+        "type": "object",
+        "properties": {
+          "fechaEntrada": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaSalida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "animales": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9999,
+            "example": 12
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Vacas con sus crías"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "fechaEntrada",
+          "animales",
+          "fincaId"
+        ]
+      },
+      "CambioPastoreo": {
+        "type": "object",
+        "properties": {
+          "fechaEntrada": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaSalida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "animales": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9999,
+            "example": 12
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Vacas con sus crías"
+          }
+        },
+        "required": [
+          "fechaEntrada",
+          "animales"
+        ]
+      },
+      "DatosSalida": {
+        "type": "object",
+        "properties": {
+          "fechaSalida": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "fechaSalida"
         ]
       },
       "ExplotacionPlataforma": {
@@ -4545,6 +5658,1668 @@
           },
           "409": {
             "description": "Ya está anulado, o algún ternero tiene pesadas, tratamientos, eventos o hijos (ya_anulado, terneros_con_datos)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Fincas de la explotación, con búsqueda y filtro",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Busca en el nombre y el municipio"
+            },
+            "required": false,
+            "description": "Busca en el nombre y el municipio",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Solo las activas (true) o las desactivadas (false); sin él, todas"
+            },
+            "required": false,
+            "description": "Solo las activas (true) o las desactivadas (false); sin él, todas",
+            "name": "activa",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo las que tienen un plazo de seguridad en curso"
+            },
+            "required": false,
+            "description": "Solo las que tienen un plazo de seguridad en curso",
+            "name": "seguridad",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo las que tienen animales pastando"
+            },
+            "required": false,
+            "description": "Solo las que tienen animales pastando",
+            "name": "pastoreo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenadas por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Finca"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la finca (finca_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Dar de alta una finca con sus parcelas",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFinca"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La ficha creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FincaDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la finca (finca_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay una finca con ese nombre o el recinto SIGPAC está en otra finca (nombre_en_uso, recinto_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Ficha de una finca, con sus parcelas",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La ficha",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FincaDetalle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la finca (finca_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Cambiar los datos y las parcelas de una finca",
+        "description": "Las parcelas con id se corrigen, las nuevas se añaden y las que no llegan se quitan.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFinca"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FincaDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o una parcela de otra finca (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la finca (finca_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay una finca con ese nombre o el recinto SIGPAC está en otra finca (nombre_en_uso, recinto_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/estado": {
+      "patch": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Desactivar o reactivar una finca",
+        "description": "Una finca no se borra: se desactiva, y sus datos y su historial se conservan.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoFinca"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FincaDetalle"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la finca (finca_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/labores": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Siembras, cosechas y otras labores de una finca",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más reciente a la más antigua",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Labor"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/labores/opciones": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Personas del equipo y cultivos y labores ya usados, para el formulario",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesLabor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/labores": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar una labor en una o varias fincas",
+        "description": "Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosLabor"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registradas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Labor"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, fincas desactivadas o de otra explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/labores/{laborId}": {
+      "put": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Corregir una labor",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "laborId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioLabor"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Labor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Borrar una labor registrada por error",
+        "description": "Queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "laborId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La labor borrada, para poder deshacerlo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Labor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/aplicaciones": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Abonados y tratamientos fitosanitarios de una finca",
+        "description": "También los anulados, con su anulación.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Aplicacion"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/aplicaciones/opciones": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Personas del equipo y productos, plagas y equipos ya usados, para el formulario",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesAplicacion"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/aplicaciones": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar un abonado o tratamiento fitosanitario en una o varias fincas",
+        "description": "Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAplicacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Aplicacion"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, fincas desactivadas o de otra explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/aplicaciones/{aplicacionId}/anulacion": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Anular un abonado o tratamiento registrado por error",
+        "description": "No se borra: queda en la ficha como anulado, con el motivo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "aplicacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Aplicacion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/pastoreos": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Pastoreos de una finca",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El que está en curso y luego del más reciente al más antiguo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pastoreo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/pastoreos": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar la entrada de animales a pastar en una finca",
+        "description": "Con fecha de salida, un pastoreo que ya terminó.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPastoreo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, finca desactivada o de otra explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La finca ya tiene un pastoreo en curso (pastoreo_en_curso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/pastoreos/{pastoreoId}": {
+      "put": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Corregir un pastoreo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pastoreoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPastoreo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Corregido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La finca ya tiene un pastoreo en curso (pastoreo_en_curso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Borrar un pastoreo registrado por error",
+        "description": "Queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pastoreoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El pastoreo borrado, para poder deshacerlo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/pastoreos/{pastoreoId}/salida": {
+      "patch": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar la salida de los animales",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pastoreoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosSalida"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Terminado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fecha no válida, futura o antes de la entrada (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Los animales ya salieron (ya_salieron)",
             "content": {
               "application/json": {
                 "schema": {

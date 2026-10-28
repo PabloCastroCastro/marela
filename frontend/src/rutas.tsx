@@ -13,6 +13,8 @@ import {
   RedireccionInicial,
 } from './explotaciones/PaginaElegirExplotacion'
 import { PaginaEquipo } from './explotaciones/PaginaEquipo'
+import { PaginaFinca } from './fincas/PaginaFinca'
+import { PaginaFincas } from './fincas/PaginaFincas'
 import { PaginaInicio } from './paginas/PaginaInicio'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada'
 import { PaginaSeccion } from './paginas/PaginaSeccion'
@@ -83,7 +85,15 @@ export const rutas: RouteObject[] = [
             path: 'fincas',
             element: (
               <SoloModulo modulo="fincas">
-                <PaginaSeccion titulo="Fincas" />
+                <PaginaFincas />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'fincas/:fincaId',
+            element: (
+              <SoloModulo modulo="fincas">
+                <PaginaFinca />
               </SoloModulo>
             ),
           },

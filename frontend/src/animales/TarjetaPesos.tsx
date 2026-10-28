@@ -3,6 +3,7 @@ import { type ReactNode, useState } from 'react'
 import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
+import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, kilos } from '../formato'
 import estilos from './Animales.module.css'
@@ -10,7 +11,6 @@ import type { AnimalDetalle } from './datos'
 import { FormularioPesada } from './FormularioPesada'
 import { GraficoPeso } from './GraficoPeso'
 import { conGanancia, ganancia, gananciaMedia, MOMENTOS, type Pesada, usePesadas } from './pesos'
-import { useRecorte } from './Recorte'
 
 const peso = (kg: number) => kilos(kg, kg % 1 ? 1 : 0)
 
@@ -24,7 +24,7 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
   // La lista, de la más reciente a la más antigua y con solo las últimas a la vista: el gráfico
   // ya muestra toda la evolución
   const recientes = conGanancia(pesadas.data ?? []).toReversed()
-  const recorte = useRecorte(recientes, (n) => `Ver todas las pesadas (${n})`)
+  const recorte = useRecorte(recientes)
 
   let contenido: ReactNode
   if (pesadas.isPending) {

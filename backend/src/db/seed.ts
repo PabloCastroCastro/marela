@@ -8,10 +8,15 @@ import { migrar } from './migrar.js'
 import {
   account,
   animales,
+  aplicaciones,
   eventosReproductivos,
+  fincas,
+  labores,
   member,
   organization,
+  parcelas,
   partos,
+  pastoreos,
   pesos,
   type RolExplotacion,
   tratamientos,
@@ -47,6 +52,11 @@ const PESADA = 6
 const TRATAMIENTO = 7
 const EVENTO = 8
 const PARTO = 9
+const FINCA = 10
+const PARCELA = 11
+const LABOR = 12
+const APLICACION = 13
+const PASTOREO = 14
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -458,7 +468,249 @@ await enExplotacion(
   },
 )
 
+// Fincas de A Veiga (GH-25): dos en propiedad, una arrendada y una antigua ya desactivada
+const fincasVeiga = [
+  {
+    n: 1,
+    nombre: 'Agra de abaixo',
+    regimen: 'propiedad' as const,
+    parcelas: [
+      { sigpac: ['36', '24', '12', '45', '1'], superficie: 2.3456 },
+      { sigpac: ['36', '24', '12', '46', '1'], superficie: 1.1 },
+    ],
+  },
+  {
+    n: 2,
+    nombre: 'Chousa do monte',
+    regimen: 'arrendamiento' as const,
+    observaciones: 'Arrendada a Manuel Rey hasta 2030',
+    parcelas: [
+      {
+        sigpac: ['36', '24', '15', '102', '2'],
+        catastral: '36024A015001020000KP',
+        superficie: 4.5,
+      },
+    ],
+  },
+  {
+    n: 3,
+    nombre: 'Prado da fonte',
+    regimen: 'propiedad' as const,
+    parcelas: [{ sigpac: ['36', '24', '12', '80', '3'], superficie: 0.8721 }],
+  },
+  {
+    n: 4,
+    nombre: 'Leira vella',
+    regimen: 'cesion' as const,
+    activa: false,
+    parcelas: [{ catastral: '36024A012000950000KS', superficie: 0.35 }],
+  },
+]
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    let numero = 0
+    for (const { n, parcelas: suyas, ...f } of fincasVeiga) {
+      await tx
+        .insert(fincas)
+        .values({ id: sid(FINCA, n), municipio: 'Lalín', provincia: 'Pontevedra', ...f })
+        .onConflictDoNothing()
+      for (const { sigpac, catastral, superficie } of suyas as {
+        sigpac?: string[]
+        catastral?: string
+        superficie: number
+      }[]) {
+        numero += 1
+        const [provincia, municipio, poligono, parcela, recinto] = sigpac ?? []
+        await tx
+          .insert(parcelas)
+          .values({
+            id: sid(PARCELA, numero),
+            fincaId: sid(FINCA, n),
+            provincia,
+            municipio,
+            poligono,
+            parcela,
+            recinto,
+            referenciaCatastral: catastral ?? null,
+            superficie,
+          })
+          .onConflictDoNothing()
+      }
+    }
+  },
+)
+
+// Labores (GH-26): la pradera de Agra de abaixo, sembrada, ensilada en rolos y segada; el maíz de
+// Chousa do monte, con el laboreo, la siembra y la cosecha del contratista
+const laboresVeiga: (Omit<typeof labores.$inferInsert, 'fincaId' | 'superficie'> & {
+  finca: number
+  superficie?: number
+})[] = [
+  {
+    finca: 1,
+    tipo: 'siembra',
+    fecha: '2025-10-05',
+    cultivo: 'Pradera de raigrás',
+    realizadaPorId: sid(USUARIO, 2),
+  },
+  {
+    finca: 1,
+    tipo: 'cosecha',
+    fecha: '2026-05-12',
+    cultivo: 'Pradera de raigrás',
+    cantidad: 42,
+    unidad: 'rolos',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+  },
+  {
+    finca: 1,
+    tipo: 'otra',
+    fecha: '2026-07-02',
+    labor: 'Siega',
+    superficie: 2.3456,
+    realizadaPorId: sid(USUARIO, 4),
+  },
+  {
+    finca: 2,
+    tipo: 'otra',
+    fecha: '2026-04-20',
+    labor: 'Laboreo',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+  },
+  {
+    finca: 2,
+    tipo: 'siembra',
+    fecha: '2026-05-02',
+    cultivo: 'Maíz forrajero',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+    observaciones: 'Variedad de ciclo 300',
+  },
+  {
+    finca: 2,
+    tipo: 'cosecha',
+    fecha: '2026-09-28',
+    cultivo: 'Maíz forrajero',
+    cantidad: 6,
+    unidad: 'remolques',
+    realizadaPorTexto: 'Contratista Hermanos Rey',
+  },
+]
+
+// Abonados y tratamientos fitosanitarios: purín y abono mineral en la pradera, y un herbicida contra
+// la romaza hace una semana, para que haya un plazo de seguridad en curso. Uno anulado.
+type AplicacionEjemplo = Omit<typeof aplicaciones.$inferInsert, 'fincaId' | 'superficie'> & {
+  finca: number
+  superficie?: number
+  anulado?: string
+}
+
+const aplicacionesVeiga: AplicacionEjemplo[] = [
+  {
+    finca: 1,
+    tipo: 'abono',
+    fecha: '2026-02-20',
+    producto: 'Purín de vacuno',
+    tipoAbono: 'organico',
+    dosis: 30,
+    unidadDosis: 'm3_ha',
+    aplicadoPorId: sid(USUARIO, 4),
+  },
+  {
+    finca: 1,
+    tipo: 'abono',
+    fecha: '2026-03-15',
+    producto: 'NPK 8-24-16',
+    tipoAbono: 'mineral',
+    dosis: 400,
+    unidadDosis: 'kg_ha',
+    aplicadoPorId: sid(USUARIO, 2),
+    lote: 'AG-2611',
+  },
+  {
+    finca: 1,
+    tipo: 'fitosanitario',
+    fecha: haceDias(7),
+    producto: 'Fluroxipir 20 %',
+    dosis: 1.5,
+    unidadDosis: 'l_ha',
+    superficie: 2.3456,
+    plaga: 'Romaza',
+    diasSeguridad: 28,
+    aplicadoPorTexto: 'Cooperativa do Deza',
+    ropo: '3600012345678',
+    equipo: 'Pulverizador suspendido 800 l',
+    lote: 'FX-0925',
+  },
+  {
+    finca: 2,
+    tipo: 'abono',
+    fecha: '2026-04-20',
+    producto: 'Urea 46 %',
+    tipoAbono: 'mineral',
+    dosis: 200,
+    unidadDosis: 'kg_ha',
+    aplicadoPorId: sid(USUARIO, 2),
+    anulado: 'Era en Agra de abaixo',
+  },
+]
+
+// Pastoreos: las vacas con sus crías en Prado da fonte desde hace diez días, en curso, y antes en
+// Chousa do monte, tras ensilar el maíz
+const pastoreosVeiga: (Omit<typeof pastoreos.$inferInsert, 'fincaId'> & { finca: number })[] = [
+  {
+    finca: 2,
+    fechaEntrada: '2026-09-30',
+    fechaSalida: haceDias(10),
+    animales: 12,
+    observaciones: 'Vacas con sus crías, en la rastrojera del maíz',
+  },
+  { finca: 3, fechaEntrada: haceDias(10), animales: 12, observaciones: 'Vacas con sus crías' },
+  { finca: 1, fechaEntrada: '2026-03-02', fechaSalida: '2026-03-20', animales: 8 },
+]
+
+const superficieFinca = (n: number) =>
+  fincasVeiga.find((f) => f.n === n)?.parcelas.reduce((t, p) => t + p.superficie, 0) ?? 0
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    for (const [i, { finca, superficie, ...l }] of laboresVeiga.entries()) {
+      await tx
+        .insert(labores)
+        .values({
+          id: sid(LABOR, i + 1),
+          fincaId: sid(FINCA, finca),
+          superficie: superficie ?? superficieFinca(finca),
+          ...l,
+        })
+        .onConflictDoNothing()
+    }
+    for (const [i, { finca, superficie, anulado, ...a }] of aplicacionesVeiga.entries()) {
+      await tx
+        .insert(aplicaciones)
+        .values({
+          id: sid(APLICACION, i + 1),
+          fincaId: sid(FINCA, finca),
+          superficie: superficie ?? superficieFinca(finca),
+          ...a,
+          ...(anulado
+            ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
+            : {}),
+        })
+        .onConflictDoNothing()
+    }
+    for (const [i, { finca, ...p }] of pastoreosVeiga.entries()) {
+      await tx
+        .insert(pastoreos)
+        .values({ id: sid(PASTOREO, i + 1), fincaId: sid(FINCA, finca), ...p })
+        .onConflictDoNothing()
+    }
+  },
+)
+
 await pool.end()
 console.log(
-  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length + 1} animales (contraseña ${CONTRASENA})`,
+  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones, ${animalesVeiga.length + 1} animales y ${fincasVeiga.length} fincas (contraseña ${CONTRASENA})`,
 )

@@ -5,6 +5,7 @@ import { api, datos } from '../api/cliente'
 import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Insignia, Tarjeta } from '../componentes/Etiquetas'
+import { useRecorte } from '../componentes/Recorte'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
@@ -13,7 +14,6 @@ import { type AnimalDetalle, identificacion } from './datos'
 import { deEvento, deParto, type EntradaReproductiva, unir } from './entradasReproduccion'
 import { FormularioAnulacion } from './FormularioAnulacion'
 import { InsigniaGestacion } from './InsigniaGestacion'
-import { useRecorte } from './Recorte'
 import { type EventoReproductivo, type Parto, useEventos, usePartos } from './reproduccion'
 
 // Una fila del historial: un evento (GH-22) o un parto (GH-23), que se puede anular
@@ -53,7 +53,7 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
       anular: () => setAnulando({ tipo: 'parto', parto: p }),
     })),
   ].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.creadoEn.localeCompare(a.creadoEn))
-  const recorte = useRecorte(entradas, (n) => `Ver todo el historial (${n})`)
+  const recorte = useRecorte(entradas)
 
   let contenido: ReactNode
   if (eventos.isPending || (hembra && partos.isPending)) {
