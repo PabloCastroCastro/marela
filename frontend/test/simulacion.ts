@@ -202,6 +202,15 @@ export type AplicacionSimulada = {
   anulacion: { en: string; por: string; motivo: string } | null
 }
 
+export type PastoreoSimulado = {
+  id: string
+  fincaId: string
+  fechaEntrada: string
+  fechaSalida: string | null
+  animales: number
+  observaciones: string | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -224,6 +233,7 @@ export type EstadoSimulado = {
   fincas: FincaSimulada[]
   labores: LaborSimulada[]
   aplicaciones: AplicacionSimulada[]
+  pastoreos: PastoreoSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -344,6 +354,7 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         observaciones: null,
       },
     ],
+    pastoreos: [],
     aplicaciones: [
       {
         id: 'ap1',
@@ -457,6 +468,11 @@ const PARTOS =
   /^\/api\/explotaciones\/[^/]+\/(?:animales\/([^/]+)\/partos|partos\/([^/]+)\/anulacion)$/
 const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
+
+// Los pastoreos de una finca, la entrada, un pastoreo o su salida
+const PASTOREOS =
+  /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/pastoreos|pastoreos(?:\/([^/]+)(\/salida)?)?)$/
+
 // Los abonados y tratamientos de una finca, el registro o la anulación de uno
 const APLICACIONES =
   /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/aplicaciones|aplicaciones(?:\/([^/]+)\/anulacion)?)$/
@@ -634,6 +650,57 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...l, ...sello })
     }
 
+    const dePastoreos = ruta.match(PASTOREOS)
+    if (dePastoreos) {
+      const [, fincaId, pastoreoId, salida] = dePastoreos
+      const sello = {
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      }
+      const enCurso = (id: string, excepto?: string) =>
+        estado.pastoreos.some((p) => p.fincaId === id && !p.fechaSalida && p.id !== excepto)
+      const ocupada = errorApi(409, 'pastoreo_en_curso')
+      if (fincaId) {
+        return json(
+          estado.pastoreos
+            .filter((p) => p.fincaId === fincaId)
+            .sort(
+              (x, y) =>
+                Number(Boolean(x.fechaSalida)) - Number(Boolean(y.fechaSalida)) ||
+                y.fechaEntrada.localeCompare(x.fechaEntrada),
+            )
+            .map((p) => ({ ...p, ...sello })),
+        )
+      }
+      if (!pastoreoId && metodo === 'POST') {
+        if (!cuerpo.fechaSalida && enCurso(cuerpo.fincaId)) return ocupada
+        const nuevo: PastoreoSimulado = {
+          id: `ps${estado.pastoreos.length + 1}`,
+          fincaId: cuerpo.fincaId,
+          fechaEntrada: cuerpo.fechaEntrada,
+          fechaSalida: cuerpo.fechaSalida || null,
+          animales: cuerpo.animales,
+          observaciones: cuerpo.observaciones || null,
+        }
+        estado.pastoreos.push(nuevo)
+        return json({ ...nuevo, ...sello }, 201)
+      }
+      const p = estado.pastoreos.find((x) => x.id === pastoreoId)
+      if (!p) return errorApi(404, 'pastoreo_no_encontrado')
+      if (salida) p.fechaSalida = cuerpo.fechaSalida
+      else if (metodo === 'DELETE') estado.pastoreos = estado.pastoreos.filter((x) => x !== p)
+      else {
+        if (!cuerpo.fechaSalida && enCurso(p.fincaId, p.id)) return ocupada
+        Object.assign(p, {
+          fechaEntrada: cuerpo.fechaEntrada,
+          fechaSalida: cuerpo.fechaSalida || null,
+          animales: cuerpo.animales,
+          observaciones: cuerpo.observaciones || null,
+        })
+      }
+      return json({ ...p, ...sello })
+    }
+
     if (ruta.endsWith('/aplicaciones/opciones')) {
       return json({
         personas: estado.miembros
@@ -720,11 +787,16 @@ export function simularApi(estado: EstadoSimulado) {
           .map((a) => a.finSeguridad)
           .sort()
           .at(-1) ?? null
+      const pastoreoEnCurso = (f: FincaSimulada) => {
+        const p = estado.pastoreos.find((x) => x.fincaId === f.id && !x.fechaSalida)
+        return p ? { id: p.id, desde: p.fechaEntrada, animales: p.animales } : null
+      }
       const ficha = (f: FincaSimulada) => ({
         ...f,
         superficie: f.parcelas.reduce((t, x) => t + x.superficie, 0),
         numeroParcelas: f.parcelas.length,
         finSeguridad: finSeguridad(f),
+        pastoreo: pastoreoEnCurso(f),
         creadoEn: '2026-10-01T10:00:00.000Z',
         modificadoEn: '2026-10-01T10:00:00.000Z',
       })
@@ -748,6 +820,7 @@ export function simularApi(estado: EstadoSimulado) {
           estado.fincas
             .filter((f) => !q.get('activa') || String(f.activa) === q.get('activa'))
             .filter((f) => !q.get('seguridad') || finSeguridad(f))
+            .filter((f) => !q.get('pastoreo') || pastoreoEnCurso(f))
             .filter((f) => !texto || `${f.nombre} ${f.municipio}`.toLowerCase().includes(texto))
             .map(ficha),
         )

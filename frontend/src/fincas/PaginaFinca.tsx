@@ -14,14 +14,16 @@ import { fecha, hectareas } from '../formato'
 import { CLAVE_FINCAS, REGIMENES, referenciaSigpac, useFinca } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioFinca } from './FormularioFinca'
+import { InsigniaPastoreo } from './InsigniaPastoreo'
 import { InsigniaSeguridad } from './InsigniaSeguridad'
 import { MenuRegistrarFinca } from './MenuRegistrarFinca'
 import { TarjetaAplicaciones } from './TarjetaAplicaciones'
 import { TarjetaLabores } from './TarjetaLabores'
+import { TarjetaPastoreos } from './TarjetaPastoreos'
 
 // Ficha de una finca: sus datos y sus parcelas con las referencias SIGPAC y catastral (GH-25), y sus
-// labores (GH-26) y sus abonados y tratamientos fitosanitarios (GH-27), con "Registrar" para apuntar
-// los nuevos
+// labores (GH-26), sus abonados y tratamientos fitosanitarios (GH-27) y sus pastoreos (GH-28), con
+// "Registrar" para apuntar los nuevos
 export function PaginaFinca() {
   const explotacion = useExplotacionActual()
   const { fincaId = '' } = useParams()
@@ -93,6 +95,7 @@ export function PaginaFinca() {
             <span className={estilos.cifra}>{hectareas(f.superficie)}</span>
             {!f.activa && <Insignia icono={<PowerOff aria-hidden />}>Desactivada</Insignia>}
             {f.finSeguridad && <InsigniaSeguridad fin={f.finSeguridad} />}
+            {f.pastoreo && <InsigniaPastoreo pastoreo={f.pastoreo} />}
           </div>
         </div>
         <div className={estilos.acciones}>
@@ -179,6 +182,7 @@ export function PaginaFinca() {
 
         <TarjetaAplicaciones finca={f} />
         <TarjetaLabores finca={f} />
+        <TarjetaPastoreos finca={f} />
       </div>
 
       <p className={estilos.suave}>

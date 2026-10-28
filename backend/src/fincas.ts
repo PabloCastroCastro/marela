@@ -138,8 +138,14 @@ const finSeguridad = (hoy: string) =>
   sql<string | null>`(select max(a.fin_seguridad)::text from aplicaciones a
     where a.finca_id = "fincas"."id" and a.anulado_en is null and a.fin_seguridad > ${hoy})`
 
+// Pastoreo en curso: desde cuándo y cuántos animales, o null (GH-28)
+type PastoreoEnCurso = { id: string; desde: string; animales: number }
+const pastoreo = sql<PastoreoEnCurso | null>`(select json_build_object('id', p.id,
+    'desde', p.fecha_entrada, 'animales', p.animales)
+  from pastoreos p where p.finca_id = "fincas"."id" and p.fecha_salida is null)`
+
 const consulta = (tx: Transaccion) =>
-  tx.select({ ...columnas, finSeguridad: finSeguridad(hoyEnMadrid()) }).from(fincas)
+  tx.select({ ...columnas, finSeguridad: finSeguridad(hoyEnMadrid()), pastoreo }).from(fincas)
 
 const finca = <T extends { creadoEn: Date; modificadoEn: Date }>(f: T) => ({
   ...f,
@@ -147,7 +153,12 @@ const finca = <T extends { creadoEn: Date; modificadoEn: Date }>(f: T) => ({
   modificadoEn: f.modificadoEn.toISOString(),
 })
 
-export type FiltrosFincas = { q?: string; activa?: boolean; seguridad?: 'en_curso' }
+export type FiltrosFincas = {
+  q?: string
+  activa?: boolean
+  seguridad?: 'en_curso'
+  pastoreo?: 'en_curso'
+}
 
 export async function listarFincas(tx: Transaccion, filtros: FiltrosFincas) {
   const condiciones: (SQL | undefined)[] = []
@@ -159,6 +170,7 @@ export async function listarFincas(tx: Transaccion, filtros: FiltrosFincas) {
   if (filtros.activa !== undefined) condiciones.push(eq(fincas.activa, filtros.activa))
   if (filtros.seguridad === 'en_curso')
     condiciones.push(sql`${finSeguridad(hoyEnMadrid())} is not null`)
+  if (filtros.pastoreo === 'en_curso') condiciones.push(sql`${pastoreo} is not null`)
   const filas = await consulta(tx)
     .where(and(...condiciones))
     .orderBy(asc(sql`lower(${fincas.nombre})`))

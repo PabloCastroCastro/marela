@@ -29,6 +29,12 @@ const Finca = z
       description:
         'Fin del plazo de seguridad en curso: hasta ese día no se cosecha ni se pasta (null si no hay)',
     }),
+    pastoreo: z
+      .object({ id: z.uuid(), desde: z.iso.date(), animales: z.number().int() })
+      .nullable()
+      .openapi({
+        description: 'Pastoreo en curso: desde cuándo y cuántos animales (null si no hay)',
+      }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -68,6 +74,10 @@ const Filtros = z.object({
     .enum(['en_curso'])
     .optional()
     .openapi({ description: 'Solo las que tienen un plazo de seguridad en curso' }),
+  pastoreo: z
+    .enum(['en_curso'])
+    .optional()
+    .openapi({ description: 'Solo las que tienen animales pastando' }),
 })
 
 const error = (description: string) => ({

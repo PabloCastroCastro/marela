@@ -194,7 +194,7 @@ Decisiones (GH-27):
 - La dosis, con su unidad: kg/ha, t/ha, l/ha o m³/ha.
 - Mientras un fitosanitario tenga el plazo de seguridad en curso, la finca lo avisa en su ficha y en el listado ("Plazo de seguridad hasta el…"), y se puede filtrar en Estado ("En plazo de seguridad"), como la supresión de los animales. La fecha que se muestra es la de la aplicación más los días del plazo.
 - Como los tratamientos de los animales, no se corrigen ni se borran: se anulan con un motivo y siguen a la vista, tachados. Uno anulado deja de contar para el plazo de seguridad.
-- "Registrar" en la ficha ofrece, en el orden del año, siembra, abono, fitosanitario, cosecha y otra labor; y al final, desactivar la finca.
+- "Registrar" en la ficha ofrece, en el orden del año, siembra, abono, fitosanitario, entrada a pastar (GH-28), cosecha y otra labor; y al final, desactivar la finca.
 
 ### Siembra, cosecha y otras labores
 
@@ -218,6 +218,14 @@ Decisiones (GH-26):
 ### Pastoreo
 
 - Fecha de entrada, fecha de salida y número de animales, sin enlazar fichas.
+
+Decisiones (GH-28):
+
+- La entrada se registra desde "Registrar" en la ficha, finca a finca. Mientras los animales siguen en la finca, el menú ofrece "Salida del pastoreo" en lugar de otra entrada, y la tarjeta "Pastoreo", "Registrar la salida".
+- Una finca no tiene dos pastoreos en curso a la vez. Se puede registrar uno que ya terminó, con su salida.
+- El pastoreo en curso se ve en la ficha ("Pastando 12 animales desde el…"), en el listado ("Pastando 12") y en el filtro Estado ("En pastoreo").
+- Si la finca está en plazo de seguridad, el formulario de entrada lo avisa, pero deja guardar: hay productos que permiten pastar.
+- Como las labores, un pastoreo se corrige o se borra (con "Deshacer"), y los cambios quedan en el historial.
 
 ### Para más adelante
 

@@ -7,20 +7,28 @@ import type { Finca } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioAplicacion } from './FormularioAplicacion'
 import { FormularioLabor } from './FormularioLabor'
+import { FormularioPastoreo } from './FormularioPastoreo'
+import { FormularioSalida } from './FormularioSalida'
 import { TIPOS_LABOR, type TipoLabor } from './labores'
 
-type Opcion = TipoLabor | TipoAplicacion
+type Opcion = TipoLabor | TipoAplicacion | 'pastoreo' | 'salida'
 
-// En el orden del año: se siembra, se abona y se trata, y se cosecha
-const OPCIONES: Opcion[] = ['siembra', 'abono', 'fitosanitario', 'cosecha', 'otra']
+// En el orden del año: se siembra, se abona y se trata, se pasta y se cosecha
+const ORDEN: Opcion[] = ['siembra', 'abono', 'fitosanitario', 'pastoreo', 'cosecha', 'otra']
 
-const TEXTOS: Record<Opcion, string> = { ...TIPOS_LABOR, ...TIPOS_APLICACION }
+const TEXTOS: Record<Opcion, string> = {
+  ...TIPOS_LABOR,
+  ...TIPOS_APLICACION,
+  pastoreo: 'Entrada a pastar',
+  salida: 'Salida del pastoreo',
+}
 
 const esAplicacion = (o: Opcion): o is TipoAplicacion => o in TIPOS_APLICACION
 
 // Acceso rápido desde la ficha de la finca a registrar lo que se hace en ella, como en la de los
-// animales: siembra, cosecha u otra labor (GH-26), abono y fitosanitarios (GH-27) y, al final,
-// desactivarla. También desde el listado, para las fincas marcadas. El pastoreo se añadirá aquí.
+// animales: siembra, cosecha u otra labor (GH-26), abono y fitosanitarios (GH-27), la entrada o la
+// salida del pastoreo (GH-28) y, al final, desactivarla. También desde el listado, para las fincas
+// marcadas, salvo el pastoreo, que va finca a finca.
 export function MenuRegistrarFinca({
   fincas,
   alDesactivar,
@@ -35,6 +43,11 @@ export function MenuRegistrarFinca({
   const [abierto, setAbierto] = useState(false)
   const [opcion, setOpcion] = useState<Opcion>()
   const cerrar = () => setOpcion(undefined)
+  const unica = fincas.length === 1 ? fincas[0] : undefined
+  // Con animales pastando, la salida en lugar de otra entrada
+  const opciones = ORDEN.flatMap((o): Opcion[] =>
+    o !== 'pastoreo' ? [o] : !unica ? [] : unica.pastoreo ? ['salida'] : ['pastoreo'],
+  )
 
   return (
     <>
@@ -47,7 +60,7 @@ export function MenuRegistrarFinca({
       </Boton>
       <HojaInferior abierta={abierto} alCerrar={() => setAbierto(false)} titulo="Registrar">
         <div className={estilos.opcionesRegistrar}>
-          {OPCIONES.map((o) => (
+          {opciones.map((o) => (
             <Boton
               key={o}
               variante="secundario"
@@ -75,7 +88,13 @@ export function MenuRegistrarFinca({
           )}
         </div>
       </HojaInferior>
+      {opcion === 'pastoreo' && unica && <FormularioPastoreo finca={unica} alCerrar={cerrar} />}
+      {opcion === 'salida' && unica?.pastoreo && (
+        <FormularioSalida pastoreo={unica.pastoreo} alCerrar={cerrar} />
+      )}
       {opcion &&
+        opcion !== 'pastoreo' &&
+        opcion !== 'salida' &&
         (esAplicacion(opcion) ? (
           <FormularioAplicacion
             fincas={fincas}

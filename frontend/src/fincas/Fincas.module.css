@@ -327,3 +327,27 @@
   flex-wrap: wrap;
   gap: var(--espacio-1);
 }
+
+/* Pastoreo (GH-28): aviso del plazo de seguridad al registrar la entrada */
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-aviso-suave);
+  color: var(--color-aviso);
+  font-size: var(--texto-sm);
+}
+
+.aviso svg {
+  flex-shrink: 0;
+}
+
+.enCurso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}

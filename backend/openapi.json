@@ -1864,6 +1864,31 @@
             "format": "date",
             "description": "Fin del plazo de seguridad en curso: hasta ese día no se cosecha ni se pasta (null si no hay)"
           },
+          "pastoreo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "animales": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "desde",
+              "animales"
+            ],
+            "description": "Pastoreo en curso: desde cuándo y cuántos animales (null si no hay)"
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -1884,6 +1909,7 @@
           "superficie",
           "numeroParcelas",
           "finSeguridad",
+          "pastoreo",
           "creadoEn",
           "modificadoEn"
         ]
@@ -2758,6 +2784,141 @@
           "producto",
           "dosis",
           "unidadDosis"
+        ]
+      },
+      "Pastoreo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fechaEntrada": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaSalida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Sin ella, sigue en curso"
+          },
+          "animales": {
+            "type": "integer"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fincaId",
+          "fechaEntrada",
+          "fechaSalida",
+          "animales",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosPastoreo": {
+        "type": "object",
+        "properties": {
+          "fechaEntrada": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaSalida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "animales": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9999,
+            "example": 12
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Vacas con sus crías"
+          },
+          "fincaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "fechaEntrada",
+          "animales",
+          "fincaId"
+        ]
+      },
+      "CambioPastoreo": {
+        "type": "object",
+        "properties": {
+          "fechaEntrada": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaSalida": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "animales": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9999,
+            "example": 12
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Vacas con sus crías"
+          }
+        },
+        "required": [
+          "fechaEntrada",
+          "animales"
+        ]
+      },
+      "DatosSalida": {
+        "type": "object",
+        "properties": {
+          "fechaSalida": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "fechaSalida"
         ]
       },
       "ExplotacionPlataforma": {
@@ -5564,6 +5725,19 @@
             "description": "Solo las que tienen un plazo de seguridad en curso",
             "name": "seguridad",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo las que tienen animales pastando"
+            },
+            "required": false,
+            "description": "Solo las que tienen animales pastando",
+            "name": "pastoreo",
+            "in": "query"
           }
         ],
         "responses": {
@@ -6692,6 +6866,460 @@
           },
           "409": {
             "description": "Ya está anulado (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fincas/{fincaId}/pastoreos": {
+      "get": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Pastoreos de una finca",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "fincaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El que está en curso y luego del más reciente al más antiguo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pastoreo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/pastoreos": {
+      "post": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar la entrada de animales a pastar en una finca",
+        "description": "Con fecha de salida, un pastoreo que ya terminó.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPastoreo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, finca desactivada o de otra explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La finca ya tiene un pastoreo en curso (pastoreo_en_curso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/pastoreos/{pastoreoId}": {
+      "put": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Corregir un pastoreo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pastoreoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPastoreo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Corregido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La finca ya tiene un pastoreo en curso (pastoreo_en_curso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Borrar un pastoreo registrado por error",
+        "description": "Queda en el historial de cambios.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pastoreoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El pastoreo borrado, para poder deshacerlo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/pastoreos/{pastoreoId}/salida": {
+      "patch": {
+        "tags": [
+          "Fincas"
+        ],
+        "summary": "Registrar la salida de los animales",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "pastoreoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosSalida"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Terminado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pastoreo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fecha no válida, futura o antes de la entrada (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus fincas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la finca o el pastoreo (pastoreo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Los animales ya salieron (ya_salieron)",
             "content": {
               "application/json": {
                 "schema": {

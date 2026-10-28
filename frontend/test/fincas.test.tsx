@@ -340,3 +340,113 @@ describe('abonado y fitosanitarios', () => {
     ])
   })
 })
+
+describe('pastoreo', () => {
+  it('registra la entrada avisando del plazo de seguridad, y luego la salida', async () => {
+    estado.aplicaciones.push({
+      ...(estado.aplicaciones[0] as (typeof estado.aplicaciones)[number]),
+      id: 'ap2',
+      tipo: 'fitosanitario',
+      tipoAbono: null,
+      plaga: 'Romaza',
+      diasSeguridad: 999,
+      finSeguridad: '2099-01-01',
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Pastoreo' })
+    expect(await within(tarjeta).findByText('Sin pastoreos registrados')).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Registrar' }))
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: 'Registrar' })).getByRole('button', {
+        name: 'Entrada a pastar',
+      }),
+    )
+    const hoja = screen.getByRole('dialog', { name: 'Pastoreo · Agra de abaixo' })
+    expect(
+      within(hoja).getByText(/La finca está en plazo de seguridad hasta el 01\/01\/2099/),
+    ).toBeInTheDocument()
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(
+      await within(hoja).findByText('Indica cuántos animales, por ejemplo 12'),
+    ).toBeInTheDocument()
+    await usuario.type(within(hoja).getByLabelText(/^Número de animales/), '12')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Pastoreo registrado')).toBeInTheDocument()
+    expect(estado.pastoreos).toMatchObject([{ fincaId: 'f1', animales: 12, fechaSalida: null }])
+    expect(await screen.findAllByText(/^Pastando 12 animales desde el/)).toHaveLength(2)
+
+    // Con animales pastando, el menú ofrece la salida en lugar de otra entrada
+    await usuario.click(screen.getByRole('button', { name: 'Registrar' }))
+    const menu = screen.getByRole('dialog', { name: 'Registrar' })
+    expect(within(menu).queryByRole('button', { name: 'Entrada a pastar' })).not.toBeInTheDocument()
+    await usuario.click(within(menu).getByRole('button', { name: 'Salida del pastoreo' }))
+    const salida = screen.getByRole('dialog', { name: 'Registrar la salida' })
+    await usuario.click(within(salida).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Salida registrada')).toBeInTheDocument()
+    expect(estado.pastoreos[0]?.fechaSalida).not.toBeNull()
+    await within(tarjeta).findByText(/^Del .* al .* \(0 días\)$/)
+    expect(screen.queryByText(/^Pastando/)).not.toBeInTheDocument()
+  })
+
+  it('corrige un pastoreo y lo borra con deshacer', async () => {
+    estado.pastoreos.push({
+      id: 'ps1',
+      fincaId: 'f1',
+      fechaEntrada: '2026-03-02',
+      fechaSalida: '2026-03-20',
+      animales: 8,
+      observaciones: null,
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Pastoreo' })
+    expect(
+      await within(tarjeta).findByText('Del 02/03/2026 al 20/03/2026 (18 días)'),
+    ).toBeInTheDocument()
+    await usuario.click(
+      within(tarjeta).getByRole('button', { name: 'Corregir el pastoreo del 02/03/2026' }),
+    )
+    const hoja = screen.getByRole('dialog', { name: 'Corregir · Pastoreo' })
+    await usuario.clear(within(hoja).getByLabelText(/^Número de animales/))
+    await usuario.type(within(hoja).getByLabelText(/^Número de animales/), '9')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Pastoreo corregido')).toBeInTheDocument()
+    expect(estado.pastoreos[0]?.animales).toBe(9)
+
+    await usuario.click(
+      within(tarjeta).getByRole('button', { name: 'Corregir el pastoreo del 02/03/2026' }),
+    )
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: 'Corregir · Pastoreo' })).getByRole('button', {
+        name: 'Borrar',
+      }),
+    )
+    expect(await screen.findByText('Pastoreo del 02/03/2026 borrado')).toBeInTheDocument()
+    expect(estado.pastoreos).toHaveLength(0)
+    await usuario.click(screen.getByRole('button', { name: 'Deshacer' }))
+    await within(tarjeta).findByText('9 animales')
+    expect(estado.pastoreos).toHaveLength(1)
+  })
+
+  it('muestra en el listado las fincas en pastoreo y las filtra', async () => {
+    estado.pastoreos.push({
+      id: 'ps1',
+      fincaId: 'f1',
+      fechaEntrada: '2026-10-18',
+      fechaSalida: null,
+      animales: 12,
+      observaciones: null,
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(fincas)
+    const lista = await tarjetas()
+    expect(within(lista).getByText('Pastando 12 animales desde el 18/10/2026')).toBeInTheDocument()
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'En pastoreo')
+    expect(await screen.findByText(/^1 finca/)).toBeInTheDocument()
+  })
+})

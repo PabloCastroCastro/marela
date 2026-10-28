@@ -155,6 +155,20 @@
       "when": 1793199518471,
       "tag": "0021_aplicaciones_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793201314664,
+      "tag": "0022_pastoreos",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793201316043,
+      "tag": "0023_pastoreos_historial",
+      "breakpoints": true
     }
   ]
 }
