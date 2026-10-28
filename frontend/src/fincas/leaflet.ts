@@ -83,3 +83,43 @@ export const centrarEnMunicipio = (
     })
     .catch(() => undefined)
 }
+
+// Tu posición: la del GPS del móvil, con un punto en el mapa que se mueve a la última conocida
+const posiciones = new WeakMap<L.Map, L.CircleMarker>()
+export function ubicar(mapa: L.Map, alFallar?: () => void) {
+  if (!navigator.geolocation) {
+    alFallar?.()
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => {
+      const punto: L.LatLngTuple = [coords.latitude, coords.longitude]
+      const marca =
+        posiciones.get(mapa) ??
+        L.circleMarker(punto, {
+          radius: 8,
+          color: '#ffffff',
+          weight: 3,
+          fillColor: '#2563eb',
+          fillOpacity: 1,
+          interactive: false,
+        }).addTo(mapa)
+      posiciones.set(mapa, marca.setLatLng(punto))
+      mapa.setView(punto, Math.max(mapa.getZoom(), ZOOM_RECINTOS + 2))
+    },
+    () => alFallar?.(),
+    { enableHighAccuracy: true, timeout: 10_000 },
+  )
+}
+
+// Ir a tu posición solo si el móvil ya dio permiso: al abrir un mapa no se pide. Dice si lo hace.
+export async function ubicarSiHayPermiso(mapa: L.Map) {
+  try {
+    const permiso = await navigator.permissions?.query({ name: 'geolocation' })
+    if (permiso?.state !== 'granted') return false
+  } catch {
+    return false
+  }
+  ubicar(mapa)
+  return true
+}

@@ -73,6 +73,8 @@ vi.mock('../src/fincas/leaflet', () => {
     capaContorno: () => ({ addTo: () => ({}) }),
     encuadrar: () => undefined,
     centrarEnMunicipio: () => undefined,
+    ubicar: () => undefined,
+    ubicarSiHayPermiso: async () => false,
     L: { featureGroup: grupo, DomEvent: { stopPropagation: () => undefined } },
   }
 })
@@ -620,6 +622,7 @@ describe('mapa de las fincas', () => {
     expect(router.state.location.search).toBe('?vista=mapa')
     expect(await screen.findByRole('list', { name: 'Leyenda del mapa' })).toBeInTheDocument()
     expect(screen.queryByRole('table', { name: 'Fincas' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir a mi ubicación' })).toBeInTheDocument()
 
     // Leira vella no tiene contorno: se avisa, con el enlace para completarla
     expect(

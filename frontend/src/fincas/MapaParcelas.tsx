@@ -14,6 +14,8 @@ import {
   crearMapa,
   encuadrar,
   type L,
+  ubicar,
+  ubicarSiHayPermiso,
   ZOOM_RECINTOS,
 } from './leaflet'
 
@@ -70,7 +72,12 @@ export default function MapaParcelas({
 
     // Centrar: en las parcelas de la finca; si no hay, en el municipio de la explotación
     if (deLaFinca.length) encuadrar(m, deLaFinca)
-    else centrarEnMunicipio(m, explotacion.id, explotacion.municipio)
+    // Una finca nueva se suele dar de alta estando en ella o cerca: si el móvil ya dio permiso,
+    // a tu posición; si no, sin pedirlo, al municipio
+    else
+      ubicarSiHayPermiso(m).then((ubicado) => {
+        if (!ubicado) centrarEnMunicipio(m, explotacion.id, explotacion.municipio)
+      })
 
     m.on('click', async (ev: L.LeafletMouseEvent) => {
       if (m.getZoom() < ZOOM_RECINTOS) {
@@ -102,12 +109,12 @@ export default function MapaParcelas({
     }
   }, [])
 
-  const ubicarme = () =>
-    navigator.geolocation?.getCurrentPosition(
-      (p) => mapa.current?.setView([p.coords.latitude, p.coords.longitude], ZOOM_RECINTOS + 2),
-      () => avisar({ tipo: 'error', mensaje: 'No se puede saber dónde estás' }),
-      { enableHighAccuracy: true, timeout: 10_000 },
-    )
+  const ubicarme = () => {
+    if (mapa.current)
+      ubicar(mapa.current, () =>
+        avisar({ tipo: 'error', mensaje: 'No se puede saber dónde estás' }),
+      )
+  }
 
   const total = elegidos.reduce((s, r) => s + r.superficie, 0)
 

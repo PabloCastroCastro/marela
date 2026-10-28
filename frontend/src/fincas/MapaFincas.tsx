@@ -1,6 +1,8 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, LocateFixed } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import { useAvisos } from '../componentes/Avisos'
+import { BotonIcono } from '../componentes/Boton'
 import { EstadoError } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
@@ -10,7 +12,15 @@ import { type Finca, REGIMENES, useContornos } from './datos'
 import estilos from './Fincas.module.css'
 import { InsigniaPastoreo } from './InsigniaPastoreo'
 import { InsigniaSeguridad } from './InsigniaSeguridad'
-import { COLORES, capaContorno, centrarEnMunicipio, crearMapa, encuadrar, L } from './leaflet'
+import {
+  COLORES,
+  capaContorno,
+  centrarEnMunicipio,
+  crearMapa,
+  encuadrar,
+  L,
+  ubicar,
+} from './leaflet'
 
 // En plazo de seguridad o pastando, el color de su insignia; el plazo, que es un aviso, primero
 const color = (f: Finca) =>
@@ -21,6 +31,7 @@ const color = (f: Finca) =>
 export default function MapaFincas({ fincas }: { fincas: Finca[] }) {
   const explotacion = useExplotacionActual()
   const contornos = useContornos(explotacion.id)
+  const { avisar } = useAvisos()
   const contenedor = useRef<HTMLDivElement>(null)
   const mapa = useRef<L.Map>(null)
   // Las fincas que se encuadraron la última vez: se vuelve a encuadrar al cambiar los filtros, no al
@@ -89,6 +100,18 @@ export default function MapaFincas({ fincas }: { fincas: Finca[] }) {
       )}
       <div className={estilos.mapa}>
         <div ref={contenedor} className={estilos.lienzo} />
+        {/* En el campo, para saber en qué finca estás: tu posición, con un punto */}
+        <BotonIcono
+          etiqueta="Ir a mi ubicación"
+          icono={<LocateFixed aria-hidden size={20} />}
+          className={estilos.ubicarme}
+          onClick={() => {
+            if (mapa.current)
+              ubicar(mapa.current, () =>
+                avisar({ tipo: 'error', mensaje: 'No se puede saber dónde estás' }),
+              )
+          }}
+        />
       </div>
       <ul className={estilos.leyenda} aria-label="Leyenda del mapa">
         <li>

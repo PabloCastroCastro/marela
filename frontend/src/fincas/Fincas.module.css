@@ -460,3 +460,9 @@
 .mapaFicha {
   height: 14rem;
 }
+
+/* En el listado, abajo a la derecha está el botón flotante de añadir: la ubicación, arriba */
+.mapaFincas .ubicarme {
+  top: var(--espacio-2);
+  bottom: auto;
+}
