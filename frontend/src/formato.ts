@@ -31,6 +31,10 @@ export const numero = (n: number, decimales = 0) =>
 
 export const kilos = (n: number, decimales = 0) => `${numero(n, decimales)} kg`
 
+// Hectáreas con los decimales que tenga, hasta cuatro (la precisión del SIGPAC): "2,3456 ha", "4,5 ha"
+export const hectareas = (n: number) =>
+  `${new Intl.NumberFormat('es-ES', { maximumFractionDigits: 4, useGrouping: 'always' }).format(n)} ha`
+
 export const euros = (n: number) =>
   new Intl.NumberFormat('es-ES', {
     style: 'currency',

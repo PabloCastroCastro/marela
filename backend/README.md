@@ -219,6 +219,18 @@ Un tratamiento **no se corrige ni se borra**: se anula con un motivo y sigue en 
 
 **Supresión:** `fin_supresion` es una columna generada, la fecha más los días de supresión: el día en que termina. Un animal está en supresión mientras alguno de sus tratamientos sin anular termine después de hoy. Las fichas de los animales llevan `finSupresion` (el más lejano, o `null`) y el listado se filtra con `?supresion=en_curso`.
 
+## Fincas
+
+Fincas de la explotación y sus parcelas, en `src/rutas/fincas.ts` (módulo `fincas`):
+
+- **`GET /api/explotaciones/{id}/fincas`:** lista por nombre, con búsqueda (`q`, en nombre y municipio) y filtro (`activa=true|false`; sin él, todas). Cada finca lleva su superficie (la suma de sus parcelas) y su número de parcelas.
+- **`GET /api/explotaciones/{id}/fincas/{fincaId}`:** la ficha, con sus parcelas.
+- **`POST /api/explotaciones/{id}/fincas`:** `{ nombre, municipio?, provincia?, regimen, observaciones?, parcelas: [{ provincia?, municipio?, poligono?, parcela?, recinto?, referenciaCatastral?, superficie }] }` da de alta la finca con al menos una parcela. `regimen` es `propiedad` (por defecto), `arrendamiento`, `aparceria`, `cesion` u `otro`.
+- **`PUT /api/explotaciones/{id}/fincas/{fincaId}`:** cambia los datos y las parcelas: las que llegan con `id` se corrigen, las nuevas se añaden y las que faltan se quitan.
+- **`PATCH /api/explotaciones/{id}/fincas/{fincaId}/estado`:** `{ activa }` desactiva o reactiva. Una finca no se borra.
+
+Reglas: cada parcela, con la referencia SIGPAC completa (provincia, municipio, polígono, parcela y recinto, solo números) o la catastral, y superficie en hectáreas mayor que 0, con cuatro decimales. El nombre no se repite en la explotación (409 `nombre_en_uso`), ni un recinto SIGPAC en dos fincas (409 `recinto_en_uso`). Los cambios quedan en el historial (migración `0017`).
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.
@@ -264,6 +276,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
 - `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
+- `test/fincas.test.ts`: fincas: alta con varias parcelas y superficie total, validación, nombre y recinto únicos en la explotación, edición que corrige, añade y quita parcelas con historial, desactivación y filtro, separación por explotación y restricciones.
 - `test/partos.test.ts`: partos: gemelos con el padre de la cubrición, un nacido muerto y la pesada al nacer, cierre de la gestación, padre indicado sin gestación, crotal puesto después y que no se quita, validación y todo o nada, anulación que borra los terneros, terneros con datos, separación por explotación y restricciones.
 - `test/reproduccion.test.ts`: eventos reproductivos: cubrición a varias vacas y fecha prevista de parto, inseminación con dosis externa y diagnóstico positivo, cierre por diagnóstico negativo o aborto, filtro de gestantes, solo hembras y padre macho, destete con su pesada y en el historial de la madre, anulación con historial, separación por explotación y restricciones.
 - `test/tratamientos.test.ts`: tratamientos: registro a varios animales, quién lo administra, validación, animales y personas de otra explotación, fechas en la vida del animal, supresión en curso y su filtro, anulación con historial, opciones del formulario, separación por explotación, y que no se corrigen ni se borran.
@@ -321,7 +334,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal; y cuatro fincas con sus parcelas SIGPAC, una arrendada y otra desactivada. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

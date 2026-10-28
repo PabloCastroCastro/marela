@@ -145,6 +145,28 @@ export type PartoSimulado = {
   anulacion: { en: string; por: string; motivo: string } | null
 }
 
+export type ParcelaSimulada = {
+  id: string
+  provincia: string | null
+  municipio: string | null
+  poligono: string | null
+  parcela: string | null
+  recinto: string | null
+  referenciaCatastral: string | null
+  superficie: number
+}
+
+export type FincaSimulada = {
+  id: string
+  nombre: string
+  municipio: string | null
+  provincia: string | null
+  regimen: 'propiedad' | 'arrendamiento' | 'aparceria' | 'cesion' | 'otro'
+  observaciones: string | null
+  activa: boolean
+  parcelas: ParcelaSimulada[]
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -164,6 +186,7 @@ export type EstadoSimulado = {
   tratamientos: TratamientoSimulado[]
   eventos: EventoSimulado[]
   partos: PartoSimulado[]
+  fincas: FincaSimulada[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -269,6 +292,60 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
     ],
     eventos: [],
     partos: [],
+    fincas: [
+      {
+        id: 'f1',
+        nombre: 'Agra de abaixo',
+        municipio: 'Lalín',
+        provincia: 'Pontevedra',
+        regimen: 'propiedad',
+        observaciones: null,
+        activa: true,
+        parcelas: [
+          {
+            id: 'pc1',
+            provincia: '36',
+            municipio: '24',
+            poligono: '12',
+            parcela: '45',
+            recinto: '1',
+            referenciaCatastral: null,
+            superficie: 2.3456,
+          },
+          {
+            id: 'pc2',
+            provincia: '36',
+            municipio: '24',
+            poligono: '12',
+            parcela: '46',
+            recinto: '1',
+            referenciaCatastral: null,
+            superficie: 1.1,
+          },
+        ],
+      },
+      {
+        id: 'f2',
+        nombre: 'Leira vella',
+        municipio: 'Lalín',
+        provincia: 'Pontevedra',
+        regimen: 'cesion',
+        observaciones: null,
+        activa: false,
+        parcelas: [
+          {
+            id: 'pc3',
+            provincia: null,
+            municipio: null,
+            poligono: null,
+            parcela: null,
+            recinto: null,
+            referenciaCatastral: '36024A012000950000KS',
+            superficie: 0.35,
+          },
+        ],
+      },
+    ],
     tratamientos: [
       {
         id: 't1',
@@ -306,6 +383,7 @@ const PARTOS =
   /^\/api\/explotaciones\/[^/]+\/(?:animales\/([^/]+)\/partos|partos\/([^/]+)\/anulacion)$/
 const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
+const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -407,6 +485,79 @@ export function simularApi(estado: EstadoSimulado) {
           .map(evento),
       )
     }
+    const deFincas = ruta.match(FINCAS)
+    if (deFincas) {
+      const [, fincaId, estadoFinca] = deFincas
+      const ficha = (f: FincaSimulada) => ({
+        ...f,
+        superficie: f.parcelas.reduce((t, x) => t + x.superficie, 0),
+        numeroParcelas: f.parcelas.length,
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      const conIds = (ps: (Omit<ParcelaSimulada, 'id'> & { id?: string })[]) =>
+        ps.map((x, i) => ({
+          provincia: x.provincia || null,
+          municipio: x.municipio || null,
+          poligono: x.poligono || null,
+          parcela: x.parcela || null,
+          recinto: x.recinto || null,
+          referenciaCatastral: x.referenciaCatastral || null,
+          superficie: x.superficie,
+          id: x.id ?? `pc${Date.now()}${i}`,
+        }))
+      const repetida = (nombre: string, id?: string) =>
+        estado.fincas.some((f) => f.nombre.toLowerCase() === nombre.toLowerCase() && f.id !== id)
+      if (!fincaId && metodo === 'GET') {
+        const q = new URL(peticion.url).searchParams
+        const texto = (q.get('q') ?? '').toLowerCase()
+        return json(
+          estado.fincas
+            .filter((f) => !q.get('activa') || String(f.activa) === q.get('activa'))
+            .filter((f) => !texto || `${f.nombre} ${f.municipio}`.toLowerCase().includes(texto))
+            .map(ficha),
+        )
+      }
+      if (!fincaId && metodo === 'POST') {
+        if (repetida(cuerpo.nombre)) {
+          return errorApi(409, 'nombre_en_uso', [
+            { campo: 'nombre', mensaje: 'Ya hay una finca con este nombre' },
+          ])
+        }
+        const nueva: FincaSimulada = {
+          id: `f${estado.fincas.length + 1}`,
+          nombre: cuerpo.nombre,
+          municipio: cuerpo.municipio || null,
+          provincia: cuerpo.provincia || null,
+          regimen: cuerpo.regimen,
+          observaciones: cuerpo.observaciones || null,
+          activa: true,
+          parcelas: conIds(cuerpo.parcelas),
+        }
+        estado.fincas.push(nueva)
+        return json(ficha(nueva), 201)
+      }
+      const f = estado.fincas.find((x) => x.id === fincaId)
+      if (!f) return errorApi(404, 'finca_no_encontrada')
+      if (estadoFinca) f.activa = cuerpo.activa
+      else if (metodo === 'PUT') {
+        if (repetida(cuerpo.nombre, f.id)) {
+          return errorApi(409, 'nombre_en_uso', [
+            { campo: 'nombre', mensaje: 'Ya hay una finca con este nombre' },
+          ])
+        }
+        Object.assign(f, {
+          nombre: cuerpo.nombre,
+          municipio: cuerpo.municipio || null,
+          provincia: cuerpo.provincia || null,
+          regimen: cuerpo.regimen,
+          observaciones: cuerpo.observaciones || null,
+          parcelas: conIds(cuerpo.parcelas),
+        })
+      }
+      return json(ficha(f))
+    }
+
     const deParto = ruta.match(PARTOS)
     if (deParto) {
       const [, madreId, partoId] = deParto

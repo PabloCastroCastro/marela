@@ -113,6 +113,20 @@
       "when": 1793179910181,
       "tag": "0015_partos_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793184978881,
+      "tag": "0016_fincas",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793184980506,
+      "tag": "0017_fincas_historial",
+      "breakpoints": true
     }
   ]
 }
