@@ -17,7 +17,7 @@ src/
   auth/             sesión, inicio de sesión, cambio de contraseña y rutas protegidas
   explotaciones/    explotaciones del usuario, elección, explotación activa y sus datos
   plataforma/       gestión de las explotaciones por el propietario
-  animales/         lista, ficha, alta, edición, bajas y pesos de animales
+  animales/         lista, ficha, historial, alta, edición, bajas, reproducción y partos, tratamientos y pesos de animales
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
   diseno/           estructura de una explotación: cabecera, selector, cuenta y navegación adaptable
   componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)
@@ -64,7 +64,7 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 | `/cambiar-contrasena` | Cambio de contraseña; obligatorio, sin poder ir a otra pantalla, mientras sea temporal |
 | `/` | Abre la única explotación o la última usada en este dispositivo; si no, a elegir |
 | `/explotaciones` | Elegir explotación (con una sola, entra directamente) |
-| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales` (lista) y `animales/:animalId` (ficha), `comida`, `fincas`, `finanzas`, y para el administrador `datos` (los de la explotación) y `equipo` (personas, roles, desactivación y contraseñas) |
+| `/explotaciones/:explotacionId/...` | La aplicación, dentro de una explotación: inicio, `animales` (lista) y `animales/:animalId` (ficha), `animales/:animalId/historial`, `comida`, `fincas`, `finanzas`, y para el administrador `datos` (los de la explotación) y `equipo` (personas, roles, desactivación y contraseñas) |
 | `/plataforma` | Gestión por el propietario de la plataforma: lista de explotaciones, alta con su primer administrador, desactivar o reactivar, y restablecer la contraseña de cualquier usuario |
 
 - **Rutas protegidas:** todas menos `/entrar` exigen sesión (`RutaProtegida`). Sin ella llevan al inicio de sesión y, al entrar, se vuelve a donde se estaba. Si una consulta responde 401 (sesión caducada), la sesión se da por cerrada y pasa lo mismo.
@@ -83,12 +83,13 @@ Componentes propios en `src/componentes/`, cada uno con su `.module.css`, según
 |---|---|
 | `Boton.tsx` | `Boton` (`primario`, `secundario`, `texto`, `peligro`; `compacto`, `normal`, `grande`; `cargando`) y `BotonIcono` |
 | `Campo.tsx` | `Campo`, `CampoFecha`, `AreaTexto` y `Selector`, con etiqueta, ayuda y error |
+| `Casilla.tsx` | Casilla de verificación con área táctil de 48 px, también indeterminada |
 | `HojaInferior.tsx` | Hoja que sube desde abajo en el móvil (se cierra arrastrando el asa) y diálogo centrado desde 40rem |
 | `Confirmacion.tsx` | `useConfirmacion()`: `await confirmar({ titulo, textoConfirmar, peligrosa })` |
 | `Avisos.tsx` | `useAvisos()`: `avisar({ tipo, mensaje, accion })`; los de éxito duran 4 s y los de error se quedan |
 | `Estados.tsx` | `EstadoVacio`, `EstadoError` (con Reintentar), `Cargando` y `Esqueleto` |
 | `Etiquetas.tsx` | `Insignia`, `Chip`, `Chips` (selección única) y `Tarjeta` |
-| `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas |
+| `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas. Con `seleccion`, se marcan varias filas: casillas en la tabla y pulsación larga en las tarjetas |
 | `Filtros.tsx` | `BarraFiltros`, `Buscador` (avisa 300 ms después de dejar de escribir) y `FiltroDesplegable` ("Estado: Activos ▾": un desplegable nativo con forma de chip, marcado cuando no está en su valor por defecto) |
 | `BotonFlotante.tsx` | Acción de crear en el móvil, encima de la barra inferior; en pantalla ancha no se muestra |
 | `iconos.ts` | Iconos propios con el estilo de Lucide (`Vaca`) |

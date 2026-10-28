@@ -1,15 +1,20 @@
 import { hashPassword } from 'better-auth/crypto'
+import { eq } from 'drizzle-orm'
 import { config } from '../config.js'
+import { hoyEnMadrid } from '../fechas.js'
 import { db, pool } from './cliente.js'
 import { enExplotacion } from './explotacion.js'
 import { migrar } from './migrar.js'
 import {
   account,
   animales,
+  eventosReproductivos,
   member,
   organization,
+  partos,
   pesos,
   type RolExplotacion,
+  tratamientos,
   user,
 } from './schema/index.js'
 
@@ -39,6 +44,9 @@ const EXPLOTACION = 3
 const MIEMBRO = 4
 const ANIMAL = 5
 const PESADA = 6
+const TRATAMIENTO = 7
+const EVENTO = 8
+const PARTO = 9
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -221,6 +229,132 @@ const pesadasVeiga = [
   [7, '2026-06-20', 152, 'otro'],
 ] as const
 
+// Tratamientos: una desparasitación y una vacuna de las adultas, y la ternera con neumonía hace tres
+// días, para que haya una supresión en curso. Uno anulado, registrado en el animal equivocado.
+// Fecha de hace n días: lo que depende de hoy (supresiones, gestaciones) sigue en curso
+const haceDias = (n: number) =>
+  new Date(Date.parse(`${hoyEnMadrid()}T12:00:00Z`) - n * 864e5).toISOString().slice(0, 10)
+const haceTresDias = haceDias(3)
+
+type TratamientoEjemplo = Omit<typeof tratamientos.$inferInsert, 'animalId'> & {
+  animal: number
+  anulado?: string
+}
+
+const tratamientosVeiga: TratamientoEjemplo[] = [
+  ...[1, 2, 3, 4, 5].map((animal) => ({
+    animal,
+    fecha: '2026-04-10',
+    producto: 'Ivermectina 1 %',
+    dosis: '1 ml por cada 50 kg',
+    via: 'subcutanea' as const,
+    motivo: 'desparasitacion' as const,
+    aplicadoPorId: sid(USUARIO, 2),
+    lote: 'L2403A',
+    diasSupresion: 49,
+  })),
+  ...[1, 2, 3].map((animal) => ({
+    animal,
+    fecha: '2026-06-05',
+    producto: 'Vacuna lengua azul serotipo 3',
+    dosis: '2 ml',
+    via: 'intramuscular' as const,
+    motivo: 'vacuna' as const,
+    diagnostico: 'Lengua azul',
+    aplicadoPorId: sid(USUARIO, 4),
+    lote: 'BTV3-0612',
+    diasSupresion: 0,
+  })),
+  {
+    animal: 7,
+    fecha: '2026-09-15',
+    producto: 'Oxitetraciclina LA',
+    dosis: '15 ml',
+    via: 'intramuscular' as const,
+    motivo: 'enfermedad' as const,
+    diagnostico: 'Neumonía',
+    aplicadoPorTexto: 'Veterinaria de la ADS',
+    diasSupresion: 28,
+    anulado: 'Registrado en el animal equivocado: era la ternera ES041503457001',
+  },
+  {
+    animal: 6,
+    fecha: haceTresDias,
+    producto: 'Oxitetraciclina LA',
+    dosis: '20 ml',
+    via: 'intramuscular' as const,
+    motivo: 'enfermedad' as const,
+    diagnostico: 'Neumonía',
+    aplicadoPorTexto: 'Veterinaria de la ADS',
+    lote: 'OX-5521',
+    diasSupresion: 28,
+    observaciones: 'Repetir a las 72 horas si sigue con fiebre',
+  },
+]
+
+// Eventos reproductivos: Marela, cubierta por Moreno, inseminada después de parir y confirmada
+// gestante; Bonita, vacía y cubierta después por Lucero sin diagnóstico; Pinta, inseminada y
+// confirmada, con una cubrición anulada; y el destete de la ternera de Marela
+type EventoEjemplo = Omit<typeof eventosReproductivos.$inferInsert, 'animalId' | 'padreId'> & {
+  animal: number
+  padre?: number
+  anulado?: string
+}
+
+const eventosVeiga: EventoEjemplo[] = [
+  { animal: 1, tipo: 'cubricion', fecha: '2025-04-20', padre: 4 },
+  { animal: 6, tipo: 'destete', fecha: '2026-08-28' },
+  { animal: 1, tipo: 'inseminacion', fecha: haceDias(65), padreTexto: 'Dosis RG-1187' },
+  {
+    animal: 1,
+    tipo: 'diagnostico',
+    fecha: haceDias(25),
+    metodo: 'ecografia',
+    resultado: 'gestante',
+  },
+  { animal: 2, tipo: 'cubricion', fecha: haceDias(100), padre: 5 },
+  { animal: 3, tipo: 'inseminacion', fecha: haceDias(290), padreTexto: 'Dosis LM-0442' },
+  {
+    animal: 3,
+    tipo: 'cubricion',
+    fecha: haceDias(285),
+    padre: 4,
+    anulado: 'Registrada en la vaca equivocada',
+  },
+  {
+    animal: 2,
+    tipo: 'diagnostico',
+    fecha: haceDias(120),
+    metodo: 'palpacion',
+    resultado: 'vacia',
+    observaciones: 'Repetir la cubrición en el próximo celo',
+  },
+  {
+    animal: 3,
+    tipo: 'diagnostico',
+    fecha: haceDias(230),
+    metodo: 'palpacion',
+    resultado: 'gestante',
+  },
+]
+
+// Partos: el de Marela, del que nació su ternera, y el de Pinta hace cuatro días, con ayuda, de un
+// ternero que aún no tiene crotal
+const partosVeiga = [
+  { n: 1, madre: 1, fecha: '2026-02-11', tipo: 'normal' as const, padre: 4, terneros: [6] },
+  {
+    n: 2,
+    madre: 3,
+    fecha: haceDias(4),
+    tipo: 'con_ayuda' as const,
+    padreTexto: 'Dosis LM-0442',
+    terneros: [9],
+  },
+]
+
+// El ternero de Pinta, sin crotal todavía
+const TERNERO_SIN_CROTAL = { n: 9, raza: 'Cruzada', sexo: 'macho' as const, peso: 40 }
+
 await enExplotacion(
   { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
   async (tx) => {
@@ -250,10 +384,81 @@ await enExplotacion(
         .values({ id: sid(PESADA, i + 1), animalId: sid(ANIMAL, animal), fecha, kg, momento })
         .onConflictDoNothing()
     }
+    for (const { n, madre, padre, padreTexto, terneros, ...p } of partosVeiga) {
+      await tx
+        .insert(partos)
+        .values({
+          id: sid(PARTO, n),
+          madreId: sid(ANIMAL, madre),
+          padreId: padre ? sid(ANIMAL, padre) : null,
+          padreTexto: padreTexto ?? null,
+          ...p,
+        })
+        .onConflictDoNothing()
+      for (const ternero of terneros) {
+        if (ternero === TERNERO_SIN_CROTAL.n) {
+          await tx
+            .insert(animales)
+            .values({
+              id: sid(ANIMAL, ternero),
+              crotal: null,
+              raza: TERNERO_SIN_CROTAL.raza,
+              sexo: TERNERO_SIN_CROTAL.sexo,
+              fechaNacimiento: p.fecha,
+              madreId: sid(ANIMAL, madre),
+              padreTexto: padreTexto ?? null,
+              partoId: sid(PARTO, n),
+            })
+            .onConflictDoNothing()
+          await tx
+            .insert(pesos)
+            .values({
+              id: sid(PESADA, 100 + n),
+              animalId: sid(ANIMAL, ternero),
+              fecha: p.fecha,
+              kg: TERNERO_SIN_CROTAL.peso,
+              momento: 'nacimiento',
+            })
+            .onConflictDoNothing()
+        } else {
+          await tx
+            .update(animales)
+            .set({ partoId: sid(PARTO, n) })
+            .where(eq(animales.id, sid(ANIMAL, ternero)))
+        }
+      }
+    }
+    for (const [i, { animal, padre, anulado, ...e }] of eventosVeiga.entries()) {
+      await tx
+        .insert(eventosReproductivos)
+        .values({
+          id: sid(EVENTO, i + 1),
+          animalId: sid(ANIMAL, animal),
+          padreId: padre ? sid(ANIMAL, padre) : null,
+          ...e,
+          ...(anulado
+            ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
+            : {}),
+        })
+        .onConflictDoNothing()
+    }
+    for (const [i, { animal, anulado, ...t }] of tratamientosVeiga.entries()) {
+      await tx
+        .insert(tratamientos)
+        .values({
+          id: sid(TRATAMIENTO, i + 1),
+          animalId: sid(ANIMAL, animal),
+          ...t,
+          ...(anulado
+            ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
+            : {}),
+        })
+        .onConflictDoNothing()
+    }
   },
 )
 
 await pool.end()
 console.log(
-  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length} animales (contraseña ${CONTRASENA})`,
+  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length + 1} animales (contraseña ${CONTRASENA})`,
 )

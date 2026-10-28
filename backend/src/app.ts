@@ -8,15 +8,18 @@ import { registrarPeticiones } from './peticiones.js'
 import { rutasAnimales } from './rutas/animales.js'
 import { rutasExplotaciones } from './rutas/explotaciones.js'
 import { rutasMiembros } from './rutas/miembros.js'
+import { rutasPartos } from './rutas/partos.js'
 import { rutasPesos } from './rutas/pesos.js'
 import { rutasPlataforma } from './rutas/plataforma.js'
+import { rutasReproduccion } from './rutas/reproduccion.js'
 import { rutasSalud } from './rutas/salud.js'
+import { rutasTratamientos } from './rutas/tratamientos.js'
 
 export const infoOpenApi = {
   openapi: '3.1.0',
   info: {
     title: 'API de Marela',
-    version: '0.2.0',
+    version: '0.3.0',
     description:
       'API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }.',
   },
@@ -59,6 +62,9 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasMiembros())
   app.route('/', rutasAnimales())
   app.route('/', rutasPesos())
+  app.route('/', rutasTratamientos())
+  app.route('/', rutasReproduccion())
+  app.route('/', rutasPartos())
   app.route('/', rutasPlataforma())
 
   // Sesión en la cookie de Better Auth (con el prefijo __Secure- salvo en desarrollo)

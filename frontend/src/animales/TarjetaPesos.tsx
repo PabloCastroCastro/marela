@@ -1,6 +1,6 @@
-import { Pencil, Plus, Scale } from 'lucide-react'
+import { Pencil, Scale } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
-import { Boton, BotonIcono } from '../componentes/Boton'
+import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
@@ -10,6 +10,7 @@ import type { AnimalDetalle } from './datos'
 import { FormularioPesada } from './FormularioPesada'
 import { GraficoPeso } from './GraficoPeso'
 import { conGanancia, ganancia, gananciaMedia, MOMENTOS, type Pesada, usePesadas } from './pesos'
+import { useRecorte } from './Recorte'
 
 const peso = (kg: number) => kilos(kg, kg % 1 ? 1 : 0)
 
@@ -19,6 +20,11 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
   const pesadas = usePesadas(explotacion.id, animal.id)
   // undefined: cerrado; null: pesada nueva; una pesada: corregirla
   const [editando, setEditando] = useState<Pesada | null>()
+
+  // La lista, de la más reciente a la más antigua y con solo las últimas a la vista: el gráfico
+  // ya muestra toda la evolución
+  const recientes = conGanancia(pesadas.data ?? []).toReversed()
+  const recorte = useRecorte(recientes, (n) => `Ver todas las pesadas (${n})`)
 
   let contenido: ReactNode
   if (pesadas.isPending) {
@@ -49,7 +55,7 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
         </dl>
         <GraficoPeso pesadas={lista} />
         <ul className={estilos.pesadas} aria-label="Pesadas">
-          {lista.toReversed().map((p) => (
+          {recorte.elementos.map((p) => (
             <li key={p.id}>
               <div>
                 <span className={estilos.cifra}>{peso(p.kg)}</span>
@@ -72,22 +78,15 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
   }
 
   return (
-    <Tarjeta aria-labelledby="ficha-pesos" className={estilos.tarjetaPesos}>
+    <Tarjeta aria-labelledby="ficha-pesos" className={estilos.tarjetaRegistros}>
       <div className={estilos.cabeceraTarjeta}>
         <h2 id="ficha-pesos">
           <Scale aria-hidden size={20} className={estilos.iconoTitulo} />
           Pesos
         </h2>
-        <Boton
-          variante="secundario"
-          tamano="compacto"
-          icono={<Plus aria-hidden size={18} />}
-          onClick={() => setEditando(null)}
-        >
-          Añadir pesada
-        </Boton>
       </div>
       {contenido}
+      {recorte.boton}
       {editando !== undefined && (
         <FormularioPesada
           animal={animal}

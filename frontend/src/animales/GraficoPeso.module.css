@@ -6,8 +6,11 @@
   touch-action: pan-y;
 }
 
+/* Al ancho de la tarjeta: con el ancho en porcentaje, el gráfico no ensancha la tarjeta en un móvil
+   estrecho antes de que el ResizeObserver lo mida */
 .grafico svg {
   display: block;
+  width: 100%;
   overflow: visible;
 }
 

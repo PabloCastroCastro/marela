@@ -71,6 +71,48 @@
       "when": 1793132893299,
       "tag": "0009_pesos_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793171281987,
+      "tag": "0010_tratamientos",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793171283803,
+      "tag": "0011_tratamientos_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793176347198,
+      "tag": "0012_reproduccion",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793176348860,
+      "tag": "0013_reproduccion_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793179902616,
+      "tag": "0014_partos",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793179910181,
+      "tag": "0015_partos_triggers",
+      "breakpoints": true
     }
   ]
 }

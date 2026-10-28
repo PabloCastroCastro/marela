@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil, Undo2, UserRoundX } from 'lucide-react'
+import { ArrowLeft, History, Pencil, Undo2 } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ErrorApi } from '../api/cliente'
@@ -12,17 +12,24 @@ import { edad, fecha } from '../formato'
 import estilos from './Animales.module.css'
 import { type AnimalDetalle, ESTADOS, identificacion, SEXOS, TIPOS_BAJA, useAnimal } from './datos'
 import { FormularioAnimal } from './FormularioAnimal'
-import { FormularioBaja, useDeshacerBaja } from './FormularioBaja'
+import { useDeshacerBaja } from './FormularioBaja'
 import { InsigniaEstado } from './InsigniaEstado'
+import { InsigniaGestacion } from './InsigniaGestacion'
+import { InsigniaSinCrotal } from './InsigniaSinCrotal'
+import { InsigniaSupresion } from './InsigniaSupresion'
+import { MenuRegistrar } from './MenuRegistrar'
 import { TarjetaPesos } from './TarjetaPesos'
+import { TarjetaReproduccion } from './TarjetaReproduccion'
+import { TarjetaTratamientos } from './TarjetaTratamientos'
 
-// Ficha de un animal: sus datos, su madre y su padre, sus hijos (GH-15) y sus pesos (GH-21)
+// Ficha de un animal: sus datos, su madre y su padre, sus hijos (GH-15), su reproducción (GH-22),
+// sus tratamientos (GH-20) y sus pesos (GH-21). "Registrar" da acceso a todo lo que se le puede
+// registrar y "Historial", a su línea de tiempo completa (GH-24).
 export function PaginaAnimal() {
   const explotacion = useExplotacionActual()
   const { animalId = '' } = useParams()
   const animal = useAnimal(explotacion.id, animalId)
   const [editando, setEditando] = useState(false)
-  const [dandoDeBaja, setDandoDeBaja] = useState(false)
   const deshacer = useDeshacerBaja(animalId)
   const confirmar = useConfirmacion()
   const lista = `${rutaExplotacion(explotacion.id)}/animales`
@@ -62,26 +69,30 @@ export function PaginaAnimal() {
   const a = animal.data
   return (
     <section className={estilos.pagina}>
-      {volver}
+      <div className={estilos.navegacionFicha}>
+        {volver}
+        <Link to={`${lista}/${a.id}/historial`} className={estilos.volver}>
+          <History aria-hidden size={20} />
+          Historial
+        </Link>
+      </div>
       <div className={estilos.titulo}>
         <div className={estilos.cabeceraFicha}>
-          <h1>{a.nombre ?? a.crotal}</h1>
+          <h1>
+            {a.nombre ?? a.crotal ?? `${a.sexo === 'hembra' ? 'Ternera' : 'Ternero'} sin crotal`}
+          </h1>
           <div className={estilos.subtitulo}>
-            {a.nombre && <span className={estilos.cifra}>{a.crotal}</span>}
+            {a.nombre && a.crotal && <span className={estilos.cifra}>{a.crotal}</span>}
             <InsigniaEstado estado={a.estado} />
+            {!a.crotal && a.estado === 'activo' && (
+              <InsigniaSinCrotal nacimiento={a.fechaNacimiento} />
+            )}
+            {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} />}
+            {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} />}
           </div>
         </div>
         <div className={estilos.acciones}>
-          {a.estado === 'activo' && (
-            <Boton
-              variante="secundario"
-              className={estilos.peligro}
-              icono={<UserRoundX aria-hidden size={18} />}
-              onClick={() => setDandoDeBaja(true)}
-            >
-              Dar de baja
-            </Boton>
-          )}
+          <MenuRegistrar animal={a} />
           <Boton
             variante="secundario"
             icono={<Pencil aria-hidden size={18} />}
@@ -129,7 +140,11 @@ export function PaginaAnimal() {
           <h2 id="ficha-datos">Datos</h2>
           <dl className={estilos.datos}>
             <Dato titulo="Crotal">
-              <span className={estilos.cifra}>{a.crotal}</span>
+              {a.crotal ? (
+                <span className={estilos.cifra}>{a.crotal}</span>
+              ) : (
+                <span className={estilos.suave}>Sin crotal: se pone desde Editar</span>
+              )}
             </Dato>
             <Dato titulo="Raza">{a.raza}</Dato>
             <Dato titulo="Sexo">{SEXOS[a.sexo]}</Dato>
@@ -172,6 +187,10 @@ export function PaginaAnimal() {
           )}
         </Tarjeta>
 
+        {(a.sexo === 'hembra' || a.madreId || a.madreTexto) && <TarjetaReproduccion animal={a} />}
+
+        <TarjetaTratamientos animal={a} />
+
         <TarjetaPesos animal={a} />
 
         {a.observaciones && (
@@ -188,7 +207,6 @@ export function PaginaAnimal() {
 
       {/* Se monta de nuevo al abrirlo, para partir siempre de la ficha actual */}
       {editando && <FormularioAnimal abierto alCerrar={() => setEditando(false)} animal={a} />}
-      {dandoDeBaja && <FormularioBaja animal={a} alCerrar={() => setDandoDeBaja(false)} />}
     </section>
   )
 }

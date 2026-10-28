@@ -45,7 +45,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Ficha del animal
 
-- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma.
+- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma. Opcional mientras se le pone a un ternero, en los 20 días siguientes a su nacimiento: hasta entonces la ficha avisa del plazo, y en el listado se filtran con "Estado: Sin crotal" (GH-23). Una vez puesto, no se puede quitar.
 - Nombre, opcional (muchas vacas lo tienen y es como se las reconoce)
 - Raza: se elige de una lista de razas de carne habituales en España o se escribe otra
 - Sexo
@@ -66,6 +66,11 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 - Movimiento de un animal entre explotaciones del mismo usuario, conservando su historial.
 
+### Historial y registro (GH-24)
+
+- La ficha tiene un solo botón "Registrar" que abre la lista de todo lo que se le puede registrar al animal: pesada, tratamiento, cubrición o inseminación, diagnóstico, parto, aborto, destete y dar de baja. Las tarjetas de la ficha no tienen botones propios.
+- "Historial", desde la ficha, abre una página con todo lo del animal (nacimiento y entrada, pesadas, tratamientos, eventos reproductivos, partos y baja), del más reciente al más antiguo, agrupado por año y con filtro por tipo. Los traslados entrarán cuando existan (GH-19).
+
 ### Pesos
 
 - Registro de pesadas: fecha, kg y momento (al nacer, al destete, a la venta u otra pesada). Al nacer, al destete y a la venta, como mucho una vez por animal.
@@ -83,6 +88,13 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - Periodo de supresión y fecha en que termina
 - Observaciones
 
+Decisiones (GH-20):
+
+- Se registran desde la ficha del animal o, para varios a la vez, marcándolos en el listado de animales y pulsando "Tratar". En el móvil se empieza a marcar manteniendo pulsado un animal (como en Material 3); después, tocar otro lo marca. En la tabla de escritorio, cada fila lleva su casilla. Se crea un tratamiento por animal.
+- Quién lo administra: por defecto, quien lo registra; se puede elegir otra persona del equipo o escribir un nombre.
+- La supresión termina el día de la fecha más los días de supresión. Mientras dura, la ficha y el listado lo muestran ("En supresión hasta el…"), y en el listado se filtra con "Estado: En supresión", aunque no es un estado: se calcula de los tratamientos y el animal sigue activo.
+- Un tratamiento no se corrige ni se borra: se anula con un motivo, sigue en la ficha tachado y deja de contar para la supresión. Para corregirlo, se anula y se registra de nuevo.
+
 ### Reproducción
 
 - Eventos: cubrición (monta natural), inseminación artificial, diagnóstico de gestación (ecografía o palpación), parto, aborto y destete.
@@ -93,6 +105,24 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - Datos del parto: fecha, tipo (normal, con ayuda, cesárea) y observaciones. Por cada ternero: sexo, estado al nacer (vivo, muerto) y peso al nacer opcional.
 - Los terneros nacidos muertos también tienen ficha, con estado "muerto", por trazabilidad.
 - Sin avisos de momento.
+
+Decisiones (GH-22):
+
+- La fecha prevista de parto es la de la cubrición o inseminación más 283 días, la gestación media del vacuno de carne.
+- La gestación en curso de una vaca se calcula de sus eventos: la última cubrición o inseminación posterior al último aborto o diagnóstico negativo. Un diagnóstico positivo la confirma; sin él se muestra "sin confirmar".
+- En la ficha y en el listado: "Parto previsto el…". En el listado se filtra con "Estado: Gestantes", ordenadas por fecha prevista de parto, aunque no es un estado: la vaca sigue activa.
+- La cubrición y la inseminación se registran a varias vacas a la vez marcándolas en el listado y pulsando "Cubrir"; el resto de eventos, desde la ficha.
+- El destete es del ternero y se registra en su ficha, con su peso opcional, que se guarda también como su pesada al destete. Sale además en el historial de la madre.
+- Un evento no se corrige ni se borra: se anula con un motivo, sigue en el historial tachado y deja de contar para la gestación.
+
+Decisiones (GH-23):
+
+- El parto es un tipo más en "Registrar" de la tarjeta de reproducción, junto a los eventos; a una gestante se le ofrece primero. Se registra con uno a cuatro terneros, y crea sus fichas en la misma transacción. El padre es el de la cubrición o inseminación de la gestación en curso; si no la hay, se elige en el formulario.
+- El crotal de cada ternero es opcional (ver "Animales"); la raza, por defecto la de la madre; el peso al nacer, opcional, se guarda como su pesada al nacer.
+- Los nacidos muertos quedan con estado "muerto" y baja por muerte, con la causa "Nacido muerto".
+- El parto cierra la gestación en curso, como el aborto o el diagnóstico negativo.
+- Las listas de la ficha (reproducción, tratamientos y pesadas) muestran los 3 registros más recientes y el resto con "Ver todo"; arriba de la de reproducción, lo que viene: la gestación y el parto previsto.
+- Un parto no se corrige ni se borra: se anula con un motivo, y se borran las fichas de sus terneros, que quedan en el historial de cambios. No se puede si alguno tiene ya otros datos (pesadas aparte de la del nacimiento, tratamientos, eventos o hijos).
 
 ## Comida
 

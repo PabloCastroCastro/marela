@@ -52,7 +52,8 @@ export const animales = pgTable(
   {
     id: id(),
     ...deExplotacion(),
-    crotal: text('crotal').notNull(),
+    // Sin crotal solo mientras se le pone, en los 20 días siguientes al nacimiento (GH-23)
+    crotal: text('crotal'),
     nombre: text('nombre'),
     raza: text('raza').notNull(),
     sexo: sexoAnimal('sexo').notNull(),
@@ -71,6 +72,9 @@ export const animales = pgTable(
     // Detalle de la baja; obligatorio si el tipo es "otra"
     causaBaja: text('causa_baja'),
     observaciones: text('observaciones'),
+    // Parto en que nació (GH-23). La clave foránea a partos está en la migración 0015, para no
+    // importar aquí reproduccion.ts, que importa animales.
+    partoId: uuid('parto_id'),
     ...auditoria(),
   },
   (t) => [

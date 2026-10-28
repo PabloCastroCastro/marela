@@ -167,7 +167,7 @@ Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.
 
 Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 
-- **Crotal:** `ES` y 12 dígitos, o el código de otro país y hasta 12 dígitos. Único en toda la plataforma (409 `crotal_en_uso`).
+- **Crotal:** `ES` y 12 dígitos, o el código de otro país y hasta 12 dígitos. Único en toda la plataforma (409 `crotal_en_uso`). Opcional, para los terneros que aún no lo tienen (GH-23); una vez puesto no se puede quitar. Los animales sin crotal van al final de la lista; `?crotal=sin` lista solo esos.
 - **Madre y padre:** su ficha en la explotación, o un texto libre, nunca los dos. La madre es una hembra y el padre, un macho (trigger `comprobar_progenitores`). La misma explotación la garantizan claves foráneas compuestas. Un animal con hijos no puede cambiar de sexo (409 `sexo_con_hijos`).
 - **Origen:** nacido en la explotación, o comprado con fecha de entrada y REGA de origen.
 - **Fechas:** no futuras, y la de entrada no anterior al nacimiento.
@@ -183,6 +183,41 @@ Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
 - **`DELETE /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** borra una pesada registrada por error y la devuelve, para poder deshacerlo. Queda en el historial.
 
 Reglas: kilos mayores que 0 y hasta 2.000, con un decimal, y fecha no futura, entre el nacimiento y la baja del animal (trigger `comprobar_fecha_pesada`, migración `0009`).
+
+### Reproducción
+
+Eventos reproductivos, en `src/rutas/reproduccion.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/reproduccion`:** su historial, del más reciente al más antiguo y con los anulados: sus eventos y los destetes de sus hijos.
+- **`POST /api/explotaciones/{id}/reproduccion`:** `{ animalIds, tipo, fecha, padreId? | padreTexto?, metodo?, resultado?, pesoDestete?, observaciones? }` registra el mismo evento a uno o varios animales (hasta 500), todos o ninguno. `tipo` es `cubricion`, `inseminacion` (con el padre: un toro de la explotación o un texto), `diagnostico` (con `metodo` y `resultado`), `aborto` o `destete`. Los cuatro primeros, solo en hembras. Un destete con `pesoDestete` guarda también la pesada al destete.
+- **`POST /api/explotaciones/{id}/reproduccion/{eventoId}/anulacion`:** `{ motivo }` anula un evento registrado por error (409 `ya_anulado`).
+
+Como los tratamientos, un evento **no se corrige ni se borra** (trigger `proteger_evento_reproductivo`, migración `0013`). El trigger `comprobar_evento_reproductivo` exige hembra, fecha en la vida del animal y padre macho; un ternero se desteta una vez.
+
+**Gestación:** `fecha_prevista_parto` es una columna generada, la fecha de la cubrición o inseminación más 283 días. La función `gestacion(animal)` da la gestación en curso: la última cubrición o inseminación posterior al último aborto o diagnóstico negativo, confirmada si hay un diagnóstico positivo. Las fichas de los animales llevan `gestacion` (`{ desde, fechaPrevistaParto, confirmada }` o `null`) y el listado se filtra con `?gestacion=en_curso`, ordenado por fecha prevista de parto.
+
+### Partos
+
+Partos, en `src/rutas/partos.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/partos`:** los de una vaca, del más reciente al más antiguo, anulados incluidos, con sus terneros.
+- **`POST /api/explotaciones/{id}/animales/{animalId}/partos`:** `{ fecha, tipo, padreId? | padreTexto?, observaciones?, terneros: [{ crotal?, sexo, estado, raza, peso? }] }` registra el parto y crea en la misma transacción la ficha de cada ternero (de 1 a 4), con `parto_id`. `tipo` es `normal` (por defecto), `con_ayuda` o `cesarea`; `estado`, `vivo` (por defecto) o `muerto`, que deja la ficha muerta con baja por muerte. Los terneros se enlazan a la madre y al padre de la gestación en curso; el padre del cuerpo solo cuenta si no la hay. El peso se guarda como su pesada al nacer. Un crotal repetido da 409 `crotal_en_uso` en `terneros.<n>.crotal`.
+- **`POST /api/explotaciones/{id}/partos/{partoId}/anulacion`:** `{ motivo }` anula el parto y borra las fichas de sus terneros y sus pesadas al nacer, que quedan en el historial de cambios. 409 `terneros_con_datos` si algún ternero tiene otras pesadas, tratamientos, eventos o hijos.
+
+Un parto no se corrige ni se borra (trigger `proteger_parto`, migración `0015`); `comprobar_parto` exige madre hembra, padre macho y fecha en la vida de la madre. El parto cierra la gestación en curso: la función `gestacion()` lo cuenta como cierre, como el aborto y el diagnóstico negativo, y devuelve también el padre de la cubrición o inseminación.
+
+### Tratamientos
+
+Tratamientos sanitarios, en `src/rutas/tratamientos.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/tratamientos`:** los del animal, del más reciente al más antiguo, anulados incluidos.
+- **`POST /api/explotaciones/{id}/tratamientos`:** `{ animalIds, fecha, producto, motivo, diasSupresion, dosis?, via?, diagnostico?, aplicadoPorId? | aplicadoPorTexto?, lote?, observaciones? }` registra el mismo tratamiento a uno o varios animales (hasta 500): uno por animal, todos o ninguno. `motivo` es `enfermedad`, `vacuna`, `desparasitacion` u `otro`. Quien lo administra es una persona del equipo (`aplicadoPorId`) o un nombre escrito (`aplicadoPorTexto`, el veterinario).
+- **`POST /api/explotaciones/{id}/tratamientos/{tratamientoId}/anulacion`:** `{ motivo }` anula un tratamiento registrado por error (409 `ya_anulado` si ya lo está).
+- **`GET /api/explotaciones/{id}/tratamientos/opciones`:** las personas activas del equipo y los productos ya usados, para el formulario.
+
+Un tratamiento **no se corrige ni se borra**: se anula con un motivo y sigue en la ficha (trigger `proteger_tratamiento`, migración `0011`). La fecha, no futura y entre el nacimiento y la baja de cada animal, y quien lo administra, del equipo de la explotación (trigger `comprobar_tratamiento`).
+
+**Supresión:** `fin_supresion` es una columna generada, la fecha más los días de supresión: el día en que termina. Un animal está en supresión mientras alguno de sus tratamientos sin anular termine después de hoy. Las fichas de los animales llevan `finSupresion` (el más lejano, o `null`) y el listado se filtra con `?supresion=en_curso`.
 
 ## Historial de cambios
 
@@ -229,6 +264,9 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
 - `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
+- `test/partos.test.ts`: partos: gemelos con el padre de la cubrición, un nacido muerto y la pesada al nacer, cierre de la gestación, padre indicado sin gestación, crotal puesto después y que no se quita, validación y todo o nada, anulación que borra los terneros, terneros con datos, separación por explotación y restricciones.
+- `test/reproduccion.test.ts`: eventos reproductivos: cubrición a varias vacas y fecha prevista de parto, inseminación con dosis externa y diagnóstico positivo, cierre por diagnóstico negativo o aborto, filtro de gestantes, solo hembras y padre macho, destete con su pesada y en el historial de la madre, anulación con historial, separación por explotación y restricciones.
+- `test/tratamientos.test.ts`: tratamientos: registro a varios animales, quién lo administra, validación, animales y personas de otra explotación, fechas en la vida del animal, supresión en curso y su filtro, anulación con historial, opciones del formulario, separación por explotación, y que no se corrigen ni se borran.
 - `test/miembros.test.ts`: altas nuevas y existentes, roles, desactivación con y sin otras explotaciones, último administrador y restablecimiento de contraseñas (también por el propietario).
 - `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
 - `test/permisos.test.ts`: la matriz de permisos con usuarios y sesiones reales: módulos por rol, pertenencia, propietario, contraseña temporal, origen y la explotación aplicada a la Row-Level Security.
@@ -283,7 +321,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y nueve animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita vacía y cubierta después sin confirmar, Pinta con una cubrición anulada y el destete de la ternera de Marela; y partos: el de Marela de su ternera y el de Pinta hace cuatro días, de un ternero aún sin crotal. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API de Marela",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
@@ -355,7 +355,11 @@
             "format": "uuid"
           },
           "crotal": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Sin crotal solo mientras se le pone, en los 20 días siguientes al nacimiento"
           },
           "nombre": {
             "type": [
@@ -401,7 +405,10 @@
                 "format": "uuid"
               },
               "crotal": {
-                "type": "string"
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "nombre": {
                 "type": [
@@ -440,7 +447,10 @@
                 "format": "uuid"
               },
               "crotal": {
-                "type": "string"
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "nombre": {
                 "type": [
@@ -517,6 +527,55 @@
               "null"
             ]
           },
+          "partoId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Parto en que nació, si se registró"
+          },
+          "finSupresion": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Día en que termina la supresión en curso, si la hay"
+          },
+          "gestacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "desde": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date",
+                "description": "Cubrición o inseminación; null si solo hay un diagnóstico"
+              },
+              "fechaPrevistaParto": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date"
+              },
+              "confirmada": {
+                "type": "boolean",
+                "description": "Con un diagnóstico positivo"
+              }
+            },
+            "required": [
+              "desde",
+              "fechaPrevistaParto",
+              "confirmada"
+            ],
+            "description": "Gestación en curso, si la hay"
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -547,6 +606,9 @@
           "fechaBaja",
           "causaBaja",
           "observaciones",
+          "partoId",
+          "finSupresion",
+          "gestacion",
           "creadoEn",
           "modificadoEn"
         ]
@@ -569,7 +631,10 @@
                       "format": "uuid"
                     },
                     "crotal": {
-                      "type": "string"
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "nombre": {
                       "type": [
@@ -619,7 +684,10 @@
         "type": "object",
         "properties": {
           "crotal": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "ES041503456789"
           },
           "nombre": {
@@ -700,7 +768,6 @@
           }
         },
         "required": [
-          "crotal",
           "raza",
           "sexo",
           "fechaNacimiento"
@@ -739,7 +806,10 @@
         "type": "object",
         "properties": {
           "crotal": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "ES041503456789"
           },
           "nombre": {
@@ -893,6 +963,849 @@
         "required": [
           "fecha",
           "kg"
+        ]
+      },
+      "Tratamiento": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string"
+          },
+          "dosis": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "via": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "intramuscular",
+              "subcutanea",
+              "intravenosa",
+              "oral",
+              "topica",
+              "intramamaria",
+              "intrauterina",
+              "otra",
+              null
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "enum": [
+              "enfermedad",
+              "vacuna",
+              "desparasitacion",
+              "otro"
+            ]
+          },
+          "diagnostico": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "aplicadoPor": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Sin él, es un nombre escrito a mano"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ]
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diasSupresion": {
+            "type": "integer"
+          },
+          "finSupresion": {
+            "type": "string",
+            "format": "date",
+            "description": "Día en que termina la supresión: la fecha más los días"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "animalId",
+          "fecha",
+          "producto",
+          "dosis",
+          "via",
+          "motivo",
+          "diagnostico",
+          "aplicadoPor",
+          "lote",
+          "diasSupresion",
+          "finSupresion",
+          "observaciones",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "OpcionesTratamiento": {
+        "type": "object",
+        "properties": {
+          "personas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "nombre": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nombre"
+              ]
+            }
+          },
+          "productos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "personas",
+          "productos"
+        ]
+      },
+      "DatosTratamiento": {
+        "type": "object",
+        "properties": {
+          "animalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "producto": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Ivermectina 1 %"
+          },
+          "dosis": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "10 ml"
+          },
+          "via": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "intramuscular",
+              "subcutanea",
+              "intravenosa",
+              "oral",
+              "topica",
+              "intramamaria",
+              "intrauterina",
+              "otra",
+              null
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "enum": [
+              "enfermedad",
+              "vacuna",
+              "desparasitacion",
+              "otro"
+            ]
+          },
+          "diagnostico": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Parásitos internos"
+          },
+          "aplicadoPorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "aplicadoPorTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Veterinaria de la ADS"
+          },
+          "lote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diasSupresion": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 999
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "animalIds",
+          "fecha",
+          "producto",
+          "motivo",
+          "diasSupresion"
+        ]
+      },
+      "DatosAnulacion": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Registrado en el animal equivocado"
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "EventoReproductivo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "cubricion",
+              "inseminacion",
+              "diagnostico",
+              "aborto",
+              "destete"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animal": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ],
+            "description": "En el historial de una vaca, el ternero destetado"
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fechaPrevistaParto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Cubrición e inseminación: la fecha más 283 días"
+          },
+          "metodo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ecografia",
+              "palpacion",
+              null
+            ]
+          },
+          "resultado": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "gestante",
+              "vacia",
+              null
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "fecha",
+          "animalId",
+          "animal",
+          "padreId",
+          "padre",
+          "padreTexto",
+          "fechaPrevistaParto",
+          "metodo",
+          "resultado",
+          "observaciones",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosEvento": {
+        "type": "object",
+        "properties": {
+          "animalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "cubricion",
+              "inseminacion",
+              "diagnostico",
+              "aborto",
+              "destete"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Dosis RG-1187"
+          },
+          "metodo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ecografia",
+              "palpacion",
+              null
+            ]
+          },
+          "resultado": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "gestante",
+              "vacia",
+              null
+            ]
+          },
+          "pesoDestete": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 2000
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "animalIds",
+          "tipo",
+          "fecha"
+        ]
+      },
+      "DatosAnulacionEvento": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Registrado en la vaca equivocada"
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "Parto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "madreId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "con_ayuda",
+              "cesarea"
+            ]
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "terneros": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nombre": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "sexo": {
+                  "type": "string",
+                  "enum": [
+                    "hembra",
+                    "macho"
+                  ]
+                },
+                "estado": {
+                  "type": "string",
+                  "enum": [
+                    "activo",
+                    "vendido",
+                    "muerto",
+                    "baja"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "nombre",
+                "sexo",
+                "estado"
+              ]
+            },
+            "description": "Sus fichas; vacío si el parto está anulado, porque se borran"
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "madreId",
+          "fecha",
+          "tipo",
+          "padreId",
+          "padre",
+          "padreTexto",
+          "observaciones",
+          "terneros",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosParto": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "con_ayuda",
+              "cesarea"
+            ],
+            "default": "normal"
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "terneros": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "crotal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Opcional: se le puede poner en los 20 días siguientes"
+                },
+                "sexo": {
+                  "type": "string",
+                  "enum": [
+                    "hembra",
+                    "macho"
+                  ]
+                },
+                "estado": {
+                  "type": "string",
+                  "enum": [
+                    "vivo",
+                    "muerto"
+                  ],
+                  "default": "vivo"
+                },
+                "raza": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "peso": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "exclusiveMinimum": 0,
+                  "maximum": 2000,
+                  "description": "Peso al nacer, en kg"
+                }
+              },
+              "required": [
+                "sexo",
+                "raza"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "fecha",
+          "terneros"
+        ]
+      },
+      "DatosAnulacionParto": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Registrado en la vaca equivocada"
+          }
+        },
+        "required": [
+          "motivo"
         ]
       },
       "ExplotacionPlataforma": {
@@ -1830,6 +2743,45 @@
             "required": false,
             "name": "sexo",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo los animales con un periodo de supresión en curso"
+            },
+            "required": false,
+            "description": "Solo los animales con un periodo de supresión en curso",
+            "name": "supresion",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sin"
+              ],
+              "description": "Solo los animales que aún no tienen crotal"
+            },
+            "required": false,
+            "description": "Solo los animales que aún no tienen crotal",
+            "name": "crotal",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto"
+            },
+            "required": false,
+            "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto",
+            "name": "gestacion",
+            "in": "query"
           }
         ],
         "responses": {
@@ -2700,6 +3652,899 @@
           },
           "404": {
             "description": "No existe la explotación, el animal o la pesada (pesada_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/tratamientos": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Tratamientos de un animal",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo, anulados incluidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tratamiento"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tratamientos/opciones": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Personas del equipo y productos ya usados, para el formulario",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordenados por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesTratamiento"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tratamientos": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar un tratamiento a uno o varios animales",
+        "description": "Crea un tratamiento por animal, todos con los mismos datos.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosTratamiento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrados, en el orden de los animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tratamiento"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, animales de otra explotación o fecha fuera de su vida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tratamientos/{tratamientoId}/anulacion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Anular un tratamiento registrado por error",
+        "description": "No se borra: queda en la ficha como anulado, con el motivo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "tratamientoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tratamiento"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el tratamiento (tratamiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/reproduccion": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Historial reproductivo de un animal",
+        "description": "Sus eventos y los destetes de sus hijos.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo, anulados incluidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoReproductivo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/reproduccion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar un evento reproductivo a uno o varios animales",
+        "description": "Crea un evento por animal, todos con los mismos datos. Un destete con peso guarda también la pesada al destete.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosEvento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoReproductivo"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, machos en un evento de hembra, animales de otra explotación o fecha fuera de su vida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/reproduccion/{eventoId}/anulacion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Anular un evento reproductivo registrado por error",
+        "description": "No se borra: queda en el historial como anulado, con el motivo, y deja de contar para la gestación.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "eventoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacionEvento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoReproductivo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el evento (evento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/partos": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Partos de una vaca",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo, anulados incluidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Parto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar un parto y crear las fichas de sus terneros",
+        "description": "Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado \"muerto\". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosParto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrado, con sus terneros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, madre que no es hembra o fecha fuera de su vida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El crotal de un ternero ya está en uso (crotal_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/partos/{partoId}/anulacion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Anular un parto registrado por error",
+        "description": "Queda en el historial como anulado y se borran las fichas de sus terneros, que quedan en el historial de cambios. No se puede si algún ternero tiene ya otros datos.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "partoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacionParto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el parto (parto_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado, o algún ternero tiene pesadas, tratamientos, eventos o hijos (ya_anulado, terneros_con_datos)",
             "content": {
               "application/json": {
                 "schema": {
