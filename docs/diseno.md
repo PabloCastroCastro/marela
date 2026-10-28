@@ -163,6 +163,13 @@ Decisiones (GH-23):
 - Régimen (propiedad, arrendamiento...)
 - Observaciones
 
+Decisiones (GH-25):
+
+- Una finca junta una o varias parcelas, cada una con su referencia SIGPAC (provincia, municipio, polígono, parcela y recinto) o su referencia catastral, y su superficie. La superficie de la finca es la suma de la de sus parcelas.
+- Un recinto SIGPAC está en una sola finca de la explotación, y no hay dos fincas con el mismo nombre.
+- Régimen: propiedad, arrendamiento, aparcería, cesión u otro.
+- Una finca no se borra: se desactiva y sale de la lista de activas; sus datos y su historial se conservan y se puede reactivar.
+
 ### Eventos de finca
 
 - Siembra, abono, fitosanitarios, cosecha, pastoreo y otras labores (siega, laboreo, riego...).

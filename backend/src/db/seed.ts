@@ -9,8 +9,10 @@ import {
   account,
   animales,
   eventosReproductivos,
+  fincas,
   member,
   organization,
+  parcelas,
   partos,
   pesos,
   type RolExplotacion,
@@ -47,6 +49,8 @@ const PESADA = 6
 const TRATAMIENTO = 7
 const EVENTO = 8
 const PARTO = 9
+const FINCA = 10
+const PARCELA = 11
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -458,7 +462,81 @@ await enExplotacion(
   },
 )
 
+// Fincas de A Veiga (GH-25): dos en propiedad, una arrendada y una antigua ya desactivada
+const fincasVeiga = [
+  {
+    n: 1,
+    nombre: 'Agra de abaixo',
+    regimen: 'propiedad' as const,
+    parcelas: [
+      { sigpac: ['36', '24', '12', '45', '1'], superficie: 2.3456 },
+      { sigpac: ['36', '24', '12', '46', '1'], superficie: 1.1 },
+    ],
+  },
+  {
+    n: 2,
+    nombre: 'Chousa do monte',
+    regimen: 'arrendamiento' as const,
+    observaciones: 'Arrendada a Manuel Rey hasta 2030',
+    parcelas: [
+      {
+        sigpac: ['36', '24', '15', '102', '2'],
+        catastral: '36024A015001020000KP',
+        superficie: 4.5,
+      },
+    ],
+  },
+  {
+    n: 3,
+    nombre: 'Prado da fonte',
+    regimen: 'propiedad' as const,
+    parcelas: [{ sigpac: ['36', '24', '12', '80', '3'], superficie: 0.8721 }],
+  },
+  {
+    n: 4,
+    nombre: 'Leira vella',
+    regimen: 'cesion' as const,
+    activa: false,
+    parcelas: [{ catastral: '36024A012000950000KS', superficie: 0.35 }],
+  },
+]
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    let numero = 0
+    for (const { n, parcelas: suyas, ...f } of fincasVeiga) {
+      await tx
+        .insert(fincas)
+        .values({ id: sid(FINCA, n), municipio: 'Lalín', provincia: 'Pontevedra', ...f })
+        .onConflictDoNothing()
+      for (const { sigpac, catastral, superficie } of suyas as {
+        sigpac?: string[]
+        catastral?: string
+        superficie: number
+      }[]) {
+        numero += 1
+        const [provincia, municipio, poligono, parcela, recinto] = sigpac ?? []
+        await tx
+          .insert(parcelas)
+          .values({
+            id: sid(PARCELA, numero),
+            fincaId: sid(FINCA, n),
+            provincia,
+            municipio,
+            poligono,
+            parcela,
+            recinto,
+            referenciaCatastral: catastral ?? null,
+            superficie,
+          })
+          .onConflictDoNothing()
+      }
+    }
+  },
+)
+
 await pool.end()
 console.log(
-  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length + 1} animales (contraseña ${CONTRASENA})`,
+  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones, ${animalesVeiga.length + 1} animales y ${fincasVeiga.length} fincas (contraseña ${CONTRASENA})`,
 )

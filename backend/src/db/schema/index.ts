@@ -1,5 +1,6 @@
 export * from './animales.js'
 export * from './auth.js'
+export * from './fincas.js'
 export * from './pesos.js'
 export * from './reproduccion.js'
 export * from './tratamientos.js'
