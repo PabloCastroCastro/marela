@@ -31,7 +31,12 @@ export const TIPOS_BAJA: Record<TipoBaja, string> = {
 // Todas las consultas de animales cuelgan de esta clave, para refrescarlas juntas tras un cambio
 export const CLAVE_ANIMALES = ['animales'] as const
 
-export type FiltrosAnimales = { q?: string; estado?: EstadoAnimal; sexo?: Sexo }
+export type FiltrosAnimales = {
+  q?: string
+  estado?: EstadoAnimal
+  sexo?: Sexo
+  supresion?: 'en_curso'
+}
 
 export const useAnimales = (explotacionId: string, filtros: FiltrosAnimales = {}) =>
   useQuery({

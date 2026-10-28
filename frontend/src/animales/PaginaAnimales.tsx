@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { ListChecks, Plus, Syringe } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton } from '../componentes/Boton'
@@ -11,39 +11,61 @@ import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { edad, fecha } from '../formato'
 import estilos from './Animales.module.css'
-import { type EstadoAnimal, SEXOS, type Sexo, useAnimales } from './datos'
+import { type EstadoAnimal, identificacion, SEXOS, type Sexo, useAnimales } from './datos'
 import { FormularioAnimal } from './FormularioAnimal'
+import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaEstado } from './InsigniaEstado'
+import { InsigniaSupresion } from './InsigniaSupresion'
 
 type FiltroEstado = EstadoAnimal | 'todos'
 type FiltroSexo = Sexo | 'todos'
+type FiltroSupresion = 'en_curso' | 'todos'
 
-// Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15)
+// Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15). Con
+// "Seleccionar" se marcan varios para registrarles un tratamiento a la vez (GH-20).
 export function PaginaAnimales() {
   const explotacion = useExplotacionActual()
   const navegar = useNavigate()
   const [texto, setTexto] = useState('')
   const [estado, setEstado] = useState<FiltroEstado>('activo')
   const [sexo, setSexo] = useState<FiltroSexo>('todos')
+  const [supresion, setSupresion] = useState<FiltroSupresion>('todos')
   const [anadiendo, setAnadiendo] = useState(false)
+  // null: sin modo selección
+  const [seleccion, setSeleccion] = useState<Set<string> | null>(null)
+  const [tratando, setTratando] = useState(false)
 
-  const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
+  const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos' || supresion !== 'todos'
   const animales = useAnimales(explotacion.id, {
     q: texto || undefined,
     estado: estado === 'todos' ? undefined : estado,
     sexo: sexo === 'todos' ? undefined : sexo,
+    supresion: supresion === 'todos' ? undefined : supresion,
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/animales/${id}`)
+  // Solo cuentan los marcados que siguen en la lista con los filtros de ahora
+  const seleccionados = (animales.data ?? []).filter((a) => seleccion?.has(a.id))
 
   return (
     <section className={estilos.pagina}>
       <div className={estilos.titulo}>
         <h1>Animales</h1>
-        <div className={estilos.soloAncho}>
-          <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
-            Añadir animal
-          </Boton>
-        </div>
+        {!seleccion && (
+          <div className={estilos.acciones}>
+            <Boton
+              variante="secundario"
+              icono={<ListChecks aria-hidden size={20} />}
+              onClick={() => setSeleccion(new Set())}
+            >
+              Seleccionar
+            </Boton>
+            <div className={estilos.soloAncho}>
+              <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
+                Añadir animal
+              </Boton>
+            </div>
+          </div>
+        )}
       </div>
 
       <BarraFiltros
@@ -72,6 +94,16 @@ export function PaginaAnimales() {
           valor={sexo}
           porDefecto="todos"
           alCambiar={setSexo}
+        />
+        <FiltroDesplegable
+          etiqueta="Supresión"
+          opciones={[
+            { valor: 'todos', texto: 'Todos' },
+            { valor: 'en_curso', texto: 'En curso' },
+          ]}
+          valor={supresion}
+          porDefecto="todos"
+          alCambiar={setSupresion}
         />
       </BarraFiltros>
 
@@ -107,6 +139,11 @@ export function PaginaAnimales() {
             filas={animales.data}
             claveFila={(a) => a.id}
             alSeleccionar={(a) => abrir(a.id)}
+            seleccion={
+              seleccion
+                ? { claves: seleccion, alCambiar: setSeleccion, etiquetaFila: identificacion }
+                : undefined
+            }
             columnas={[
               {
                 clave: 'crotal',
@@ -141,7 +178,12 @@ export function PaginaAnimales() {
               {
                 clave: 'estado',
                 titulo: 'Estado',
-                valor: (a) => <InsigniaEstado estado={a.estado} />,
+                valor: (a) => (
+                  <span className={estilos.insignias}>
+                    <InsigniaEstado estado={a.estado} />
+                    {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} />}
+                  </span>
+                ),
                 ordenar: (a) => a.estado,
               },
             ]}
@@ -149,11 +191,40 @@ export function PaginaAnimales() {
         </>
       )}
 
-      <BotonFlotante
-        etiqueta="Añadir animal"
-        icono={<Plus aria-hidden size={26} />}
-        alPulsar={() => setAnadiendo(true)}
-      />
+      {seleccion ? (
+        <div className={estilos.barraSeleccion}>
+          <p role="status">
+            {seleccionados.length === 1
+              ? '1 seleccionado'
+              : `${seleccionados.length} seleccionados`}
+          </p>
+          <div className={estilos.acciones}>
+            <Boton variante="texto" onClick={() => setSeleccion(null)}>
+              Cancelar
+            </Boton>
+            <Boton
+              icono={<Syringe aria-hidden size={20} />}
+              disabled={seleccionados.length === 0}
+              onClick={() => setTratando(true)}
+            >
+              Tratar
+            </Boton>
+          </div>
+        </div>
+      ) : (
+        <BotonFlotante
+          etiqueta="Añadir animal"
+          icono={<Plus aria-hidden size={26} />}
+          alPulsar={() => setAnadiendo(true)}
+        />
+      )}
+      {tratando && (
+        <FormularioTratamiento
+          animales={seleccionados}
+          alCerrar={() => setTratando(false)}
+          alGuardar={() => setSeleccion(null)}
+        />
+      )}
       <FormularioAnimal
         abierto={anadiendo}
         alCerrar={() => setAnadiendo(false)}

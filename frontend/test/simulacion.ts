@@ -94,6 +94,28 @@ export type PesadaSimulada = {
   momento: 'nacimiento' | 'destete' | 'venta' | 'otro'
 }
 
+export type TratamientoSimulado = {
+  id: string
+  animalId: string
+  fecha: string
+  producto: string
+  dosis: string | null
+  via: string | null
+  motivo: 'enfermedad' | 'vacuna' | 'desparasitacion' | 'otro'
+  diagnostico: string | null
+  aplicadoPor: { id: string | null; nombre: string } | null
+  lote: string | null
+  diasSupresion: number
+  observaciones: string | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
+// Día en que termina la supresión: la fecha más los días
+const finSupresion = (t: TratamientoSimulado) =>
+  new Date(Date.parse(`${t.fecha}T00:00:00Z`) + t.diasSupresion * 86_400_000)
+    .toISOString()
+    .slice(0, 10)
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -110,6 +132,7 @@ export type EstadoSimulado = {
   miembros: MiembroSimulado[]
   animales: AnimalSimulado[]
   pesadas: PesadaSimulada[]
+  tratamientos: TratamientoSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -213,6 +236,23 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
       { id: 'p1', animalId: 'a3', fecha: '2026-02-11', kg: 38, momento: 'nacimiento' },
       { id: 'p2', animalId: 'a3', fecha: '2026-04-12', kg: 98, momento: 'otro' },
     ],
+    tratamientos: [
+      {
+        id: 't1',
+        animalId: 'a1',
+        fecha: '2026-04-10',
+        producto: 'Ivermectina 1 %',
+        dosis: '10 ml',
+        via: 'subcutanea',
+        motivo: 'desparasitacion',
+        diagnostico: null,
+        aplicadoPor: { id: 'u1', nombre: 'Ana Varela' },
+        lote: 'L2403A',
+        diasSupresion: 49,
+        observaciones: null,
+        anulacion: null,
+      },
+    ],
     ...cambios,
   }
 }
@@ -226,6 +266,8 @@ const EQUIPO = /^\/api\/explotaciones\/([^/]+)\/miembros(?:\/([^/]+))?(?:\/([^/]
 const ANIMALES = /^\/api\/explotaciones\/([^/]+)\/animales(?:\/([^/]+))?$/
 const BAJA = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/baja$/
 const PESOS = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/pesos(?:\/([^/]+))?$/
+const TRATAMIENTOS_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/tratamientos$/
+const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -295,6 +337,75 @@ export function simularApi(estado: EstadoSimulado) {
         provincia: e.provincia ?? null,
         modulos: MODULOS[e.rol],
       })
+    }
+
+    const tratamiento = (t: TratamientoSimulado) => ({
+      ...t,
+      finSupresion: finSupresion(t),
+      creadoEn: '2026-10-01T10:00:00.000Z',
+      modificadoEn: '2026-10-01T10:00:00.000Z',
+    })
+    if (ruta.endsWith('/tratamientos/opciones')) {
+      return json({
+        personas: estado.miembros
+          .filter((m) => m.activo)
+          .map((m) => ({ id: m.usuarioId, nombre: m.nombre })),
+        productos: [...new Set(estado.tratamientos.map((t) => t.producto))].sort(),
+      })
+    }
+    const deUnAnimal = ruta.match(TRATAMIENTOS_ANIMAL)
+    if (deUnAnimal) {
+      return json(
+        estado.tratamientos
+          .filter((t) => t.animalId === deUnAnimal[1])
+          .sort((x, y) => y.fecha.localeCompare(x.fecha))
+          .map(tratamiento),
+      )
+    }
+    const deTratamientos = ruta.match(TRATAMIENTOS)
+    if (deTratamientos) {
+      const [, tratamientoId] = deTratamientos
+      if (tratamientoId) {
+        const t = estado.tratamientos.find((x) => x.id === tratamientoId)
+        if (!t) return errorApi(404, 'tratamiento_no_encontrado')
+        if (t.anulacion) return errorApi(409, 'ya_anulado')
+        t.anulacion = {
+          en: '2026-10-20T10:00:00.000Z',
+          por: estado.usuario.name,
+          motivo: cuerpo.motivo,
+        }
+        return json(tratamiento(t))
+      }
+      if (!cuerpo.producto?.trim()) {
+        return errorApi(400, 'validacion', [
+          { campo: 'producto', mensaje: 'Indica el producto o medicamento' },
+        ])
+      }
+      const persona = estado.miembros.find((m) => m.usuarioId === cuerpo.aplicadoPorId)
+      const creados = (cuerpo.animalIds as string[]).map((animalId, i) => {
+        const t: TratamientoSimulado = {
+          id: `t${estado.tratamientos.length + i + 1}`,
+          animalId,
+          fecha: cuerpo.fecha,
+          producto: cuerpo.producto,
+          dosis: cuerpo.dosis || null,
+          via: cuerpo.via ?? null,
+          motivo: cuerpo.motivo,
+          diagnostico: cuerpo.diagnostico || null,
+          aplicadoPor: persona
+            ? { id: persona.usuarioId, nombre: persona.nombre }
+            : cuerpo.aplicadoPorTexto
+              ? { id: null, nombre: cuerpo.aplicadoPorTexto }
+              : null,
+          lote: cuerpo.lote || null,
+          diasSupresion: cuerpo.diasSupresion,
+          observaciones: cuerpo.observaciones || null,
+          anulacion: null,
+        }
+        return t
+      })
+      estado.tratamientos.push(...creados)
+      return json(creados.map(tratamiento), 201)
     }
 
     const dePesos = ruta.match(PESOS)
@@ -389,8 +500,17 @@ export function simularApi(estado: EstadoSimulado) {
         const p = estado.animales.find((x) => x.id === id)
         return p ? { id: p.id, crotal: p.crotal, nombre: p.nombre } : null
       }
+      const hoy = new Date().toISOString().slice(0, 10)
+      const supresion = (a: AnimalSimulado) =>
+        estado.tratamientos
+          .filter((t) => t.animalId === a.id && !t.anulacion)
+          .map(finSupresion)
+          .filter((fin) => fin > hoy)
+          .sort()
+          .at(-1) ?? null
       const ficha = (a: AnimalSimulado) => ({
         ...a,
+        finSupresion: supresion(a),
         madre: resumen(a.madreId),
         padre: resumen(a.padreId),
         creadoEn: '2026-10-01T10:00:00.000Z',
@@ -430,6 +550,7 @@ export function simularApi(estado: EstadoSimulado) {
           estado.animales
             .filter((a) => !q.get('estado') || a.estado === q.get('estado'))
             .filter((a) => !q.get('sexo') || a.sexo === q.get('sexo'))
+            .filter((a) => !q.get('supresion') || supresion(a) !== null)
             .filter(
               (a) =>
                 !texto ||

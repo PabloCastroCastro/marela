@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
+import { Casilla } from './Casilla'
 import { clases } from './clases'
 import estilos from './Tabla.module.css'
 
@@ -15,6 +16,8 @@ import estilos from './Tabla.module.css'
 //     ]}
 //     alSeleccionar={(a) => navegar(`/animales/${a.id}`)}
 //   />
+//
+// Con `seleccion`, cada fila lleva una casilla y pulsarla la marca en lugar de abrirla.
 
 export type Columna<T> = {
   clave: string
@@ -39,6 +42,12 @@ type Props<T> = {
   ordenInicial?: Orden
   // Si se indica, cada fila abre su detalle
   alSeleccionar?: (fila: T) => void
+  // Modo selección: las claves de las filas marcadas y el nombre de cada fila para su casilla
+  seleccion?: {
+    claves: ReadonlySet<string>
+    alCambiar: (claves: Set<string>) => void
+    etiquetaFila: (fila: T) => string
+  }
 }
 
 const comparar = (a: unknown, b: unknown) => {
@@ -57,7 +66,8 @@ export function Tabla<T>({
   filas,
   claveFila,
   ordenInicial,
-  alSeleccionar,
+  alSeleccionar: alAbrir,
+  seleccion,
 }: Props<T>) {
   const [orden, setOrden] = useState<Orden | undefined>(ordenInicial)
 
@@ -83,6 +93,24 @@ export function Tabla<T>({
         : { clave, sentido: 'asc' },
     )
 
+  const marcada = (fila: T) => seleccion?.claves.has(claveFila(fila)) ?? false
+  const alternar = (fila: T) => {
+    if (!seleccion) return
+    const claves = new Set(seleccion.claves)
+    const clave = claveFila(fila)
+    if (claves.has(clave)) claves.delete(clave)
+    else claves.add(clave)
+    seleccion.alCambiar(claves)
+  }
+  const todas = filas.length > 0 && filas.every(marcada)
+  const alguna = filas.some(marcada)
+  // En modo selección, pulsar la fila la marca; la casilla ya lo hace por sí sola
+  const alSeleccionar = seleccion
+    ? (fila: T, e?: { target: EventTarget }) => {
+        if (!(e?.target instanceof Element && e.target.closest('label'))) alternar(fila)
+      }
+    : alAbrir
+
   const principal = columnas.find((c) => c.principal) ?? columnas[0]
   const resto = columnas.filter((c) => c !== principal)
 
@@ -91,6 +119,19 @@ export function Tabla<T>({
       <table className={estilos.tabla} aria-label={etiqueta}>
         <thead>
           <tr>
+            {seleccion && (
+              <th scope="col" className={estilos.columnaCasilla}>
+                <Casilla
+                  etiqueta="Seleccionar todos"
+                  ocultarEtiqueta
+                  checked={todas}
+                  indeterminada={alguna && !todas}
+                  onChange={() =>
+                    seleccion.alCambiar(todas ? new Set() : new Set(filas.map(claveFila)))
+                  }
+                />
+              </th>
+            )}
             {columnas.map((c) => {
               const sentido = orden?.clave === c.clave ? orden.sentido : undefined
               return (
@@ -129,19 +170,33 @@ export function Tabla<T>({
           {ordenadas.map((fila) => (
             <tr
               key={claveFila(fila)}
-              className={clases(alSeleccionar && estilos.seleccionable)}
-              // Con teclado se usa el botón de la columna principal; el clic en la fila es un atajo
-              onClick={alSeleccionar ? () => alSeleccionar(fila) : undefined}
+              className={clases(
+                alSeleccionar && estilos.seleccionable,
+                marcada(fila) && estilos.marcada,
+              )}
+              // Con teclado se usa el botón de la columna principal, o la casilla; el clic en la fila
+              // es un atajo
+              onClick={alSeleccionar ? (e) => alSeleccionar(fila, e) : undefined}
             >
+              {seleccion && (
+                <td className={estilos.columnaCasilla}>
+                  <Casilla
+                    etiqueta={`Seleccionar ${seleccion.etiquetaFila(fila)}`}
+                    ocultarEtiqueta
+                    checked={marcada(fila)}
+                    onChange={() => alternar(fila)}
+                  />
+                </td>
+              )}
               {columnas.map((c) => (
                 <td key={c.clave} className={clases(c.numerica && estilos.numerica)}>
-                  {c === principal && alSeleccionar ? (
+                  {c === principal && alAbrir && !seleccion ? (
                     <button
                       type="button"
                       className={estilos.enlace}
                       onClick={(e) => {
                         e.stopPropagation()
-                        alSeleccionar(fila)
+                        alAbrir(fila)
                       }}
                     >
                       {c.valor(fila)}
@@ -175,7 +230,26 @@ export function Tabla<T>({
           )
           return (
             <li key={claveFila(fila)}>
-              {alSeleccionar ? (
+              {seleccion ? (
+                // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: con teclado se usa la casilla; el clic en la tarjeta es un atajo
+                <div
+                  className={clases(
+                    estilos.tarjeta,
+                    estilos.tarjetaBoton,
+                    marcada(fila) && estilos.marcada,
+                  )}
+                  onClick={(e) => alSeleccionar?.(fila, e)}
+                >
+                  <Casilla
+                    etiqueta={`Seleccionar ${seleccion.etiquetaFila(fila)}`}
+                    ocultarEtiqueta
+                    checked={marcada(fila)}
+                    onChange={() => alternar(fila)}
+                    className={estilos.casillaTarjeta}
+                  />
+                  <span className={estilos.contenido}>{contenido}</span>
+                </div>
+              ) : alSeleccionar ? (
                 <button
                   type="button"
                   className={clases(estilos.tarjeta, estilos.tarjetaBoton)}

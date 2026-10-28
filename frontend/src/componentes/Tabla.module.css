@@ -157,3 +157,26 @@
     cursor: pointer;
   }
 }
+
+/* Modo selección: la casilla al inicio de la fila o de la tarjeta, y la fila marcada destacada */
+.marcada,
+.marcada td {
+  border-color: var(--color-primario);
+  background: var(--color-primario-suave);
+}
+
+.casillaTarjeta {
+  flex: none;
+  margin: calc(-1 * var(--espacio-2)) 0 calc(-1 * var(--espacio-2)) calc(-1 * var(--espacio-3));
+}
+
+.columnaCasilla {
+  width: var(--altura-control);
+}
+
+@media (min-width: 40rem) {
+  .tabla th.columnaCasilla,
+  .tabla td.columnaCasilla {
+    padding: 0;
+  }
+}

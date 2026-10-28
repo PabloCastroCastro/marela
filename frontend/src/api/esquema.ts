@@ -644,6 +644,8 @@ export interface paths {
                     q?: string;
                     estado?: "activo" | "vendido" | "muerto" | "baja";
                     sexo?: "hembra" | "macho";
+                    /** @description Solo los animales con un periodo de supresión en curso */
+                    supresion?: "en_curso";
                 };
                 header?: never;
                 path: {
@@ -1345,6 +1347,309 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/tratamientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tratamientos de un animal */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Del más reciente al más antiguo, anulados incluidos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Tratamiento"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/tratamientos/opciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personas del equipo y productos ya usados, para el formulario */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Ordenados por nombre */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OpcionesTratamiento"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/tratamientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registrar un tratamiento a uno o varios animales
+         * @description Crea un tratamiento por animal, todos con los mismos datos.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosTratamiento"];
+                };
+            };
+            responses: {
+                /** @description Registrados, en el orden de los animales */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Tratamiento"][];
+                    };
+                };
+                /** @description Datos no válidos, animales de otra explotación o fecha fuera de su vida (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/tratamientos/{tratamientoId}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular un tratamiento registrado por error
+         * @description No se borra: queda en la ficha como anulado, con el motivo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    tratamientoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAnulacion"];
+                };
+            };
+            responses: {
+                /** @description Anulado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Tratamiento"];
+                    };
+                };
+                /** @description Falta el motivo (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el tratamiento (tratamiento_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya está anulado (ya_anulado) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -1774,6 +2079,11 @@ export interface components {
             fechaBaja: string | null;
             causaBaja: string | null;
             observaciones: string | null;
+            /**
+             * Format: date
+             * @description Día en que termina la supresión en curso, si la hay
+             */
+            finSupresion: string | null;
             /** Format: date-time */
             creadoEn: string;
             /** Format: date-time */
@@ -1880,6 +2190,81 @@ export interface components {
              * @enum {string}
              */
             momento: "nacimiento" | "destete" | "venta" | "otro";
+        };
+        Tratamiento: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            animalId: string;
+            /** Format: date */
+            fecha: string;
+            producto: string;
+            dosis: string | null;
+            /** @enum {string|null} */
+            via: "intramuscular" | "subcutanea" | "intravenosa" | "oral" | "topica" | "intramamaria" | "intrauterina" | "otra" | null;
+            /** @enum {string} */
+            motivo: "enfermedad" | "vacuna" | "desparasitacion" | "otro";
+            diagnostico: string | null;
+            aplicadoPor: {
+                /**
+                 * Format: uuid
+                 * @description Sin él, es un nombre escrito a mano
+                 */
+                id: string | null;
+                nombre: string;
+            } | null;
+            lote: string | null;
+            diasSupresion: number;
+            /**
+             * Format: date
+             * @description Día en que termina la supresión: la fecha más los días
+             */
+            finSupresion: string;
+            observaciones: string | null;
+            anulacion: {
+                /** Format: date-time */
+                en: string;
+                por: string;
+                motivo: string;
+            } | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        OpcionesTratamiento: {
+            personas: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+            }[];
+            productos: string[];
+        };
+        DatosTratamiento: {
+            animalIds: string[];
+            /** Format: date */
+            fecha: string;
+            /** @example Ivermectina 1 % */
+            producto: string;
+            /** @example 10 ml */
+            dosis?: string | null;
+            /** @enum {string|null} */
+            via?: "intramuscular" | "subcutanea" | "intravenosa" | "oral" | "topica" | "intramamaria" | "intrauterina" | "otra" | null;
+            /** @enum {string} */
+            motivo: "enfermedad" | "vacuna" | "desparasitacion" | "otro";
+            /** @example Parásitos internos */
+            diagnostico?: string | null;
+            /** Format: uuid */
+            aplicadoPorId?: string | null;
+            /** @example Veterinaria de la ADS */
+            aplicadoPorTexto?: string | null;
+            lote?: string | null;
+            diasSupresion: number;
+            observaciones?: string | null;
+        };
+        DatosAnulacion: {
+            /** @example Registrado en el animal equivocado */
+            motivo: string;
         };
         ExplotacionPlataforma: {
             /** Format: uuid */
