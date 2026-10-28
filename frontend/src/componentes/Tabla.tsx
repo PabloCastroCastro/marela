@@ -1,5 +1,12 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronRight } from 'lucide-react'
-import { type ReactNode, useMemo, useState } from 'react'
+import {
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Casilla } from './Casilla'
 import { clases } from './clases'
 import estilos from './Tabla.module.css'
@@ -17,7 +24,9 @@ import estilos from './Tabla.module.css'
 //     alSeleccionar={(a) => navegar(`/animales/${a.id}`)}
 //   />
 //
-// Con `seleccion`, cada fila lleva una casilla y pulsarla la marca en lugar de abrirla.
+// Con `seleccion` se pueden marcar varias filas: en la tabla, con una casilla en cada fila; en el
+// móvil, manteniendo pulsada una tarjeta. Mientras haya alguna marcada, tocar una tarjeta la marca
+// en lugar de abrirla.
 
 export type Columna<T> = {
   clave: string
@@ -42,7 +51,7 @@ type Props<T> = {
   ordenInicial?: Orden
   // Si se indica, cada fila abre su detalle
   alSeleccionar?: (fila: T) => void
-  // Modo selección: las claves de las filas marcadas y el nombre de cada fila para su casilla
+  // Selección de varias filas: las claves de las marcadas y el nombre de cada fila para su casilla
   seleccion?: {
     claves: ReadonlySet<string>
     alCambiar: (claves: Set<string>) => void
@@ -60,13 +69,17 @@ const comparar = (a: unknown, b: unknown) => {
   return Number(a) - Number(b)
 }
 
+// El clic en una casilla ya la marca: la fila o la tarjeta no hacen nada más
+const enCasilla = (e: { target: EventTarget }) =>
+  e.target instanceof Element && e.target.closest('label') !== null
+
 export function Tabla<T>({
   etiqueta,
   columnas,
   filas,
   claveFila,
   ordenInicial,
-  alSeleccionar: alAbrir,
+  alSeleccionar,
   seleccion,
 }: Props<T>) {
   const [orden, setOrden] = useState<Orden | undefined>(ordenInicial)
@@ -104,12 +117,19 @@ export function Tabla<T>({
   }
   const todas = filas.length > 0 && filas.every(marcada)
   const alguna = filas.some(marcada)
-  // En modo selección, pulsar la fila la marca; la casilla ya lo hace por sí sola
-  const alSeleccionar = seleccion
-    ? (fila: T, e?: { target: EventTarget }) => {
-        if (!(e?.target instanceof Element && e.target.closest('label'))) alternar(fila)
-      }
-    : alAbrir
+  const seleccionando = (seleccion?.claves.size ?? 0) > 0
+  const pulsacion = usePulsacionLarga(alternar)
+
+  const casilla = (fila: T, className?: string) =>
+    seleccion && (
+      <Casilla
+        etiqueta={`Seleccionar ${seleccion.etiquetaFila(fila)}`}
+        ocultarEtiqueta
+        checked={marcada(fila)}
+        onChange={() => alternar(fila)}
+        className={className}
+      />
+    )
 
   const principal = columnas.find((c) => c.principal) ?? columnas[0]
   const resto = columnas.filter((c) => c !== principal)
@@ -174,29 +194,19 @@ export function Tabla<T>({
                 alSeleccionar && estilos.seleccionable,
                 marcada(fila) && estilos.marcada,
               )}
-              // Con teclado se usa el botón de la columna principal, o la casilla; el clic en la fila
-              // es un atajo
-              onClick={alSeleccionar ? (e) => alSeleccionar(fila, e) : undefined}
+              // Con teclado se usa el botón de la columna principal; el clic en la fila es un atajo
+              onClick={alSeleccionar ? (e) => !enCasilla(e) && alSeleccionar(fila) : undefined}
             >
-              {seleccion && (
-                <td className={estilos.columnaCasilla}>
-                  <Casilla
-                    etiqueta={`Seleccionar ${seleccion.etiquetaFila(fila)}`}
-                    ocultarEtiqueta
-                    checked={marcada(fila)}
-                    onChange={() => alternar(fila)}
-                  />
-                </td>
-              )}
+              {seleccion && <td className={estilos.columnaCasilla}>{casilla(fila)}</td>}
               {columnas.map((c) => (
                 <td key={c.clave} className={clases(c.numerica && estilos.numerica)}>
-                  {c === principal && alAbrir && !seleccion ? (
+                  {c === principal && alSeleccionar ? (
                     <button
                       type="button"
                       className={estilos.enlace}
                       onClick={(e) => {
                         e.stopPropagation()
-                        alAbrir(fila)
+                        alSeleccionar(fila)
                       }}
                     >
                       {c.valor(fila)}
@@ -229,8 +239,8 @@ export function Tabla<T>({
             </>
           )
           return (
-            <li key={claveFila(fila)}>
-              {seleccion ? (
+            <li key={claveFila(fila)} className={estilos.fila}>
+              {seleccionando ? (
                 // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: con teclado se usa la casilla; el clic en la tarjeta es un atajo
                 <div
                   className={clases(
@@ -238,26 +248,28 @@ export function Tabla<T>({
                     estilos.tarjetaBoton,
                     marcada(fila) && estilos.marcada,
                   )}
-                  onClick={(e) => alSeleccionar?.(fila, e)}
+                  onPointerDown={pulsacion.reiniciar}
+                  onClick={(e) => {
+                    if (!enCasilla(e) && !pulsacion.acabaDeMarcar()) alternar(fila)
+                  }}
                 >
-                  <Casilla
-                    etiqueta={`Seleccionar ${seleccion.etiquetaFila(fila)}`}
-                    ocultarEtiqueta
-                    checked={marcada(fila)}
-                    onChange={() => alternar(fila)}
-                    className={estilos.casillaTarjeta}
-                  />
+                  {casilla(fila, estilos.casillaTarjeta)}
                   <span className={estilos.contenido}>{contenido}</span>
                 </div>
               ) : alSeleccionar ? (
-                <button
-                  type="button"
-                  className={clases(estilos.tarjeta, estilos.tarjetaBoton)}
-                  onClick={() => alSeleccionar(fila)}
-                >
-                  <span className={estilos.contenido}>{contenido}</span>
-                  <ChevronRight aria-hidden size={20} className={estilos.flecha} />
-                </button>
+                <>
+                  {/* Sin nada marcado, la casilla solo aparece al llegar a ella con el teclado */}
+                  {casilla(fila, estilos.casillaOculta)}
+                  <button
+                    type="button"
+                    className={clases(estilos.tarjeta, estilos.tarjetaBoton)}
+                    {...(seleccion ? pulsacion.props(fila) : {})}
+                    onClick={() => !pulsacion.acabaDeMarcar() && alSeleccionar(fila)}
+                  >
+                    <span className={estilos.contenido}>{contenido}</span>
+                    <ChevronRight aria-hidden size={20} className={estilos.flecha} />
+                  </button>
+                </>
               ) : (
                 <div className={estilos.tarjeta}>
                   <span className={estilos.contenido}>{contenido}</span>
@@ -269,4 +281,50 @@ export function Tabla<T>({
       </ul>
     </>
   )
+}
+
+// Mantener pulsada una tarjeta medio segundo la marca, como en Material 3. Si el dedo se mueve, es
+// un desplazamiento y no cuenta.
+const DURACION_PULSACION = 500
+
+function usePulsacionLarga<T>(alPulsar: (fila: T) => void) {
+  const temporizador = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const inicio = useRef({ x: 0, y: 0 })
+  const marco = useRef(false)
+
+  const cancelar = () => clearTimeout(temporizador.current)
+
+  return {
+    props: (fila: T) => ({
+      onPointerDown: (e: PointerEvent) => {
+        marco.current = false
+        inicio.current = { x: e.clientX, y: e.clientY }
+        cancelar()
+        temporizador.current = setTimeout(() => {
+          marco.current = true
+          navigator.vibrate?.(10)
+          alPulsar(fila)
+        }, DURACION_PULSACION)
+      },
+      onPointerMove: (e: PointerEvent) => {
+        if (Math.hypot(e.clientX - inicio.current.x, e.clientY - inicio.current.y) > 10) cancelar()
+      },
+      onPointerUp: cancelar,
+      onPointerCancel: cancelar,
+      onPointerLeave: cancelar,
+      // Sin el menú del sistema que abre la pulsación larga
+      onContextMenu: (e: MouseEvent) => e.preventDefault(),
+    }),
+    // Un toque nuevo: lo que venga no es el clic de soltar una pulsación larga
+    reiniciar: () => {
+      marco.current = false
+    },
+    // El clic que llega al soltar tras marcar ni abre la ficha ni desmarca la tarjeta, que ya se
+    // ha vuelto a pintar en modo selección
+    acabaDeMarcar: () => {
+      const si = marco.current
+      marco.current = false
+      return si
+    },
+  }
 }

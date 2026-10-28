@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -429,16 +429,21 @@ describe('tratamientos', () => {
     expect(within(tarjeta).queryByRole('button', { name: /^Anular/ })).not.toBeInTheDocument()
   })
 
-  it('trata a varios animales seleccionados en la lista', async () => {
+  it('en el móvil, mantener pulsado un animal empieza a marcar varios y los trata', async () => {
     simularApi(estado)
     const usuario = userEvent.setup()
-    abrir(animales)
-    await tarjetas()
-    await usuario.click(screen.getByRole('button', { name: 'Seleccionar' }))
+    const router = abrir(animales)
     const lista = await tarjetas()
-    await usuario.click(
-      within(lista).getByRole('checkbox', { name: 'Seleccionar Marela · ES041503456789' }),
-    )
+    const marela = within(lista).getByText('ES041503456789').closest('button') as HTMLElement
+    fireEvent.pointerDown(marela, { clientX: 10, clientY: 10 })
+    await waitFor(() => expect(screen.getByText('1 seleccionado')).toBeInTheDocument())
+    // Al soltar, el clic llega a la tarjeta ya en modo selección: ni abre la ficha ni la desmarca
+    fireEvent.pointerUp(marela)
+    fireEvent.click(within(lista).getByText('ES041503456789'))
+    expect(router.state.location.pathname).toBe(animales)
+    expect(screen.getByText('1 seleccionado')).toBeInTheDocument()
+
+    // Con uno marcado, tocar otro lo marca
     await usuario.click(within(lista).getByText('ES041503457001'))
     expect(screen.getByText('2 seleccionados')).toBeInTheDocument()
 
@@ -456,8 +461,24 @@ describe('tratamientos', () => {
       ['a1', 'Veterinaria'],
       ['a3', 'Veterinaria'],
     ])
-    // Sale del modo selección
-    expect(screen.getByRole('button', { name: 'Seleccionar' })).toBeInTheDocument()
+    // Quedan desmarcados
+    expect(screen.queryByText(/seleccionados?$/)).not.toBeInTheDocument()
+  })
+
+  it('en la tabla, las casillas están siempre a la vista', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(animales)
+    await tarjetas()
+    const tabla = screen.getByRole('table', { name: 'Animales' })
+    await usuario.click(within(tabla).getByRole('checkbox', { name: 'Seleccionar todos' }))
+    expect(screen.getByText('3 seleccionados')).toBeInTheDocument()
+    await usuario.click(
+      within(tabla).getByRole('checkbox', { name: 'Seleccionar Marela · ES041503456789' }),
+    )
+    expect(screen.getByText('2 seleccionados')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Desmarcar' }))
+    expect(screen.queryByText(/seleccionados?$/)).not.toBeInTheDocument()
   })
 
   it('filtra los animales con supresión en curso', async () => {

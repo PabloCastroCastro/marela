@@ -336,3 +336,10 @@
     bottom: var(--espacio-4);
   }
 }
+
+/* Solo con la lista de tarjetas (el móvil); desde 40rem la tabla ya muestra las casillas */
+@media (min-width: 40rem) {
+  .soloMovil {
+    display: none;
+  }
+}

@@ -103,7 +103,7 @@ export function PaginaComponentes() {
   const [guardando, setGuardando] = useState(false)
   const [texto, setTexto] = useState('')
   const [tipo, setTipo] = useState<'todos' | Animal['tipo']>('todos')
-  const [seleccion, setSeleccion] = useState<Set<string> | null>(null)
+  const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
   const [desde, setDesde] = useState('')
 
   // El tema forzado solo dura mientras se ve el catálogo
@@ -341,11 +341,10 @@ export function PaginaComponentes() {
             alCambiar={setDesde}
           />
         </BarraFiltros>
-        <Casilla
-          etiqueta={seleccion ? `Modo selección (${seleccion.size} marcados)` : 'Modo selección'}
-          checked={seleccion !== null}
-          onChange={(e) => setSeleccion(e.target.checked ? new Set() : null)}
-        />
+        <p>
+          {seleccion.size} marcados. En la tabla, con las casillas; en el móvil, manteniendo pulsada
+          una tarjeta.
+        </p>
         {filtrados.length === 0 ? (
           <EstadoVacio titulo="Ningún animal coincide" descripcion="Prueba con otros filtros." />
         ) : (
@@ -354,11 +353,11 @@ export function PaginaComponentes() {
             filas={filtrados}
             claveFila={(a) => a.id}
             ordenInicial={{ clave: 'crotal', sentido: 'asc' }}
-            seleccion={
-              seleccion
-                ? { claves: seleccion, alCambiar: setSeleccion, etiquetaFila: (a) => a.crotal }
-                : undefined
-            }
+            seleccion={{
+              claves: seleccion,
+              alCambiar: setSeleccion,
+              etiquetaFila: (a) => a.crotal,
+            }}
             alSeleccionar={(a) => avisar({ mensaje: `Abrir la ficha de ${a.nombre}` })}
             columnas={[
               {

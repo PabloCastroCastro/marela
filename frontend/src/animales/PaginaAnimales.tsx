@@ -1,4 +1,4 @@
-import { ListChecks, Plus, Syringe } from 'lucide-react'
+import { Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton } from '../componentes/Boton'
@@ -23,7 +23,8 @@ type FiltroEstado = EstadoAnimal | 'en_supresion' | 'todos'
 type FiltroSexo = Sexo | 'todos'
 
 // Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15). Con
-// "Seleccionar" se marcan varios para registrarles un tratamiento a la vez (GH-20).
+// casillas (en el móvil, manteniendo pulsado un animal) se marcan varios para registrarles un
+// tratamiento a la vez (GH-20).
 export function PaginaAnimales() {
   const explotacion = useExplotacionActual()
   const navegar = useNavigate()
@@ -32,7 +33,7 @@ export function PaginaAnimales() {
   const [sexo, setSexo] = useState<FiltroSexo>('todos')
   const [anadiendo, setAnadiendo] = useState(false)
   // null: sin modo selección
-  const [seleccion, setSeleccion] = useState<Set<string> | null>(null)
+  const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
   const [tratando, setTratando] = useState(false)
 
   const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
@@ -44,28 +45,18 @@ export function PaginaAnimales() {
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/animales/${id}`)
   // Solo cuentan los marcados que siguen en la lista con los filtros de ahora
-  const seleccionados = (animales.data ?? []).filter((a) => seleccion?.has(a.id))
+  const seleccionados = (animales.data ?? []).filter((a) => seleccion.has(a.id))
+  const desmarcar = () => setSeleccion(new Set())
 
   return (
     <section className={estilos.pagina}>
       <div className={estilos.titulo}>
         <h1>Animales</h1>
-        {!seleccion && (
-          <div className={estilos.acciones}>
-            <Boton
-              variante="secundario"
-              icono={<ListChecks aria-hidden size={20} />}
-              onClick={() => setSeleccion(new Set())}
-            >
-              Seleccionar
-            </Boton>
-            <div className={estilos.soloAncho}>
-              <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
-                Añadir animal
-              </Boton>
-            </div>
-          </div>
-        )}
+        <div className={estilos.soloAncho}>
+          <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
+            Añadir animal
+          </Boton>
+        </div>
       </div>
 
       <BarraFiltros
@@ -124,17 +115,14 @@ export function PaginaAnimales() {
         <>
           <p className={estilos.recuento} role="status">
             {animales.data.length} {animales.data.length === 1 ? 'animal' : 'animales'}
+            <span className={estilos.soloMovil}> · Mantén pulsado uno para marcar varios</span>
           </p>
           <Tabla
             etiqueta="Animales"
             filas={animales.data}
             claveFila={(a) => a.id}
             alSeleccionar={(a) => abrir(a.id)}
-            seleccion={
-              seleccion
-                ? { claves: seleccion, alCambiar: setSeleccion, etiquetaFila: identificacion }
-                : undefined
-            }
+            seleccion={{ claves: seleccion, alCambiar: setSeleccion, etiquetaFila: identificacion }}
             columnas={[
               {
                 clave: 'crotal',
@@ -182,7 +170,7 @@ export function PaginaAnimales() {
         </>
       )}
 
-      {seleccion ? (
+      {seleccionados.length > 0 ? (
         <div className={estilos.barraSeleccion}>
           <p role="status">
             {seleccionados.length === 1
@@ -190,14 +178,10 @@ export function PaginaAnimales() {
               : `${seleccionados.length} seleccionados`}
           </p>
           <div className={estilos.acciones}>
-            <Boton variante="texto" onClick={() => setSeleccion(null)}>
-              Cancelar
+            <Boton variante="texto" icono={<X aria-hidden size={20} />} onClick={desmarcar}>
+              Desmarcar
             </Boton>
-            <Boton
-              icono={<Syringe aria-hidden size={20} />}
-              disabled={seleccionados.length === 0}
-              onClick={() => setTratando(true)}
-            >
+            <Boton icono={<Syringe aria-hidden size={20} />} onClick={() => setTratando(true)}>
               Tratar
             </Boton>
           </div>
@@ -213,7 +197,7 @@ export function PaginaAnimales() {
         <FormularioTratamiento
           animales={seleccionados}
           alCerrar={() => setTratando(false)}
-          alGuardar={() => setSeleccion(null)}
+          alGuardar={desmarcar}
         />
       )}
       <FormularioAnimal

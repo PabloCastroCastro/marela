@@ -25,7 +25,10 @@
   text-align: start;
 }
 
+/* La pulsación larga marca la tarjeta: sin seleccionar texto ni abrir el menú del sistema */
 .tarjetaBoton {
+  -webkit-touch-callout: none;
+  user-select: none;
   cursor: pointer;
   transition: background-color var(--duracion-corta) ease-out;
 }
@@ -179,4 +182,26 @@
   .tabla td.columnaCasilla {
     padding: 0;
   }
+}
+
+/* Sin nada marcado, la casilla de la tarjeta solo se ve con el foco del teclado, encima de ella */
+.fila {
+  position: relative;
+}
+
+.casillaOculta {
+  position: absolute;
+  top: 50%;
+  left: var(--espacio-1);
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.casillaOculta:not(:focus-within) {
+  width: 1px;
+  min-width: 0;
+  height: 1px;
+  min-height: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
