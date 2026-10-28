@@ -646,6 +646,8 @@ export interface paths {
                     sexo?: "hembra" | "macho";
                     /** @description Solo los animales con un periodo de supresión en curso */
                     supresion?: "en_curso";
+                    /** @description Solo los animales que aún no tienen crotal */
+                    crotal?: "sin";
                     /** @description Solo las hembras con una gestación en curso, por fecha prevista de parto */
                     gestacion?: "en_curso";
                 };

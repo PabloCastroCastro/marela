@@ -98,6 +98,10 @@ const Filtros = z.object({
     .enum(['en_curso'])
     .optional()
     .openapi({ description: 'Solo los animales con un periodo de supresión en curso' }),
+  crotal: z
+    .enum(['sin'])
+    .optional()
+    .openapi({ description: 'Solo los animales que aún no tienen crotal' }),
   gestacion: z.enum(['en_curso']).optional().openapi({
     description: 'Solo las hembras con una gestación en curso, por fecha prevista de parto',
   }),

@@ -805,6 +805,7 @@ export function simularApi(estado: EstadoSimulado) {
             .filter((a) => !q.get('sexo') || a.sexo === q.get('sexo'))
             .filter((a) => !q.get('supresion') || supresion(a) !== null)
             .filter((a) => !q.get('gestacion') || gestacion(a) !== null)
+            .filter((a) => !q.get('crotal') || a.crotal === null)
             .filter(
               (a) =>
                 !texto ||

@@ -2761,6 +2761,19 @@
             "schema": {
               "type": "string",
               "enum": [
+                "sin"
+              ],
+              "description": "Solo los animales que aún no tienen crotal"
+            },
+            "required": false,
+            "description": "Solo los animales que aún no tienen crotal",
+            "name": "crotal",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
                 "en_curso"
               ],
               "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto"

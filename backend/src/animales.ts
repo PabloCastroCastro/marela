@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { and, asc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
+import { and, asc, eq, ilike, isNull, or, type SQL, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { Transaccion } from './db/explotacion.js'
 import {
@@ -174,6 +174,7 @@ export type FiltrosAnimales = {
   sexo?: (typeof SEXOS)[number]
   supresion?: 'en_curso'
   gestacion?: 'en_curso'
+  crotal?: 'sin'
 }
 
 export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) {
@@ -193,6 +194,7 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
   if (filtros.sexo) condiciones.push(eq(animales.sexo, filtros.sexo))
   if (filtros.supresion === 'en_curso')
     condiciones.push(sql`${finSupresion(hoyEnMadrid())} is not null`)
+  if (filtros.crotal === 'sin') condiciones.push(isNull(animales.crotal))
   if (filtros.gestacion === 'en_curso')
     condiciones.push(sql`exists (select from gestacion(${animales.id}))`)
   const filas = await consulta(tx)

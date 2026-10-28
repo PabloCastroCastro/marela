@@ -45,7 +45,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 ### Ficha del animal
 
-- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma. Opcional mientras se le pone a un ternero, en los 20 días siguientes a su nacimiento: hasta entonces la ficha avisa del plazo (GH-23). Una vez puesto, no se puede quitar.
+- Crotal / identificación oficial: ES y 12 dígitos; los de animales comprados en otro país, su código y hasta 12 dígitos. Único en toda la plataforma. Opcional mientras se le pone a un ternero, en los 20 días siguientes a su nacimiento: hasta entonces la ficha avisa del plazo, y en el listado se filtran con "Estado: Sin crotal" (GH-23). Una vez puesto, no se puede quitar.
 - Nombre, opcional (muchas vacas lo tienen y es como se las reconoce)
 - Raza: se elige de una lista de razas de carne habituales en España o se escribe otra
 - Sexo

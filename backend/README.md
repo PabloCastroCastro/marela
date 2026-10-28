@@ -167,7 +167,7 @@ Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.
 
 Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 
-- **Crotal:** `ES` y 12 dígitos, o el código de otro país y hasta 12 dígitos. Único en toda la plataforma (409 `crotal_en_uso`). Opcional, para los terneros que aún no lo tienen (GH-23); una vez puesto no se puede quitar. Los animales sin crotal van al final de la lista.
+- **Crotal:** `ES` y 12 dígitos, o el código de otro país y hasta 12 dígitos. Único en toda la plataforma (409 `crotal_en_uso`). Opcional, para los terneros que aún no lo tienen (GH-23); una vez puesto no se puede quitar. Los animales sin crotal van al final de la lista; `?crotal=sin` lista solo esos.
 - **Madre y padre:** su ficha en la explotación, o un texto libre, nunca los dos. La madre es una hembra y el padre, un macho (trigger `comprobar_progenitores`). La misma explotación la garantizan claves foráneas compuestas. Un animal con hijos no puede cambiar de sexo (409 `sexo_con_hijos`).
 - **Origen:** nacido en la explotación, o comprado con fecha de entrada y REGA de origen.
 - **Fechas:** no futuras, y la de entrada no anterior al nacimiento.

@@ -165,11 +165,20 @@ describe('partos', () => {
     const vaca = await animal()
     const parto = (await (await parir(vaca.id, {})).json()) as Parto
     const id = parto.terneros[0]?.id ?? ''
+    const sinCrotal = async () =>
+      (
+        (await (
+          await pedir('GET', `/explotaciones/${a}/animales?crotal=sin`, ana.cookie)
+        ).json()) as Animal[]
+      ).map((x) => x.id)
+    expect(await sinCrotal()).toContain(id)
+    expect(await sinCrotal()).not.toContain(vaca.id)
     const c = crotal()
     const res = await pedir('PATCH', `/explotaciones/${a}/animales/${id}`, ana.cookie, {
       crotal: c,
     })
     expect(((await res.json()) as Animal).crotal).toBe(c)
+    expect(await sinCrotal()).not.toContain(id)
     const quitar = await pedir('PATCH', `/explotaciones/${a}/animales/${id}`, ana.cookie, {
       crotal: '',
     })

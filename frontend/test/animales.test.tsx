@@ -702,8 +702,11 @@ describe('partos', () => {
     expect(screen.getByText(/^Sin crotal: ponlo como tarde el/)).toBeInTheDocument()
 
     await router.navigate(animales)
-    const lista = await tarjetas()
-    expect(within(lista).getAllByText('Sin crotal').length).toBeGreaterThan(0)
+    await tarjetas()
+    const usuario = userEvent.setup()
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'Sin crotal')
+    expect(await screen.findByText('1 animal')).toBeInTheDocument()
+    expect(within(await tarjetas()).getAllByText('Sin crotal').length).toBeGreaterThan(0)
   })
 
   it('anula un parto y desaparecen sus terneros', async () => {
