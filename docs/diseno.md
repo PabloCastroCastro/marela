@@ -66,6 +66,11 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 
 - Movimiento de un animal entre explotaciones del mismo usuario, conservando su historial.
 
+### Historial y registro (GH-24)
+
+- La ficha tiene un solo botón "Registrar" que abre la lista de todo lo que se le puede registrar al animal: pesada, tratamiento, cubrición o inseminación, diagnóstico, parto, aborto, destete y dar de baja. Las tarjetas de la ficha no tienen botones propios.
+- "Historial", desde la ficha, abre una página con todo lo del animal (nacimiento y entrada, pesadas, tratamientos, eventos reproductivos, partos y baja), del más reciente al más antiguo, agrupado por año y con filtro por tipo. Los traslados entrarán cuando existan (GH-19).
+
 ### Pesos
 
 - Registro de pesadas: fecha, kg y momento (al nacer, al destete, a la venta u otra pesada). Al nacer, al destete y a la venta, como mucho una vez por animal.
