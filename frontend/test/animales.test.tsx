@@ -37,6 +37,13 @@ afterEach(() => {
 })
 
 const animales = `/explotaciones/${A_VEIGA.id}/animales`
+
+// Abre el menú "Registrar" de la ficha y elige una opción
+async function registrar(usuario: ReturnType<typeof userEvent.setup>, opcion: string) {
+  await usuario.click(await screen.findByRole('button', { name: 'Registrar' }))
+  const menu = screen.getByRole('dialog', { name: 'Registrar' })
+  await usuario.click(within(menu).getByRole('button', { name: opcion }))
+}
 const tarjetas = () => screen.findByRole('list', { name: 'Animales' })
 
 describe('lista de animales', () => {
@@ -185,7 +192,7 @@ describe('bajas', () => {
     simularApi(estado)
     const usuario = userEvent.setup()
     abrir(`${animales}/a1`)
-    await usuario.click(await screen.findByRole('button', { name: 'Dar de baja' }))
+    await registrar(usuario, 'Dar de baja')
     const hoja = screen.getByRole('dialog', { name: /Dar de baja Marela/ })
     await usuario.selectOptions(within(hoja).getByLabelText('Motivo'), 'Muerte')
     await usuario.type(within(hoja).getByLabelText(/^Detalle/), 'Neumonía')
@@ -210,7 +217,7 @@ describe('bajas', () => {
     simularApi(estado)
     const usuario = userEvent.setup()
     abrir(`${animales}/a1`)
-    await usuario.click(await screen.findByRole('button', { name: 'Dar de baja' }))
+    await registrar(usuario, 'Dar de baja')
     const hoja = screen.getByRole('dialog', { name: /Dar de baja/ })
     await usuario.selectOptions(within(hoja).getByLabelText('Motivo'), 'Otra causa')
     await usuario.click(within(hoja).getByRole('button', { name: 'Dar de baja' }))
@@ -228,12 +235,15 @@ describe('bajas', () => {
     const usuario = userEvent.setup()
     abrir(`${animales}/a1`)
     expect(await screen.findByText('Robo o extravío')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Dar de baja' })).not.toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Registrar' }))
+    const menu = screen.getByRole('dialog', { name: 'Registrar' })
+    expect(within(menu).queryByRole('button', { name: 'Dar de baja' })).not.toBeInTheDocument()
+    await usuario.keyboard('{Escape}')
     await usuario.click(screen.getByRole('button', { name: 'Deshacer la baja' }))
     await usuario.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Deshacer la baja' }),
     )
-    expect(await screen.findByRole('button', { name: 'Dar de baja' })).toBeInTheDocument()
+    expect(await screen.findByText(/vuelve a estar activo/)).toBeInTheDocument()
     expect(estado.animales[0]?.estado).toBe('activo')
   })
 
@@ -291,7 +301,7 @@ describe('pesos', () => {
     simularApi(estado)
     const usuario = userEvent.setup()
     abrir(`${animales}/a3`)
-    await usuario.click(await screen.findByRole('button', { name: 'Añadir pesada' }))
+    await registrar(usuario, 'Pesada')
     const hoja = screen.getByRole('dialog', { name: /Añadir pesada/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Guardar pesada' }))
     expect(within(hoja).getByText(/Indica el peso en kg/)).toBeInTheDocument()
@@ -309,7 +319,7 @@ describe('pesos', () => {
     simularApi(estado)
     const usuario = userEvent.setup()
     abrir(`${animales}/a3`)
-    await usuario.click(await screen.findByRole('button', { name: 'Añadir pesada' }))
+    await registrar(usuario, 'Pesada')
     const hoja = screen.getByRole('dialog', { name: /Añadir pesada/ })
     await usuario.type(within(hoja).getByLabelText(/^Peso/), '40')
     await usuario.selectOptions(within(hoja).getByLabelText('Momento'), 'Al nacer')
@@ -391,7 +401,7 @@ describe('tratamientos', () => {
     expect(await within(tarjeta).findByText('Ivermectina 1 %')).toBeInTheDocument()
     expect(screen.queryByText(/^En supresión/)).not.toBeInTheDocument()
 
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar tratamiento' }))
+    await registrar(usuario, 'Tratamiento')
     const hoja = screen.getByRole('dialog', { name: /Registrar tratamiento · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Guardar tratamiento' }))
     expect(within(hoja).getByText('Indica el motivo')).toBeInTheDocument()
@@ -542,7 +552,7 @@ describe('reproducción', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await within(tarjeta).findByText('Sin eventos registrados')).toBeInTheDocument()
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    await registrar(usuario, 'Cubrición o inseminación')
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Inseminación' }))
     await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
@@ -568,7 +578,7 @@ describe('reproducción', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await screen.findAllByText(/^Parto previsto el .*, sin confirmar$/)).toHaveLength(2)
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    await registrar(usuario, 'Diagnóstico de gestación')
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Diagnóstico' }))
     await usuario.click(within(hoja).getByRole('button', { name: 'Palpación' }))
@@ -598,8 +608,8 @@ describe('reproducción', () => {
     simularApi(estado)
     const usuario = userEvent.setup()
     const router = abrir(`${animales}/a3`)
-    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
-    await usuario.click(await within(tarjeta).findByRole('button', { name: 'Registrar' }))
+    await screen.findByRole('region', { name: 'Reproducción' })
+    await registrar(usuario, 'Destete')
     const hoja = screen.getByRole('dialog', { name: /Registrar · ES041503457001/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Destete' }))
     await usuario.type(within(hoja).getByLabelText(/^Peso al destete/), '231,5')
@@ -659,7 +669,7 @@ describe('partos', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await screen.findAllByText(/^Parto previsto el/)).not.toHaveLength(0)
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    await registrar(usuario, 'Parto')
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     expect(within(hoja).getByText(/El padre es el de la cubrición/)).toBeInTheDocument()
 
@@ -778,5 +788,40 @@ describe('historiales largos', () => {
       'aria-expanded',
       'true',
     )
+  })
+})
+
+describe('historial', () => {
+  it('reúne todo lo del animal por años y lo filtra por tipo', async () => {
+    estado.eventos.push({
+      id: 'e1',
+      animalId: 'a1',
+      tipo: 'cubricion',
+      fecha: '2025-04-20',
+      padreId: 'a2',
+      padreTexto: null,
+      metodo: null,
+      resultado: null,
+      observaciones: null,
+      anulacion: null,
+    })
+    estado.pesadas.push({ id: 'p9', animalId: 'a1', fecha: '2026-03-01', kg: 612, momento: 'otro' })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    await usuario.click(await screen.findByRole('link', { name: 'Historial' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Historial' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '2026' })).toBeInTheDocument()
+    const del2025 = screen.getByRole('region', { name: '2025' })
+    expect(within(del2025).getByText('Cubrición')).toBeInTheDocument()
+    expect(screen.getByText('Tratamiento: Ivermectina 1 %')).toBeInTheDocument()
+    expect(screen.getByText('Pesada: 612 kg')).toBeInTheDocument()
+    expect(screen.getByText('Nacimiento')).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Pesos (1)' }))
+    expect(screen.getByText('Pesada: 612 kg')).toBeInTheDocument()
+    expect(screen.queryByText('Tratamiento: Ivermectina 1 %')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: '2025' })).not.toBeInTheDocument()
   })
 })

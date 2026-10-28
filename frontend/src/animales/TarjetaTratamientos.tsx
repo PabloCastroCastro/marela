@@ -1,7 +1,7 @@
-import { Ban, Plus, Syringe } from 'lucide-react'
+import { Ban, Syringe } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { api, datos } from '../api/cliente'
-import { Boton, BotonIcono } from '../componentes/Boton'
+import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
@@ -9,7 +9,6 @@ import { fecha } from '../formato'
 import estilos from './Animales.module.css'
 import type { AnimalDetalle } from './datos'
 import { FormularioAnulacion } from './FormularioAnulacion'
-import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaSupresion } from './InsigniaSupresion'
 import { useRecorte } from './Recorte'
 import { MOTIVOS_TRATAMIENTO, type Tratamiento, useTratamientos, VIAS } from './tratamientos'
@@ -19,7 +18,6 @@ import { MOTIVOS_TRATAMIENTO, type Tratamiento, useTratamientos, VIAS } from './
 export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
   const explotacion = useExplotacionActual()
   const tratamientos = useTratamientos(explotacion.id, animal.id)
-  const [registrando, setRegistrando] = useState(false)
   const [anulando, setAnulando] = useState<Tratamiento>()
 
   // A la vista, solo los últimos
@@ -92,14 +90,6 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
           <Syringe aria-hidden size={20} className={estilos.iconoTitulo} />
           Tratamientos
         </h2>
-        <Boton
-          variante="secundario"
-          tamano="compacto"
-          icono={<Plus aria-hidden size={18} />}
-          onClick={() => setRegistrando(true)}
-        >
-          Registrar tratamiento
-        </Boton>
       </div>
       {animal.finSupresion && (
         <div>
@@ -108,9 +98,6 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
       )}
       {contenido}
       {recorte.boton}
-      {registrando && (
-        <FormularioTratamiento animales={[animal]} alCerrar={() => setRegistrando(false)} />
-      )}
       {anulando && (
         <FormularioAnulacion
           titulo="¿Anular el tratamiento?"

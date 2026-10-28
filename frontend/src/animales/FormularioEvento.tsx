@@ -58,12 +58,15 @@ const OTRO = 'otro'
 export function FormularioEvento({
   animales,
   tipos,
+  tipoInicial,
   alCerrar,
   alGuardar,
 }: {
   animales: AnimalDelEvento[]
-  // Lo que se puede elegir; lo primero, elegido al abrir. El parto, solo con una vaca.
+  // Lo que se puede elegir. El parto, solo con una vaca.
   tipos: TipoRegistro[]
+  // Lo elegido al abrir; si no se indica, lo primero de tipos
+  tipoInicial?: TipoRegistro
   alCerrar: () => void
   alGuardar?: () => void
 }) {
@@ -84,7 +87,7 @@ export function FormularioEvento({
     hoy(),
   )
   const [f, setF] = useState({
-    tipo: tipos[0] ?? ('cubricion' as TipoRegistro),
+    tipo: tipoInicial ?? tipos[0] ?? ('cubricion' as TipoRegistro),
     fecha: ultimoDia,
     // Un toro, OTRO o '' (sin elegir)
     padre: '',

@@ -1,6 +1,6 @@
-import { Pencil, Plus, Scale } from 'lucide-react'
+import { Pencil, Scale } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
-import { Boton, BotonIcono } from '../componentes/Boton'
+import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
@@ -84,14 +84,6 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
           <Scale aria-hidden size={20} className={estilos.iconoTitulo} />
           Pesos
         </h2>
-        <Boton
-          variante="secundario"
-          tamano="compacto"
-          icono={<Plus aria-hidden size={18} />}
-          onClick={() => setEditando(null)}
-        >
-          Añadir pesada
-        </Boton>
       </div>
       {contenido}
       {recorte.boton}

@@ -1,43 +1,23 @@
-import { Ban, Plus } from 'lucide-react'
+import { Ban } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { Link } from 'react-router'
 import { api, datos } from '../api/cliente'
-import { Boton, BotonIcono } from '../componentes/Boton'
+import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
 import estilos from './Animales.module.css'
-import { type AnimalDetalle, identificacion, SEXOS } from './datos'
+import { type AnimalDetalle, identificacion } from './datos'
+import { deEvento, deParto, type EntradaReproductiva, unir } from './entradasReproduccion'
 import { FormularioAnulacion } from './FormularioAnulacion'
-import { FormularioEvento } from './FormularioEvento'
 import { InsigniaGestacion } from './InsigniaGestacion'
 import { useRecorte } from './Recorte'
-import {
-  type EventoReproductivo,
-  METODOS,
-  type Parto,
-  RESULTADOS,
-  TIPOS_EVENTO,
-  TIPOS_PARTO,
-  tiposPara,
-  useEventos,
-  usePartos,
-} from './reproduccion'
+import { type EventoReproductivo, type Parto, useEventos, usePartos } from './reproduccion'
 
-// Una fila del historial: un evento (GH-22) o un parto (GH-23)
-type Entrada = {
-  clave: string
-  fecha: string
-  creadoEn: string
-  titulo: string
-  detalle: ReactNode[]
-  lineas: ReactNode[]
-  observaciones: string | null
-  anulacion: { en: string; por: string; motivo: string } | null
-  anular: () => void
-}
+// Una fila del historial: un evento (GH-22) o un parto (GH-23), que se puede anular
+type Entrada = EntradaReproductiva & { anular: () => void }
 
 type Anulando =
   | { tipo: 'evento'; evento: EventoReproductivo; titulo: string }
@@ -51,80 +31,27 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
   const hembra = animal.sexo === 'hembra'
   const eventos = useEventos(explotacion.id, animal.id)
   const partos = usePartos(explotacion.id, animal.id, hembra)
-  const [registrando, setRegistrando] = useState(false)
   const [anulando, setAnulando] = useState<Anulando>()
   const lista = `${rutaExplotacion(explotacion.id)}/animales`
-  // El destete, solo si aún no lo tiene
-  const destetado = eventos.data?.some(
-    (e) => e.tipo === 'destete' && e.animalId === animal.id && !e.anulacion,
-  )
-  const tipos = tiposPara(animal).filter((t) => t !== 'destete' || !destetado)
   const enlace = (a: { id: string; crotal: string | null; nombre: string | null }) => (
     <Link key={a.id} to={`${lista}/${a.id}`}>
       {identificacion(a)}
     </Link>
   )
 
-  const deEvento = (e: EventoReproductivo): Entrada => {
-    const titulo =
-      e.tipo === 'diagnostico' && e.resultado
-        ? `Diagnóstico: ${RESULTADOS[e.resultado].toLowerCase()}`
-        : e.tipo === 'destete' && e.animalId !== animal.id
-          ? 'Destete de su ternero'
-          : TIPOS_EVENTO[e.tipo]
-    return {
-      clave: e.id,
-      fecha: e.fecha,
-      creadoEn: e.creadoEn,
-      titulo,
-      detalle: [
-        fecha(e.fecha),
-        e.padre ? (
-          <span key="padre">con {enlace(e.padre)}</span>
-        ) : (
-          e.padreTexto && `con ${e.padreTexto}`
-        ),
-        e.metodo && METODOS[e.metodo],
-        e.tipo === 'destete' && e.animalId !== animal.id && enlace(e.animal),
-      ],
-      lineas:
-        e.fechaPrevistaParto && !e.anulacion
-          ? [`Parto previsto el ${fecha(e.fechaPrevistaParto)}`]
-          : [],
-      observaciones: e.observaciones,
-      anulacion: e.anulacion,
-      anular: () => setAnulando({ tipo: 'evento', evento: e, titulo }),
-    }
-  }
-
-  const deParto = (p: Parto): Entrada => ({
-    clave: p.id,
-    fecha: p.fecha,
-    creadoEn: p.creadoEn,
-    titulo: p.tipo === 'normal' ? 'Parto' : `Parto ${TIPOS_PARTO[p.tipo].toLowerCase()}`,
-    detalle: [
-      fecha(p.fecha),
-      p.padre ? (
-        <span key="padre">de {enlace(p.padre)}</span>
-      ) : (
-        p.padreTexto && `de ${p.padreTexto}`
-      ),
-    ],
-    lineas: p.terneros.map((t) => (
-      <span key={t.id}>
-        {enlace(t)} · {SEXOS[t.sexo].toLowerCase()}
-        {t.estado === 'muerto' && ', nacido muerto'}
-      </span>
-    )),
-    observaciones: p.observaciones,
-    anulacion: p.anulacion,
-    anular: () => setAnulando({ tipo: 'parto', parto: p }),
-  })
-
   // Del más reciente al más antiguo; a la vista, solo lo último
-  const entradas = [
-    ...(eventos.data ?? []).map(deEvento),
-    ...(partos.data ?? []).map(deParto),
+  const entradas: Entrada[] = [
+    ...(eventos.data ?? []).map((e) => {
+      const entrada = deEvento(e, animal.id, enlace)
+      return {
+        ...entrada,
+        anular: () => setAnulando({ tipo: 'evento', evento: e, titulo: entrada.titulo }),
+      }
+    }),
+    ...(partos.data ?? []).map((p) => ({
+      ...deParto(p, enlace),
+      anular: () => setAnulando({ tipo: 'parto', parto: p }),
+    })),
   ].sort((a, b) => b.fecha.localeCompare(a.fecha) || b.creadoEn.localeCompare(a.creadoEn))
   const recorte = useRecorte(entradas, (n) => `Ver todo el historial (${n})`)
 
@@ -151,9 +78,7 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
             <li key={e.clave} className={e.anulacion ? estilos.anulado : undefined}>
               <div>
                 <span className={estilos.producto}>{e.titulo}</span>
-                <span className={estilos.suave}>
-                  {e.detalle.filter(Boolean).flatMap((d, i) => (i ? [' · ', d] : [d]))}
-                </span>
+                <span className={estilos.suave}>{unir([fecha(e.fecha), ...e.detalle])}</span>
                 {e.lineas.map((l, i) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: líneas fijas de cada fila
                   <span key={i} className={estilos.suave}>
@@ -185,16 +110,6 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
     <Tarjeta aria-labelledby="ficha-reproduccion" className={estilos.tarjetaRegistros}>
       <div className={estilos.cabeceraTarjeta}>
         <h2 id="ficha-reproduccion">Reproducción</h2>
-        {tipos.length > 0 && (
-          <Boton
-            variante="secundario"
-            tamano="compacto"
-            icono={<Plus aria-hidden size={18} />}
-            onClick={() => setRegistrando(true)}
-          >
-            {tipos.length === 1 && tipos[0] === 'destete' ? 'Registrar destete' : 'Registrar'}
-          </Boton>
-        )}
       </div>
       {animal.gestacion && (
         <div>
@@ -203,13 +118,6 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
       )}
       {contenido}
       {recorte.boton}
-      {registrando && (
-        <FormularioEvento
-          animales={[animal]}
-          tipos={tipos}
-          alCerrar={() => setRegistrando(false)}
-        />
-      )}
       {anulando?.tipo === 'evento' && (
         <FormularioAnulacion
           titulo="¿Anular el evento?"
