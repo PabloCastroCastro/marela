@@ -1,4 +1,4 @@
-import { Baby } from 'lucide-react'
+import { CalendarHeart } from 'lucide-react'
 import { Insignia } from '../componentes/Etiquetas'
 import { fecha } from '../formato'
 import estilos from './Animales.module.css'
@@ -12,7 +12,7 @@ export function InsigniaGestacion({ gestacion, corta }: { gestacion: Gestacion; 
     ? `Parto previsto el ${fecha(prevista)}${gestacion.confirmada ? '' : ', sin confirmar'}`
     : 'Gestante'
   return (
-    <Insignia tipo="informacion" icono={<Baby aria-hidden />}>
+    <Insignia tipo="informacion" icono={<CalendarHeart aria-hidden />}>
       {corta && prevista ? (
         <>
           <span aria-hidden title={completo}>

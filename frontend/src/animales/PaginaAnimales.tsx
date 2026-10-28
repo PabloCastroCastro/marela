@@ -1,4 +1,4 @@
-import { Baby, Plus, Syringe, X } from 'lucide-react'
+import { Heart, Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -195,7 +195,7 @@ export function PaginaAnimales() {
             />
             <Boton
               variante="secundario"
-              icono={<Baby aria-hidden size={20} />}
+              icono={<Heart aria-hidden size={20} />}
               onClick={() => setCubriendo(true)}
             >
               Cubrir
