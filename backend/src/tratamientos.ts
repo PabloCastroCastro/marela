@@ -172,7 +172,9 @@ async function comprobar(tx: Transaccion, datos: DatosTratamiento) {
     .where(inArray(animales.id, datos.animalIds))
   if (encontrados.length < datos.animalIds.length)
     throw invalido('animalIds', 'Algún animal no está entre los de la explotación')
-  const antes = encontrados.filter((a) => datos.fecha < a.fechaNacimiento).map((a) => a.crotal)
+  const antes = encontrados
+    .filter((a) => datos.fecha < a.fechaNacimiento)
+    .map((a) => a.crotal ?? 'un ternero sin crotal')
   if (antes.length > 0)
     throw invalido(
       'fecha',
@@ -182,7 +184,7 @@ async function comprobar(tx: Transaccion, datos: DatosTratamiento) {
     )
   const despues = encontrados
     .filter((a) => a.fechaBaja && datos.fecha > a.fechaBaja)
-    .map((a) => a.crotal)
+    .map((a) => a.crotal ?? 'un ternero sin crotal')
   if (despues.length > 0)
     throw invalido(
       'fecha',

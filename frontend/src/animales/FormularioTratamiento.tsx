@@ -22,7 +22,7 @@ import {
 
 type AnimalTratado = {
   id: string
-  crotal: string
+  crotal: string | null
   nombre?: string | null
   fechaNacimiento: string
   fechaBaja?: string | null
@@ -158,7 +158,7 @@ export function FormularioTratamiento({
           </p>
         )}
         {animales.length > 1 && (
-          <p className={estilos.suave}>{animales.map((a) => a.crotal).join(', ')}</p>
+          <p className={estilos.suave}>{animales.map(identificacion).join(', ')}</p>
         )}
         {errores.animalIds && (
           <p className={estilos.error} role="alert">

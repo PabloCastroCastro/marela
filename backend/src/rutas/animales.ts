@@ -18,13 +18,15 @@ import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
 // Animales de la explotación (GH-14)
 
 const Progenitor = z
-  .object({ id: z.uuid(), crotal: z.string(), nombre: z.string().nullable() })
+  .object({ id: z.uuid(), crotal: z.string().nullable(), nombre: z.string().nullable() })
   .nullable()
 
 const Animal = z
   .object({
     id: z.uuid(),
-    crotal: z.string(),
+    crotal: z.string().nullable().openapi({
+      description: 'Sin crotal solo mientras se le pone, en los 20 días siguientes al nacimiento',
+    }),
     nombre: z.string().nullable(),
     raza: z.string(),
     sexo: z.enum(SEXOS),
@@ -43,6 +45,7 @@ const Animal = z
     fechaBaja: z.iso.date().nullable(),
     causaBaja: z.string().nullable(),
     observaciones: z.string().nullable(),
+    partoId: z.uuid().nullable().openapi({ description: 'Parto en que nació, si se registró' }),
     finSupresion: z.iso
       .date()
       .nullable()
@@ -67,7 +70,7 @@ const AnimalDetalle = Animal.extend({
   hijos: z.array(
     z.object({
       id: z.uuid(),
-      crotal: z.string(),
+      crotal: z.string().nullable(),
       nombre: z.string().nullable(),
       sexo: z.enum(SEXOS),
       fechaNacimiento: z.iso.date(),

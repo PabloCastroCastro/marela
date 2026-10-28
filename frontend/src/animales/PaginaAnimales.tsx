@@ -17,6 +17,7 @@ import { FormularioEvento } from './FormularioEvento'
 import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaEstado } from './InsigniaEstado'
 import { InsigniaGestacion } from './InsigniaGestacion'
+import { InsigniaSinCrotal } from './InsigniaSinCrotal'
 import { InsigniaSupresion } from './InsigniaSupresion'
 
 // "En supresión" y "Gestantes" se filtran como un estado más, aunque no lo son: se calculan de los
@@ -136,7 +137,7 @@ export function PaginaAnimales() {
               {
                 clave: 'crotal',
                 titulo: 'Crotal',
-                valor: (a) => a.crotal,
+                valor: (a) => a.crotal ?? 'Sin crotal',
                 ordenar: (a) => a.crotal,
                 principal: true,
               },
@@ -169,6 +170,9 @@ export function PaginaAnimales() {
                 valor: (a) => (
                   <span className={estilos.insignias}>
                     <InsigniaEstado estado={a.estado} />
+                    {!a.crotal && a.estado === 'activo' && (
+                      <InsigniaSinCrotal nacimiento={a.fechaNacimiento} corta />
+                    )}
                     {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} corta />}
                     {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} corta />}
                   </span>

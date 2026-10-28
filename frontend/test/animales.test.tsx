@@ -7,6 +7,7 @@ import { crearClienteConsultas, Proveedores } from '../src/proveedores'
 import { rutas } from '../src/rutas'
 import {
   A_VEIGA,
+  animalSimulado,
   type EstadoSimulado,
   type EventoSimulado,
   estadoInicial,
@@ -541,7 +542,7 @@ describe('reproducción', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await within(tarjeta).findByText('Sin eventos registrados')).toBeInTheDocument()
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar evento' }))
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Inseminación' }))
     await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
@@ -567,7 +568,7 @@ describe('reproducción', () => {
     abrir(`${animales}/a1`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
     expect(await screen.findAllByText(/^Parto previsto el .*, sin confirmar$/)).toHaveLength(2)
-    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar evento' }))
     const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Diagnóstico' }))
     await usuario.click(within(hoja).getByRole('button', { name: 'Palpación' }))
@@ -598,7 +599,7 @@ describe('reproducción', () => {
     const usuario = userEvent.setup()
     const router = abrir(`${animales}/a3`)
     const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
-    await usuario.click(await within(tarjeta).findByRole('button', { name: 'Registrar' }))
+    await usuario.click(await within(tarjeta).findByRole('button', { name: 'Registrar evento' }))
     const hoja = screen.getByRole('dialog', { name: /Registrar · ES041503457001/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Destete' }))
     await usuario.type(within(hoja).getByLabelText(/^Peso al destete/), '231,5')
@@ -634,5 +635,109 @@ describe('reproducción', () => {
     await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'Gestantes')
     expect(await screen.findByText('2 animales')).toBeInTheDocument()
     expect(within(await tarjetas()).getAllByText(/^Parto previsto el/)).toHaveLength(2)
+  })
+})
+
+describe('partos', () => {
+  const haceDias = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
+
+  it('registra gemelos, uno sin crotal y otro muerto, y cierra la gestación', async () => {
+    estado.eventos.push({
+      id: 'e1',
+      animalId: 'a1',
+      tipo: 'cubricion',
+      fecha: haceDias(290),
+      padreId: 'a2',
+      padreTexto: null,
+      metodo: null,
+      resultado: null,
+      observaciones: null,
+      anulacion: null,
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    expect(await screen.findAllByText(/^Parto previsto el/)).not.toHaveLength(0)
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar parto' }))
+    const hoja = screen.getByRole('dialog', { name: /Registrar parto · Marela/ })
+    expect(within(hoja).getByText(/El padre es el de la cubrición/)).toBeInTheDocument()
+
+    await usuario.click(within(hoja).getByRole('button', { name: 'Añadir otro ternero' }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar parto' }))
+    expect(within(hoja).getAllByText('Indica el sexo')).toHaveLength(2)
+
+    const [primero, segundo] = within(hoja).getAllByRole('group', { name: /^Ternero \d$/ })
+    if (!primero || !segundo) throw new Error('Faltan los terneros')
+    await usuario.click(within(primero).getByRole('button', { name: 'Hembra' }))
+    await usuario.type(within(primero).getByLabelText(/^Peso al nacer/), '38,5')
+    await usuario.click(within(segundo).getByRole('button', { name: 'Macho' }))
+    await usuario.click(within(segundo).getByRole('button', { name: 'Muerto' }))
+    await usuario.type(within(segundo).getByLabelText(/^Crotal/), 'ES041503459999')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar parto' }))
+
+    expect(await screen.findByText('Parto registrado: 2 terneros')).toBeInTheDocument()
+    const historial = await within(tarjeta).findByRole('list', { name: 'Historial reproductivo' })
+    const [parto] = within(historial).getAllByRole('listitem')
+    expect(parto?.textContent).toContain('Sin crotal · hembra')
+    expect(parto?.textContent).toContain('ES041503459999 · macho, nacido muerto')
+    // Sin gestación en curso: solo queda la fecha prevista en la fila de la cubrición
+    expect(screen.queryByText(/, sin confirmar$/)).not.toBeInTheDocument()
+    const crias = estado.animales.filter((x) => x.partoId)
+    expect(crias.map((x) => [x.crotal, x.sexo, x.estado, x.madreId, x.padreId])).toEqual([
+      [null, 'hembra', 'activo', 'a1', 'a2'],
+      ['ES041503459999', 'macho', 'muerto', 'a1', 'a2'],
+    ])
+  })
+
+  it('un ternero sin crotal lo avisa en la ficha y en la lista', async () => {
+    estado.animales.push(
+      animalSimulado({ id: 'a9', crotal: null, sexo: 'macho', fechaNacimiento: haceDias(3) }),
+    )
+    simularApi(estado)
+    const router = abrir(`${animales}/a9`)
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Ternero sin crotal' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/^Sin crotal: ponlo como tarde el/)).toBeInTheDocument()
+
+    await router.navigate(animales)
+    const lista = await tarjetas()
+    expect(within(lista).getAllByText('Sin crotal').length).toBeGreaterThan(0)
+  })
+
+  it('anula un parto y desaparecen sus terneros', async () => {
+    estado.partos.push({
+      id: 'pa1',
+      madreId: 'a1',
+      fecha: haceDias(5),
+      tipo: 'normal',
+      padreId: null,
+      padreTexto: null,
+      observaciones: null,
+      anulacion: null,
+    })
+    estado.animales.push(
+      animalSimulado({
+        id: 'a9',
+        crotal: null,
+        madreId: 'a1',
+        fechaNacimiento: haceDias(5),
+        partoId: 'pa1',
+      }),
+    )
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    await usuario.click(await within(tarjeta).findByRole('button', { name: /^Anular parto del/ }))
+    const hoja = screen.getByRole('dialog', { name: '¿Anular el parto?' })
+    expect(
+      within(hoja).getByText(/se borran las fichas de sus terneros \(Sin crotal\)/),
+    ).toBeInTheDocument()
+    await usuario.type(within(hoja).getByLabelText(/^Motivo/), 'Era otra vaca')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Anular parto' }))
+    expect(await screen.findByText(/^Parto del .* anulado$/)).toBeInTheDocument()
+    expect(estado.animales.some((x) => x.id === 'a9')).toBe(false)
   })
 })

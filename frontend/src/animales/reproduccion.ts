@@ -70,3 +70,29 @@ export function tiposPara(animal: {
   if (animal.madreId || animal.madreTexto) tipos.push('destete')
   return tipos
 }
+
+// Partos (GH-23)
+export type Parto = components['schemas']['Parto']
+export type DatosParto = components['schemas']['DatosParto']
+export type TipoParto = Parto['tipo']
+
+export const TIPOS_PARTO: Record<TipoParto, string> = {
+  normal: 'Normal',
+  con_ayuda: 'Con ayuda',
+  cesarea: 'Cesárea',
+}
+
+export const clavePartos = (explotacionId: string, animalId: string) =>
+  [...CLAVE_ANIMALES, explotacionId, 'partos', animalId] as const
+
+export const usePartos = (explotacionId: string, animalId: string, activo = true) =>
+  useQuery({
+    queryKey: clavePartos(explotacionId, animalId),
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/animales/{animalId}/partos', {
+          params: { path: { explotacionId, animalId } },
+        }),
+      ),
+    enabled: activo,
+  })

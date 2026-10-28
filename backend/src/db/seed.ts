@@ -1,4 +1,5 @@
 import { hashPassword } from 'better-auth/crypto'
+import { eq } from 'drizzle-orm'
 import { config } from '../config.js'
 import { hoyEnMadrid } from '../fechas.js'
 import { db, pool } from './cliente.js'
@@ -10,6 +11,7 @@ import {
   eventosReproductivos,
   member,
   organization,
+  partos,
   pesos,
   type RolExplotacion,
   tratamientos,
@@ -44,6 +46,7 @@ const ANIMAL = 5
 const PESADA = 6
 const TRATAMIENTO = 7
 const EVENTO = 8
+const PARTO = 9
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -289,9 +292,9 @@ const tratamientosVeiga: TratamientoEjemplo[] = [
   },
 ]
 
-// Eventos reproductivos: Marela, cubierta por Moreno y después inseminada y confirmada gestante;
-// Bonita, cubierta por Lucero sin diagnóstico; Pinta, inseminada y vacía, con una cubrición anulada; y
-// el destete de la ternera de Marela
+// Eventos reproductivos: Marela, cubierta por Moreno, inseminada después de parir y confirmada
+// gestante; Bonita, vacía y cubierta después por Lucero sin diagnóstico; Pinta, inseminada y
+// confirmada, con una cubrición anulada; y el destete de la ternera de Marela
 type EventoEjemplo = Omit<typeof eventosReproductivos.$inferInsert, 'animalId' | 'padreId'> & {
   animal: number
   padre?: number
@@ -310,23 +313,47 @@ const eventosVeiga: EventoEjemplo[] = [
     resultado: 'gestante',
   },
   { animal: 2, tipo: 'cubricion', fecha: haceDias(100), padre: 5 },
-  { animal: 3, tipo: 'inseminacion', fecha: haceDias(120), padreTexto: 'Dosis LM-0442' },
+  { animal: 3, tipo: 'inseminacion', fecha: haceDias(290), padreTexto: 'Dosis LM-0442' },
   {
     animal: 3,
     tipo: 'cubricion',
-    fecha: haceDias(90),
+    fecha: haceDias(285),
     padre: 4,
     anulado: 'Registrada en la vaca equivocada',
   },
   {
-    animal: 3,
+    animal: 2,
     tipo: 'diagnostico',
-    fecha: haceDias(75),
+    fecha: haceDias(120),
     metodo: 'palpacion',
     resultado: 'vacia',
-    observaciones: 'Repetir la inseminación en el próximo celo',
+    observaciones: 'Repetir la cubrición en el próximo celo',
+  },
+  {
+    animal: 3,
+    tipo: 'diagnostico',
+    fecha: haceDias(230),
+    metodo: 'palpacion',
+    resultado: 'gestante',
   },
 ]
+
+// Partos: el de Marela, del que nació su ternera, y el de Pinta hace cuatro días, con ayuda, de un
+// ternero que aún no tiene crotal
+const partosVeiga = [
+  { n: 1, madre: 1, fecha: '2026-02-11', tipo: 'normal' as const, padre: 4, terneros: [6] },
+  {
+    n: 2,
+    madre: 3,
+    fecha: haceDias(4),
+    tipo: 'con_ayuda' as const,
+    padreTexto: 'Dosis LM-0442',
+    terneros: [9],
+  },
+]
+
+// El ternero de Pinta, sin crotal todavía
+const TERNERO_SIN_CROTAL = { n: 9, raza: 'Cruzada', sexo: 'macho' as const, peso: 40 }
 
 await enExplotacion(
   { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
@@ -356,6 +383,50 @@ await enExplotacion(
         .insert(pesos)
         .values({ id: sid(PESADA, i + 1), animalId: sid(ANIMAL, animal), fecha, kg, momento })
         .onConflictDoNothing()
+    }
+    for (const { n, madre, padre, padreTexto, terneros, ...p } of partosVeiga) {
+      await tx
+        .insert(partos)
+        .values({
+          id: sid(PARTO, n),
+          madreId: sid(ANIMAL, madre),
+          padreId: padre ? sid(ANIMAL, padre) : null,
+          padreTexto: padreTexto ?? null,
+          ...p,
+        })
+        .onConflictDoNothing()
+      for (const ternero of terneros) {
+        if (ternero === TERNERO_SIN_CROTAL.n) {
+          await tx
+            .insert(animales)
+            .values({
+              id: sid(ANIMAL, ternero),
+              crotal: null,
+              raza: TERNERO_SIN_CROTAL.raza,
+              sexo: TERNERO_SIN_CROTAL.sexo,
+              fechaNacimiento: p.fecha,
+              madreId: sid(ANIMAL, madre),
+              padreTexto: padreTexto ?? null,
+              partoId: sid(PARTO, n),
+            })
+            .onConflictDoNothing()
+          await tx
+            .insert(pesos)
+            .values({
+              id: sid(PESADA, 100 + n),
+              animalId: sid(ANIMAL, ternero),
+              fecha: p.fecha,
+              kg: TERNERO_SIN_CROTAL.peso,
+              momento: 'nacimiento',
+            })
+            .onConflictDoNothing()
+        } else {
+          await tx
+            .update(animales)
+            .set({ partoId: sid(PARTO, n) })
+            .where(eq(animales.id, sid(ANIMAL, ternero)))
+        }
+      }
     }
     for (const [i, { animal, padre, anulado, ...e }] of eventosVeiga.entries()) {
       await tx
@@ -389,5 +460,5 @@ await enExplotacion(
 
 await pool.end()
 console.log(
-  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length} animales (contraseña ${CONTRASENA})`,
+  `Datos de ejemplo cargados: ${usuarios.length} usuarios, ${explotaciones.length} explotaciones y ${animalesVeiga.length + 1} animales (contraseña ${CONTRASENA})`,
 )

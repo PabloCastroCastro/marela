@@ -75,6 +75,10 @@ export const useRazas = (explotacionId: string) =>
     staleTime: 5 * 60_000,
   })
 
-// "Marela · ES041503456789", o solo el crotal si no tiene nombre
-export const identificacion = (a: { crotal: string; nombre?: string | null }) =>
-  a.nombre ? `${a.nombre} · ${a.crotal}` : a.crotal
+// "Marela · ES041503456789", o solo el crotal si no tiene nombre. Un ternero aún sin crotal
+// (GH-23): "Sin crotal"
+export const identificacion = (a: { crotal: string | null; nombre?: string | null }) =>
+  a.nombre ? `${a.nombre} · ${a.crotal ?? 'sin crotal'}` : (a.crotal ?? 'Sin crotal')
+
+// Plazo para crotalar a un ternero: los 20 días siguientes a su nacimiento
+export const DIAS_PARA_CROTALAR = 20

@@ -353,3 +353,30 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Cada ternero del formulario de parto, en su recuadro */
+.ternero {
+  position: relative;
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: var(--espacio-3) var(--espacio-4) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+}
+
+.ternero legend {
+  padding: 0 var(--espacio-1);
+  font-weight: var(--peso-medio);
+}
+
+.quitarTernero {
+  position: absolute;
+  top: var(--espacio-1);
+  right: var(--espacio-1);
+}
+
+.etiquetaGrupo {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
