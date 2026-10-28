@@ -55,7 +55,8 @@ describe('fincas', () => {
     expect(within(parcelas).getByText('SIGPAC 36:24:12:45:1')).toBeInTheDocument()
     expect(within(parcelas).getByText('2,3456 ha')).toBeInTheDocument()
 
-    await usuario.click(screen.getByRole('button', { name: 'Desactivar' }))
+    await usuario.click(screen.getByRole('button', { name: 'Registrar' }))
+    await usuario.click(screen.getByRole('button', { name: 'Desactivar la finca' }))
     await usuario.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Desactivar' }),
     )

@@ -8,9 +8,15 @@ import { FormularioLabor } from './FormularioLabor'
 import { TIPOS_LABOR, type TipoLabor } from './labores'
 
 // Acceso rápido desde la ficha de la finca a registrar lo que se hace en ella, como en la de los
-// animales: siembra, cosecha u otra labor (GH-26). El abono, los fitosanitarios y el pastoreo se
-// añadirán aquí.
-export function MenuRegistrarFinca({ finca }: { finca: FincaDetalle }) {
+// animales: siembra, cosecha u otra labor (GH-26) y, al final, desactivarla. El abono, los
+// fitosanitarios y el pastoreo se añadirán aquí.
+export function MenuRegistrarFinca({
+  finca,
+  alDesactivar,
+}: {
+  finca: FincaDetalle
+  alDesactivar: () => void
+}) {
   const [abierto, setAbierto] = useState(false)
   const [tipo, setTipo] = useState<TipoLabor>()
 
@@ -38,6 +44,17 @@ export function MenuRegistrarFinca({ finca }: { finca: FincaDetalle }) {
               {TIPOS_LABOR[t]}
             </Boton>
           ))}
+          <Boton
+            variante="secundario"
+            anchoCompleto
+            className={estilos.peligro}
+            onClick={() => {
+              setAbierto(false)
+              alDesactivar()
+            }}
+          >
+            Desactivar la finca
+          </Boton>
         </div>
       </HojaInferior>
       {tipo && (

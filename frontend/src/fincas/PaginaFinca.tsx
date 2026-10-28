@@ -92,13 +92,10 @@ export function PaginaFinca() {
           </div>
         </div>
         <div className={estilos.acciones}>
-          {f.activa && <MenuRegistrarFinca finca={f} />}
           {f.activa ? (
-            <Boton
-              variante="secundario"
-              icono={<PowerOff aria-hidden size={18} />}
-              cargando={cambiarEstado.isPending}
-              onClick={async () => {
+            <MenuRegistrarFinca
+              finca={f}
+              alDesactivar={async () => {
                 const ok = await confirmar({
                   titulo: `¿Desactivar ${f.nombre}?`,
                   mensaje:
@@ -107,9 +104,7 @@ export function PaginaFinca() {
                 })
                 if (ok) cambiarEstado.mutate(false)
               }}
-            >
-              Desactivar
-            </Boton>
+            />
           ) : (
             <Boton
               variante="secundario"
