@@ -12,6 +12,7 @@ import { rutasFincas } from './rutas/fincas.js'
 import { rutasLabores } from './rutas/labores.js'
 import { rutasMiembros } from './rutas/miembros.js'
 import { rutasPartos } from './rutas/partos.js'
+import { rutasPastoreos } from './rutas/pastoreos.js'
 import { rutasPesos } from './rutas/pesos.js'
 import { rutasPlataforma } from './rutas/plataforma.js'
 import { rutasReproduccion } from './rutas/reproduccion.js'
@@ -71,6 +72,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasFincas())
   app.route('/', rutasLabores())
   app.route('/', rutasAplicaciones())
+  app.route('/', rutasPastoreos())
   app.route('/', rutasPlataforma())
 
   // Sesión en la cookie de Better Auth (con el prefijo __Secure- salvo en desarrollo)

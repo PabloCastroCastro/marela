@@ -16,6 +16,7 @@ import {
   organization,
   parcelas,
   partos,
+  pastoreos,
   pesos,
   type RolExplotacion,
   tratamientos,
@@ -55,6 +56,7 @@ const FINCA = 10
 const PARCELA = 11
 const LABOR = 12
 const APLICACION = 13
+const PASTOREO = 14
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -654,6 +656,20 @@ const aplicacionesVeiga: AplicacionEjemplo[] = [
   },
 ]
 
+// Pastoreos: las vacas con sus crías en Prado da fonte desde hace diez días, en curso, y antes en
+// Chousa do monte, tras ensilar el maíz
+const pastoreosVeiga: (Omit<typeof pastoreos.$inferInsert, 'fincaId'> & { finca: number })[] = [
+  {
+    finca: 2,
+    fechaEntrada: '2026-09-30',
+    fechaSalida: haceDias(10),
+    animales: 12,
+    observaciones: 'Vacas con sus crías, en la rastrojera del maíz',
+  },
+  { finca: 3, fechaEntrada: haceDias(10), animales: 12, observaciones: 'Vacas con sus crías' },
+  { finca: 1, fechaEntrada: '2026-03-02', fechaSalida: '2026-03-20', animales: 8 },
+]
+
 const superficieFinca = (n: number) =>
   fincasVeiga.find((f) => f.n === n)?.parcelas.reduce((t, p) => t + p.superficie, 0) ?? 0
 
@@ -683,6 +699,12 @@ await enExplotacion(
             ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
             : {}),
         })
+        .onConflictDoNothing()
+    }
+    for (const [i, { finca, ...p }] of pastoreosVeiga.entries()) {
+      await tx
+        .insert(pastoreos)
+        .values({ id: sid(PASTOREO, i + 1), fincaId: sid(FINCA, finca), ...p })
         .onConflictDoNothing()
     }
   },
