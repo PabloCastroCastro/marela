@@ -229,7 +229,7 @@ Decisiones (GH-28):
 
 ### Para más adelante
 
-- Conexión con el catastro, SIGPAC y Maps.
+- Conexión con el catastro, SIGPAC y mapas: adelantada al ciclo 4b (GH-52 y GH-91).
 - Tener en cuenta la normativa (cuaderno de explotación / SIEX).
 - Posible conexión entre cosecha y entrada de comida con origen "producción propia".
 

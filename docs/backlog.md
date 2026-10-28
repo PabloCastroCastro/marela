@@ -10,8 +10,9 @@ Plan de trabajo de Marela: ciclos, etiquetas, milestones e issues. Las decisione
 | 2 · Animales: fichas | Ficha del animal, altas y bajas | v0.2.0 |
 | 3 · Animales: sanidad y reproducción | Tratamientos con periodo de supresión, pesos, eventos reproductivos y partos | v0.3.0 |
 | 4 · Fincas | Ficha de la finca, labores, abono y fitosanitarios, y pastoreo | v0.4.0 |
-| 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock | v0.5.0 |
-| 6 · Sin conexión | Registro y consulta sin cobertura en Animales y Fincas, con sincronización | v0.6.0 |
+| 4b · Fincas en el mapa | Parcelas desde el mapa o por su referencia SIGPAC o catastral, y mapa de las fincas | v0.5.0 |
+| 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock | v0.6.0 |
+| 6 · Sin conexión | Registro y consulta sin cobertura en Animales y Fincas, con sincronización | v0.7.0 |
 | 7 · Finanzas | Régimen fiscal, facturas, otros ingresos y gastos, ventas, informes y exportación. Primera versión completa y despliegue en producción | v1.0.0 |
 | 8 · Operación | Copias de seguridad automáticas, copia fuera del servidor y restauración | v1.1.0 |
 | 9 · Correo | Envío de correo, invitaciones y recuperación de contraseña por email | v1.2.0 |
@@ -40,8 +41,9 @@ Plan de trabajo de Marela: ciclos, etiquetas, milestones e issues. Las decisione
 | Ciclo 2 · Animales: fichas | Ficha del animal, altas y bajas (v0.2.0) |
 | Ciclo 3 · Animales: sanidad y reproducción | Tratamientos con periodo de supresión, pesos, eventos reproductivos y partos (v0.3.0) |
 | Ciclo 4 · Fincas | Ficha de la finca, labores, abono y fitosanitarios, y pastoreo (v0.4.0) |
-| Ciclo 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock (v0.5.0) |
-| Ciclo 6 · Sin conexión | Registro y consulta sin cobertura en Animales y Fincas, con sincronización (v0.6.0) |
+| Ciclo 4b · Fincas en el mapa | Parcelas desde el mapa o por su referencia SIGPAC o catastral, y mapa de las fincas (v0.5.0) |
+| Ciclo 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock (v0.6.0) |
+| Ciclo 6 · Sin conexión | Registro y consulta sin cobertura en Animales y Fincas, con sincronización (v0.7.0) |
 | Ciclo 7 · Finanzas | Régimen fiscal, facturas, otros ingresos y gastos, ventas, informes y exportación. Primera versión completa y despliegue en producción (v1.0.0) |
 | Ciclo 8 · Operación | Copias de seguridad automáticas, copia fuera del servidor y restauración (v1.1.0) |
 | Ciclo 9 · Correo | Envío de correo, invitaciones y recuperación de contraseña por email (v1.2.0) |
@@ -412,6 +414,51 @@ Depende de #25.
 
 ---
 
+### Milestone: Ciclo 4b · Fincas en el mapa
+
+#### GH-52
+**Título:** Parcelas desde el mapa o por referencia
+**Etiquetas:** feature, db, backend, frontend
+
+Depende de #25.
+
+Hoy cada parcela se registra a mano: la referencia SIGPAC o la catastral y la superficie. La idea es elegirlas en un mapa, o escribir solo la referencia, y que los datos se rellenen solos con los servicios públicos de SIGPAC y del Catastro.
+
+**Criterios de aceptación**
+- [ ] Al dar de alta o editar una finca, "Añadir desde el mapa" abre un mapa con la ortofoto y los recintos SIGPAC dibujados encima
+- [ ] Al tocar un recinto se añade como parcela con su referencia SIGPAC, su superficie y su uso; el municipio y la provincia de la finca se rellenan si están vacíos
+- [ ] Se pueden tocar varios recintos para la misma finca; tocar de nuevo uno lo quita
+- [ ] Por referencia: al escribir una referencia SIGPAC o catastral completa, se consultan su superficie y su municipio
+- [ ] Se guarda el contorno de cada parcela, para dibujarla después en el mapa de las fincas
+- [ ] El mapa se centra en la posición del móvil si se permite o, si no, en el municipio de la explotación
+- [ ] Si un servicio no responde o no hay conexión, se avisa con un error claro y se sigue pudiendo registrar a mano, como ahora
+
+**Notas técnicas**
+- Servicios públicos y gratuitos, a comprobar al empezar (direcciones, formatos y si admiten consultas desde el navegador):
+  - SIGPAC (FEGA): consulta del recinto en un punto, con su referencia, superficie, uso y contorno.
+  - Catastro: referencia catastral a partir de coordenadas, y datos y contorno de una referencia (servicios OVC e INSPIRE).
+  - IGN: ortofoto PNOA de fondo.
+- Las consultas pasan por el backend, con tiempo de espera, para no depender de que el servicio admita llamadas desde el navegador.
+- La librería del mapa se carga solo en esta pantalla: el paquete del frontend ya pasa de 500 kB.
+- Mostrar la atribución de cada fuente en el mapa.
+
+#### GH-91
+**Título:** Mapa de las fincas
+**Etiquetas:** feature, backend, frontend
+
+Depende de #52.
+
+**Criterios de aceptación**
+- [ ] En Fincas, una vista de mapa además de la lista, con las parcelas de cada finca dibujadas sobre la ortofoto
+- [ ] Al tocar una finca, su nombre y superficie, y el acceso a su ficha
+- [ ] Las fincas en pastoreo o en plazo de seguridad se distinguen en el mapa, como en el listado
+- [ ] Los filtros de la lista (búsqueda y estado) se aplican también al mapa
+- [ ] Las fincas registradas a mano, sin contorno, no salen en el mapa: se avisa de cuántas son, con la opción de completarlas desde el mapa
+- [ ] En la ficha de la finca, un mapa pequeño con sus parcelas
+- [ ] Se maneja bien con los dedos en el móvil y con el ratón en el escritorio
+
+---
+
 ### Milestone: Ciclo 5 · Comida
 
 #### GH-29
@@ -695,12 +742,6 @@ Exportación del libro de registro de la explotación y del libro de tratamiento
 **Etiquetas:** feature, backend, frontend
 
 Al registrar una cosecha, ofrecer crear la entrada de comida de producción propia en el almacén que corresponda.
-
-#### GH-52
-**Título:** Conexión con catastro, SIGPAC y mapas
-**Etiquetas:** investigacion, frontend, backend
-
-Ver las fincas en un mapa y consultar sus datos en el catastro y en SIGPAC a partir de sus referencias.
 
 #### GH-53
 **Título:** Cuaderno digital de explotación (SIEX)
