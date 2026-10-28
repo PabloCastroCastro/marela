@@ -169,6 +169,13 @@
       "when": 1793201316043,
       "tag": "0023_pastoreos_historial",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793204243375,
+      "tag": "0024_parcelas_mapa",
+      "breakpoints": true
     }
   ]
 }

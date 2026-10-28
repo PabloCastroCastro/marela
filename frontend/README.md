@@ -56,6 +56,7 @@ Cada sección (`animales/`, `comida/`, `fincas/`, `finanzas/`) tendrá su carpet
 - Objetivos táctiles de al menos 44 px.
 - **Accesibilidad**: foco visible con teclado, enlace para saltar al contenido y `prefers-reduced-motion`.
 - Iconos de [Lucide](https://lucide.dev) (`lucide-react`).
+- Mapas con [Leaflet](https://leafletjs.com) (`leaflet`), solo en la pantalla de elegir parcelas y cargado aparte (`React.lazy`): ortofoto del PNOA (IGN) y recintos del SIGPAC (FEGA) (GH-52).
 
 ## Sesión y explotaciones
 

@@ -164,10 +164,10 @@
   background: var(--color-superficie-elevada);
 }
 
-/* Las cinco partes de la referencia SIGPAC: en dos filas en el móvil y en una desde 40rem */
+/* Las siete partes de la referencia SIGPAC: en dos filas en el móvil y en una desde 40rem */
 .sigpac {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--espacio-2) var(--espacio-3);
 }
 
@@ -186,7 +186,7 @@
 
 @media (min-width: 40rem) {
   .sigpac {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(7, 1fr);
   }
 
   .dosCampos {
@@ -345,6 +345,44 @@
 }
 
 .enCurso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+/* Mapa para elegir los recintos de una finca (GH-52): casi toda la altura de la hoja */
+.mapaElegir {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.mapa {
+  position: relative;
+  height: min(60dvh, 32rem);
+  overflow: hidden;
+  border-radius: var(--radio-m);
+  background: var(--color-superficie-elevada);
+}
+
+.lienzo {
+  position: absolute;
+  inset: 0;
+  /* Encima del mapa, que pinta sus propias capas con z-index */
+  z-index: 0;
+}
+
+.ubicarme {
+  position: absolute;
+  right: var(--espacio-2);
+  bottom: var(--espacio-6);
+  z-index: 1000;
+  background: var(--color-superficie-elevada);
+  box-shadow: var(--sombra-2);
+}
+
+.parcelaDatos {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
