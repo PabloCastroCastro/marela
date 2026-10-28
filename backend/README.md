@@ -184,6 +184,18 @@ Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
 
 Reglas: kilos mayores que 0 y hasta 2.000, con un decimal, y fecha no futura, entre el nacimiento y la baja del animal (trigger `comprobar_fecha_pesada`, migración `0009`).
 
+### Reproducción
+
+Eventos reproductivos, en `src/rutas/reproduccion.ts` (mismo módulo `animales`):
+
+- **`GET /api/explotaciones/{id}/animales/{animalId}/reproduccion`:** su historial, del más reciente al más antiguo y con los anulados: sus eventos y los destetes de sus hijos.
+- **`POST /api/explotaciones/{id}/reproduccion`:** `{ animalIds, tipo, fecha, padreId? | padreTexto?, metodo?, resultado?, pesoDestete?, observaciones? }` registra el mismo evento a uno o varios animales (hasta 500), todos o ninguno. `tipo` es `cubricion`, `inseminacion` (con el padre: un toro de la explotación o un texto), `diagnostico` (con `metodo` y `resultado`), `aborto` o `destete`. Los cuatro primeros, solo en hembras. Un destete con `pesoDestete` guarda también la pesada al destete.
+- **`POST /api/explotaciones/{id}/reproduccion/{eventoId}/anulacion`:** `{ motivo }` anula un evento registrado por error (409 `ya_anulado`).
+
+Como los tratamientos, un evento **no se corrige ni se borra** (trigger `proteger_evento_reproductivo`, migración `0013`). El trigger `comprobar_evento_reproductivo` exige hembra, fecha en la vida del animal y padre macho; un ternero se desteta una vez.
+
+**Gestación:** `fecha_prevista_parto` es una columna generada, la fecha de la cubrición o inseminación más 283 días. La función `gestacion(animal)` da la gestación en curso: la última cubrición o inseminación posterior al último aborto o diagnóstico negativo, confirmada si hay un diagnóstico positivo. Las fichas de los animales llevan `gestacion` (`{ desde, fechaPrevistaParto, confirmada }` o `null`) y el listado se filtra con `?gestacion=en_curso`, ordenado por fecha prevista de parto.
+
 ### Tratamientos
 
 Tratamientos sanitarios, en `src/rutas/tratamientos.ts` (mismo módulo `animales`):
@@ -242,6 +254,7 @@ docker compose -f docker-compose.dev.yml exec backend npm test      # desde la r
 - `test/auth.test.ts`: inicio de sesión con usuario o email, cookie, límite de intentos, origen, cierre, caducidad y renovación de la sesión, usuario desactivado, cambio de contraseña y alta de usuarios.
 - `test/animales.test.ts`: alta, búsqueda y filtros, separación por explotación, crotal, fechas y origen, madre y padre, edición, historial, razas, bajas y restricciones de la base de datos.
 - `test/pesos.test.ts`: pesadas: registro, orden, validación, momento único, fechas en la vida del animal, corrección, borrado con historial, separación por explotación y restricciones.
+- `test/reproduccion.test.ts`: eventos reproductivos: cubrición a varias vacas y fecha prevista de parto, inseminación con dosis externa y diagnóstico positivo, cierre por diagnóstico negativo o aborto, filtro de gestantes, solo hembras y padre macho, destete con su pesada y en el historial de la madre, anulación con historial, separación por explotación y restricciones.
 - `test/tratamientos.test.ts`: tratamientos: registro a varios animales, quién lo administra, validación, animales y personas de otra explotación, fechas en la vida del animal, supresión en curso y su filtro, anulación con historial, opciones del formulario, separación por explotación, y que no se corrigen ni se borran.
 - `test/miembros.test.ts`: altas nuevas y existentes, roles, desactivación con y sin otras explotaciones, último administrador y restablecimiento de contraseñas (también por el propietario).
 - `test/plataforma.test.ts`: alta de explotaciones con administrador nuevo o existente, validación, REGA repetido, transacción y punto de extensión, desactivación y reactivación, y edición por el administrador.
@@ -297,7 +310,7 @@ Para SQL que Drizzle no genera (funciones, permisos), crea una migración vacía
 
 ### Datos de ejemplo
 
-`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
+`npm run db:seed` carga dos explotaciones con sus usuarios, y ocho animales en A Veiga (vacas, un toro propio, un toro comprado y terneros con su madre y su padre), con pesadas de una vaca y de dos terneros, y tratamientos: una desparasitación y una vacuna de las adultas, uno anulado y una ternera con neumonía hace tres días, en supresión; y eventos reproductivos: Marela gestante confirmada, Bonita cubierta sin confirmar, Pinta vacía con una cubrición anulada y el destete de la ternera de Marela. Es idempotente: se puede ejecutar varias veces sin duplicar nada. Todos los usuarios tienen la contraseña `marela-dev` y su email es `<usuario>@marela.test`.
 
 | Usuario | Acceso |
 |---|---|

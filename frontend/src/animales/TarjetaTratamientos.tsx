@@ -1,17 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Ban, Plus, Syringe } from 'lucide-react'
-import { type FormEvent, type ReactNode, useState } from 'react'
-import { api, datos, erroresPorCampo } from '../api/cliente'
-import { useAvisos } from '../componentes/Avisos'
+import { type ReactNode, useState } from 'react'
+import { api, datos } from '../api/cliente'
 import { Boton, BotonIcono } from '../componentes/Boton'
-import { AreaTexto } from '../componentes/Campo'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
 import { Insignia, Tarjeta } from '../componentes/Etiquetas'
-import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
 import estilos from './Animales.module.css'
-import { type AnimalDetalle, CLAVE_ANIMALES } from './datos'
+import type { AnimalDetalle } from './datos'
+import { FormularioAnulacion } from './FormularioAnulacion'
 import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaSupresion } from './InsigniaSupresion'
 import { MOTIVOS_TRATAMIENTO, type Tratamiento, useTratamientos, VIAS } from './tratamientos'
@@ -110,96 +107,26 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
         <FormularioTratamiento animales={[animal]} alCerrar={() => setRegistrando(false)} />
       )}
       {anulando && (
-        <FormularioAnulacion tratamiento={anulando} alCerrar={() => setAnulando(undefined)} />
+        <FormularioAnulacion
+          titulo="¿Anular el tratamiento?"
+          descripcion={`${anulando.producto}, del ${fecha(anulando.fecha)}. No se borra: queda en la ficha como anulado, con el motivo, y deja de contar para la supresión.`}
+          textoBoton="Anular tratamiento"
+          ayuda="Por ejemplo: registrado en el animal equivocado"
+          mensajeExito={`Tratamiento con ${anulando.producto} anulado`}
+          anular={(motivo) =>
+            datos(
+              api.POST(
+                '/api/explotaciones/{explotacionId}/tratamientos/{tratamientoId}/anulacion',
+                {
+                  params: { path: { explotacionId: explotacion.id, tratamientoId: anulando.id } },
+                  body: { motivo },
+                },
+              ),
+            )
+          }
+          alCerrar={() => setAnulando(undefined)}
+        />
       )}
     </Tarjeta>
-  )
-}
-
-// Anular un tratamiento registrado por error: no se borra, queda en la ficha con el motivo
-function FormularioAnulacion({
-  tratamiento,
-  alCerrar,
-}: {
-  tratamiento: Tratamiento
-  alCerrar: () => void
-}) {
-  const explotacion = useExplotacionActual()
-  const cliente = useQueryClient()
-  const { avisar } = useAvisos()
-  const [motivo, setMotivo] = useState('')
-  const [errorLocal, setErrorLocal] = useState<string>()
-
-  const anular = useMutation({
-    mutationFn: () =>
-      datos(
-        api.POST('/api/explotaciones/{explotacionId}/tratamientos/{tratamientoId}/anulacion', {
-          params: { path: { explotacionId: explotacion.id, tratamientoId: tratamiento.id } },
-          body: { motivo },
-        }),
-      ),
-    onSuccess: async () => {
-      await cliente.invalidateQueries({ queryKey: [...CLAVE_ANIMALES, explotacion.id] })
-      avisar({ tipo: 'exito', mensaje: `Tratamiento con ${tratamiento.producto} anulado` })
-      alCerrar()
-    },
-  })
-
-  const errores = erroresPorCampo(anular.error)
-  const errorGeneral =
-    anular.error && Object.keys(errores).length === 0 ? anular.error.message : null
-
-  const enviar = (e: FormEvent) => {
-    e.preventDefault()
-    if (!motivo.trim()) {
-      setErrorLocal('Indica por qué se anula')
-      return
-    }
-    setErrorLocal(undefined)
-    anular.mutate()
-  }
-
-  return (
-    <HojaInferior
-      abierta
-      alCerrar={alCerrar}
-      titulo="¿Anular el tratamiento?"
-      pie={
-        <>
-          <Boton variante="texto" onClick={alCerrar}>
-            Cancelar
-          </Boton>
-          <Boton
-            type="submit"
-            form="formulario-anulacion"
-            variante="peligro"
-            cargando={anular.isPending}
-          >
-            Anular tratamiento
-          </Boton>
-        </>
-      }
-    >
-      <form id="formulario-anulacion" className={estilos.formulario} onSubmit={enviar} noValidate>
-        {errorGeneral && (
-          <p className={estilos.error} role="alert">
-            {errorGeneral}
-          </p>
-        )}
-        <p>
-          {tratamiento.producto}, del {fecha(tratamiento.fecha)}. No se borra: queda en la ficha
-          como anulado, con el motivo, y deja de contar para la supresión.
-        </p>
-        <AreaTexto
-          etiqueta="Motivo de la anulación"
-          ayuda="Por ejemplo: registrado en el animal equivocado"
-          value={motivo}
-          onChange={(e) => setMotivo(e.target.value)}
-          error={errorLocal ?? errores.motivo}
-          required
-          autoFocus
-        />
-      </form>
-    </HojaInferior>
   )
 }

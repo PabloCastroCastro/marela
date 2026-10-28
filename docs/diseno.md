@@ -101,6 +101,15 @@ Decisiones (GH-20):
 - Los terneros nacidos muertos también tienen ficha, con estado "muerto", por trazabilidad.
 - Sin avisos de momento.
 
+Decisiones (GH-22):
+
+- La fecha prevista de parto es la de la cubrición o inseminación más 283 días, la gestación media del vacuno de carne.
+- La gestación en curso de una vaca se calcula de sus eventos: la última cubrición o inseminación posterior al último aborto o diagnóstico negativo. Un diagnóstico positivo la confirma; sin él se muestra "sin confirmar".
+- En la ficha y en el listado: "Parto previsto el…". En el listado se filtra con "Estado: Gestantes", ordenadas por fecha prevista de parto, aunque no es un estado: la vaca sigue activa.
+- La cubrición y la inseminación se registran a varias vacas a la vez marcándolas en el listado y pulsando "Cubrir"; el resto de eventos, desde la ficha.
+- El destete es del ternero y se registra en su ficha, con su peso opcional, que se guarda también como su pesada al destete. Sale además en el historial de la madre.
+- Un evento no se corrige ni se borra: se anula con un motivo, sigue en el historial tachado y deja de contar para la gestación.
+
 ## Comida
 
 - Los almacenes son configurables por explotación: nombre, tipo y unidad (unidades o kilos).

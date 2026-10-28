@@ -135,9 +135,15 @@ const finSupresion = (hoy: string) =>
   sql<string | null>`(select max(t.fin_supresion)::text from tratamientos t
     where t.animal_id = ${animales.id} and t.anulado_en is null and t.fin_supresion > ${hoy})`
 
+// Gestación en curso (GH-22): la de la función gestacion() de la migración 0013, o null
+type Gestacion = { desde: string | null; fechaPrevistaParto: string | null; confirmada: boolean }
+const gestacion = sql<Gestacion | null>`(select json_build_object('desde', g.desde,
+    'fechaPrevistaParto', g.fecha_prevista_parto, 'confirmada', g.confirmada)
+  from gestacion(${animales.id}) g)`
+
 function consulta(tx: Transaccion) {
   return tx
-    .select({ ...columnas, finSupresion: finSupresion(hoyEnMadrid()) })
+    .select({ ...columnas, finSupresion: finSupresion(hoyEnMadrid()), gestacion })
     .from(animales)
     .leftJoin(madre, eq(madre.id, animales.madreId))
     .leftJoin(padre, eq(padre.id, animales.padreId))
@@ -163,6 +169,7 @@ export type FiltrosAnimales = {
   estado?: (typeof ESTADOS_ANIMAL)[number]
   sexo?: (typeof SEXOS)[number]
   supresion?: 'en_curso'
+  gestacion?: 'en_curso'
 }
 
 export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) {
@@ -182,9 +189,17 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
   if (filtros.sexo) condiciones.push(eq(animales.sexo, filtros.sexo))
   if (filtros.supresion === 'en_curso')
     condiciones.push(sql`${finSupresion(hoyEnMadrid())} is not null`)
+  if (filtros.gestacion === 'en_curso')
+    condiciones.push(sql`exists (select from gestacion(${animales.id}))`)
   const filas = await consulta(tx)
     .where(and(...condiciones))
-    .orderBy(asc(animales.crotal))
+    // Las gestantes, por la fecha prevista de parto: primero las que antes van a parir
+    .orderBy(
+      ...(filtros.gestacion === 'en_curso'
+        ? [sql`(select g.fecha_prevista_parto from gestacion(${animales.id}) g) nulls last`]
+        : []),
+      asc(animales.crotal),
+    )
   return filas.map(ficha)
 }
 

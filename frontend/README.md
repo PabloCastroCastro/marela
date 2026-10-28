@@ -17,7 +17,7 @@ src/
   auth/             sesión, inicio de sesión, cambio de contraseña y rutas protegidas
   explotaciones/    explotaciones del usuario, elección, explotación activa y sus datos
   plataforma/       gestión de las explotaciones por el propietario
-  animales/         lista, ficha, alta, edición, bajas, pesos y tratamientos de animales
+  animales/         lista, ficha, alta, edición, bajas, reproducción, tratamientos y pesos de animales
   api/              cliente de la API: esquema.ts (generado) y cliente.ts
   diseno/           estructura de una explotación: cabecera, selector, cuenta y navegación adaptable
   componentes/      componentes comunes (botones, campos, hoja inferior, avisos, tabla…)

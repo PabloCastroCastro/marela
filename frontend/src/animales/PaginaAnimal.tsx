@@ -14,12 +14,14 @@ import { type AnimalDetalle, ESTADOS, identificacion, SEXOS, TIPOS_BAJA, useAnim
 import { FormularioAnimal } from './FormularioAnimal'
 import { FormularioBaja, useDeshacerBaja } from './FormularioBaja'
 import { InsigniaEstado } from './InsigniaEstado'
+import { InsigniaGestacion } from './InsigniaGestacion'
 import { InsigniaSupresion } from './InsigniaSupresion'
 import { TarjetaPesos } from './TarjetaPesos'
+import { TarjetaReproduccion } from './TarjetaReproduccion'
 import { TarjetaTratamientos } from './TarjetaTratamientos'
 
-// Ficha de un animal: sus datos, su madre y su padre, sus hijos (GH-15), sus
-// tratamientos (GH-20) y sus pesos (GH-21)
+// Ficha de un animal: sus datos, su madre y su padre, sus hijos (GH-15), su reproducción (GH-22),
+// sus tratamientos (GH-20) y sus pesos (GH-21)
 export function PaginaAnimal() {
   const explotacion = useExplotacionActual()
   const { animalId = '' } = useParams()
@@ -73,6 +75,7 @@ export function PaginaAnimal() {
             {a.nombre && <span className={estilos.cifra}>{a.crotal}</span>}
             <InsigniaEstado estado={a.estado} />
             {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} />}
+            {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} />}
           </div>
         </div>
         <div className={estilos.acciones}>
@@ -175,6 +178,8 @@ export function PaginaAnimal() {
             </ul>
           )}
         </Tarjeta>
+
+        {(a.sexo === 'hembra' || a.madreId || a.madreTexto) && <TarjetaReproduccion animal={a} />}
 
         <TarjetaTratamientos animal={a} />
 
