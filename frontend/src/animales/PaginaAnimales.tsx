@@ -17,9 +17,10 @@ import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaEstado } from './InsigniaEstado'
 import { InsigniaSupresion } from './InsigniaSupresion'
 
-type FiltroEstado = EstadoAnimal | 'todos'
+// "En supresión" se filtra como un estado más, aunque no lo es: se calcula de los tratamientos y el
+// animal sigue activo (GH-20)
+type FiltroEstado = EstadoAnimal | 'en_supresion' | 'todos'
 type FiltroSexo = Sexo | 'todos'
-type FiltroSupresion = 'en_curso' | 'todos'
 
 // Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15). Con
 // "Seleccionar" se marcan varios para registrarles un tratamiento a la vez (GH-20).
@@ -29,18 +30,17 @@ export function PaginaAnimales() {
   const [texto, setTexto] = useState('')
   const [estado, setEstado] = useState<FiltroEstado>('activo')
   const [sexo, setSexo] = useState<FiltroSexo>('todos')
-  const [supresion, setSupresion] = useState<FiltroSupresion>('todos')
   const [anadiendo, setAnadiendo] = useState(false)
   // null: sin modo selección
   const [seleccion, setSeleccion] = useState<Set<string> | null>(null)
   const [tratando, setTratando] = useState(false)
 
-  const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos' || supresion !== 'todos'
+  const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
   const animales = useAnimales(explotacion.id, {
     q: texto || undefined,
-    estado: estado === 'todos' ? undefined : estado,
+    estado: estado === 'todos' ? undefined : estado === 'en_supresion' ? 'activo' : estado,
     sexo: sexo === 'todos' ? undefined : sexo,
-    supresion: supresion === 'todos' ? undefined : supresion,
+    supresion: estado === 'en_supresion' ? 'en_curso' : undefined,
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/animales/${id}`)
   // Solo cuentan los marcados que siguen en la lista con los filtros de ahora
@@ -75,6 +75,7 @@ export function PaginaAnimales() {
           etiqueta="Estado"
           opciones={[
             { valor: 'activo', texto: 'Activos' },
+            { valor: 'en_supresion', texto: 'En supresión' },
             { valor: 'vendido', texto: 'Vendidos' },
             { valor: 'muerto', texto: 'Muertos' },
             { valor: 'baja', texto: 'Otras bajas' },
@@ -94,16 +95,6 @@ export function PaginaAnimales() {
           valor={sexo}
           porDefecto="todos"
           alCambiar={setSexo}
-        />
-        <FiltroDesplegable
-          etiqueta="Supresión"
-          opciones={[
-            { valor: 'todos', texto: 'Todos' },
-            { valor: 'en_curso', texto: 'En curso' },
-          ]}
-          valor={supresion}
-          porDefecto="todos"
-          alCambiar={setSupresion}
         />
       </BarraFiltros>
 

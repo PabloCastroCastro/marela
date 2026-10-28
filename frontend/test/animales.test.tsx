@@ -466,7 +466,7 @@ describe('tratamientos', () => {
     const usuario = userEvent.setup()
     abrir(animales)
     await tarjetas()
-    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Supresión/ }), 'En curso')
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'En supresión')
     expect(await screen.findByText('1 animal')).toBeInTheDocument()
     const lista = await tarjetas()
     expect(within(lista).getByText('ES041503457001')).toBeInTheDocument()

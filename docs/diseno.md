@@ -87,7 +87,7 @@ Decisiones (GH-20):
 
 - Se registran desde la ficha del animal o, para varios a la vez, seleccionándolos en el listado de animales ("Seleccionar" y "Tratar"). Se crea un tratamiento por animal.
 - Quién lo administra: por defecto, quien lo registra; se puede elegir otra persona del equipo o escribir un nombre.
-- La supresión termina el día de la fecha más los días de supresión. Mientras dura, la ficha y el listado lo muestran ("En supresión hasta el…"), y el listado tiene el filtro "Supresión: En curso".
+- La supresión termina el día de la fecha más los días de supresión. Mientras dura, la ficha y el listado lo muestran ("En supresión hasta el…"), y en el listado se filtra con "Estado: En supresión", aunque no es un estado: se calcula de los tratamientos y el animal sigue activo.
 - Un tratamiento no se corrige ni se borra: se anula con un motivo, sigue en la ficha tachado y deja de contar para la supresión. Para corregirlo, se anula y se registra de nuevo.
 
 ### Reproducción
