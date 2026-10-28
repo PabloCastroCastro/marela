@@ -47,6 +47,17 @@ const Animal = z
       .date()
       .nullable()
       .openapi({ description: 'Día en que termina la supresión en curso, si la hay' }),
+    gestacion: z
+      .object({
+        desde: z.iso
+          .date()
+          .nullable()
+          .openapi({ description: 'Cubrición o inseminación; null si solo hay un diagnóstico' }),
+        fechaPrevistaParto: z.iso.date().nullable(),
+        confirmada: z.boolean().openapi({ description: 'Con un diagnóstico positivo' }),
+      })
+      .nullable()
+      .openapi({ description: 'Gestación en curso, si la hay' }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -84,6 +95,9 @@ const Filtros = z.object({
     .enum(['en_curso'])
     .optional()
     .openapi({ description: 'Solo los animales con un periodo de supresión en curso' }),
+  gestacion: z.enum(['en_curso']).optional().openapi({
+    description: 'Solo las hembras con una gestación en curso, por fecha prevista de parto',
+  }),
 })
 
 export const error = (description: string) => ({

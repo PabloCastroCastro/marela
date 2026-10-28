@@ -5,7 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { edad } from '../src/formato'
 import { crearClienteConsultas, Proveedores } from '../src/proveedores'
 import { rutas } from '../src/rutas'
-import { A_VEIGA, type EstadoSimulado, estadoInicial, O_SOUTO, simularApi } from './simulacion'
+import {
+  A_VEIGA,
+  type EstadoSimulado,
+  type EventoSimulado,
+  estadoInicial,
+  O_SOUTO,
+  simularApi,
+} from './simulacion'
 
 function abrir(ruta: string) {
   const router = createMemoryRouter(rutas, { initialEntries: [ruta] })
@@ -492,5 +499,140 @@ describe('tratamientos', () => {
     const lista = await tarjetas()
     expect(within(lista).getByText('ES041503457001')).toBeInTheDocument()
     expect(within(lista).getByText(/^En supresión hasta el/)).toBeInTheDocument()
+  })
+})
+
+describe('reproducción', () => {
+  // Fecha de hace n días, en aaaa-mm-dd
+  const haceDias = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
+
+  const evento = (cambios: Partial<EventoSimulado> & Pick<EventoSimulado, 'tipo'>) =>
+    estado.eventos.push({
+      id: `e${estado.eventos.length + 1}`,
+      animalId: 'a1',
+      fecha: haceDias(60),
+      padreId: null,
+      padreTexto: null,
+      metodo: null,
+      resultado: null,
+      observaciones: null,
+      anulacion: null,
+      ...cambios,
+    })
+
+  it('muestra la gestación y el historial reproductivo de la vaca', async () => {
+    evento({ tipo: 'cubricion', padreId: 'a2' })
+    evento({ tipo: 'diagnostico', fecha: haceDias(20), metodo: 'ecografia', resultado: 'gestante' })
+    simularApi(estado)
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    const historial = await within(tarjeta).findByRole('list', { name: 'Historial reproductivo' })
+    expect(within(historial).getByText('Diagnóstico: gestante')).toBeInTheDocument()
+    expect(
+      within(historial).getByRole('link', { name: 'Moreno · ES041503456812' }),
+    ).toBeInTheDocument()
+    // En la cabecera de la ficha, en la tarjeta (confirmada) y en la cubrición
+    expect(screen.getAllByText(/^Parto previsto el \d\d\/\d\d\/\d{4}$/)).toHaveLength(3)
+  })
+
+  it('registra una inseminación con una dosis externa', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    expect(await within(tarjeta).findByText('Sin eventos registrados')).toBeInTheDocument()
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Inseminación' }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await within(hoja).findByText('Indica el toro')).toBeInTheDocument()
+
+    await usuario.selectOptions(
+      within(hoja).getByLabelText(/^Toro o dosis/),
+      'Dosis o toro de fuera',
+    )
+    await usuario.type(within(hoja).getByLabelText(/^Dosis o toro \(/), 'RG-1187')
+    expect(within(hoja).getByText(/^Parto previsto el/)).toBeInTheDocument()
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText('Inseminación registrada')).toBeInTheDocument()
+    expect(await within(tarjeta).findByText(/con RG-1187/)).toBeInTheDocument()
+    expect(screen.getAllByText(/^Parto previsto el .*, sin confirmar$/)).toHaveLength(2)
+  })
+
+  it('un diagnóstico negativo cierra la gestación', async () => {
+    evento({ tipo: 'cubricion', padreId: 'a2' })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    expect(await screen.findAllByText(/^Parto previsto el .*, sin confirmar$/)).toHaveLength(2)
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Registrar' }))
+    const hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Diagnóstico' }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Palpación' }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Vacía' }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText('Diagnóstico registrado')).toBeInTheDocument()
+    expect(await within(tarjeta).findByText('Diagnóstico: vacía')).toBeInTheDocument()
+    expect(screen.queryByText(/^Parto previsto el .*, sin confirmar$/)).not.toBeInTheDocument()
+  })
+
+  it('anula un evento con motivo, que sigue en el historial', async () => {
+    evento({ tipo: 'aborto' })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    await usuario.click(await within(tarjeta).findByRole('button', { name: /^Anular aborto del/ }))
+    const hoja = screen.getByRole('dialog', { name: '¿Anular el evento?' })
+    await usuario.type(within(hoja).getByLabelText(/^Motivo/), 'Era otra vaca')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Anular evento' }))
+    expect(await screen.findByText(/^Aborto del .* anulado$/)).toBeInTheDocument()
+    expect(await within(tarjeta).findByText('Anulado')).toBeInTheDocument()
+  })
+
+  it('desteta un ternero con su peso, y sale en el historial de la madre', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(`${animales}/a3`)
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    await usuario.click(await within(tarjeta).findByRole('button', { name: 'Registrar' }))
+    const hoja = screen.getByRole('dialog', { name: /Registrar · ES041503457001/ })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Destete' }))
+    await usuario.type(within(hoja).getByLabelText(/^Peso al destete/), '231,5')
+    await usuario.clear(within(hoja).getByLabelText(/^Fecha/))
+    await usuario.type(within(hoja).getByLabelText(/^Fecha/), '2026-08-01')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Destete registrado')).toBeInTheDocument()
+    expect(estado.pesadas.at(-1)).toMatchObject({ animalId: 'a3', kg: 231.5, momento: 'destete' })
+
+    await router.navigate(`${animales}/a1`)
+    await screen.findByRole('heading', { level: 1, name: 'Marela' })
+    const deLaMadre = await screen.findByRole('region', { name: 'Reproducción' })
+    expect(await within(deLaMadre).findByText('Destete de su ternero')).toBeInTheDocument()
+  })
+
+  it('cubre varias vacas marcadas en la lista y filtra las gestantes', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(animales)
+    await tarjetas()
+    const tabla = screen.getByRole('table', { name: 'Animales' })
+    await usuario.click(within(tabla).getByRole('checkbox', { name: /Marela/ }))
+    await usuario.click(within(tabla).getByRole('checkbox', { name: /ES041503457001/ }))
+    await usuario.click(screen.getByRole('button', { name: 'Cubrir' }))
+    const hoja = screen.getByRole('dialog', { name: 'Cubrir 2 animales' })
+    await usuario.selectOptions(
+      within(hoja).getByLabelText(/^Toro/),
+      await within(hoja).findByRole('option', { name: 'Moreno · ES041503456812' }),
+    )
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Cubrición registrada a 2 animales')).toBeInTheDocument()
+
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'Gestantes')
+    expect(await screen.findByText('2 animales')).toBeInTheDocument()
+    expect(within(await tarjetas()).getAllByText(/^Parto previsto el/)).toHaveLength(2)
   })
 })

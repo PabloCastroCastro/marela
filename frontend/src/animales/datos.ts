@@ -36,6 +36,7 @@ export type FiltrosAnimales = {
   estado?: EstadoAnimal
   sexo?: Sexo
   supresion?: 'en_curso'
+  gestacion?: 'en_curso'
 }
 
 export const useAnimales = (explotacionId: string, filtros: FiltrosAnimales = {}) =>

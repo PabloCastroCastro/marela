@@ -1,7 +1,7 @@
 import { Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Boton } from '../componentes/Boton'
+import { Boton, BotonIcono } from '../componentes/Boton'
 import { BotonFlotante } from '../componentes/BotonFlotante'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { BarraFiltros, Buscador, FiltroDesplegable } from '../componentes/Filtros'
@@ -13,18 +13,20 @@ import { edad, fecha } from '../formato'
 import estilos from './Animales.module.css'
 import { type EstadoAnimal, identificacion, SEXOS, type Sexo, useAnimales } from './datos'
 import { FormularioAnimal } from './FormularioAnimal'
+import { FormularioEvento } from './FormularioEvento'
 import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaEstado } from './InsigniaEstado'
+import { InsigniaGestacion } from './InsigniaGestacion'
 import { InsigniaSupresion } from './InsigniaSupresion'
 
-// "En supresión" se filtra como un estado más, aunque no lo es: se calcula de los tratamientos y el
-// animal sigue activo (GH-20)
-type FiltroEstado = EstadoAnimal | 'en_supresion' | 'todos'
+// "En supresión" y "Gestantes" se filtran como un estado más, aunque no lo son: se calculan de los
+// tratamientos (GH-20) y de los eventos reproductivos (GH-22), y el animal sigue activo
+type FiltroEstado = EstadoAnimal | 'en_supresion' | 'gestante' | 'todos'
 type FiltroSexo = Sexo | 'todos'
 
 // Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15). Con
 // casillas (en el móvil, manteniendo pulsado un animal) se marcan varios para registrarles un
-// tratamiento a la vez (GH-20).
+// tratamiento (GH-20) o una cubrición (GH-22) a la vez.
 export function PaginaAnimales() {
   const explotacion = useExplotacionActual()
   const navegar = useNavigate()
@@ -32,16 +34,22 @@ export function PaginaAnimales() {
   const [estado, setEstado] = useState<FiltroEstado>('activo')
   const [sexo, setSexo] = useState<FiltroSexo>('todos')
   const [anadiendo, setAnadiendo] = useState(false)
-  // null: sin modo selección
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
   const [tratando, setTratando] = useState(false)
+  const [cubriendo, setCubriendo] = useState(false)
 
   const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
   const animales = useAnimales(explotacion.id, {
     q: texto || undefined,
-    estado: estado === 'todos' ? undefined : estado === 'en_supresion' ? 'activo' : estado,
+    estado:
+      estado === 'todos'
+        ? undefined
+        : estado === 'en_supresion' || estado === 'gestante'
+          ? 'activo'
+          : estado,
     sexo: sexo === 'todos' ? undefined : sexo,
     supresion: estado === 'en_supresion' ? 'en_curso' : undefined,
+    gestacion: estado === 'gestante' ? 'en_curso' : undefined,
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/animales/${id}`)
   // Solo cuentan los marcados que siguen en la lista con los filtros de ahora
@@ -67,6 +75,7 @@ export function PaginaAnimales() {
           opciones={[
             { valor: 'activo', texto: 'Activos' },
             { valor: 'en_supresion', texto: 'En supresión' },
+            { valor: 'gestante', texto: 'Gestantes' },
             { valor: 'vendido', texto: 'Vendidos' },
             { valor: 'muerto', texto: 'Muertos' },
             { valor: 'baja', texto: 'Otras bajas' },
@@ -161,6 +170,7 @@ export function PaginaAnimales() {
                   <span className={estilos.insignias}>
                     <InsigniaEstado estado={a.estado} />
                     {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} corta />}
+                    {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} corta />}
                   </span>
                 ),
                 ordenar: (a) => a.estado,
@@ -178,8 +188,13 @@ export function PaginaAnimales() {
               : `${seleccionados.length} seleccionados`}
           </p>
           <div className={estilos.acciones}>
-            <Boton variante="texto" icono={<X aria-hidden size={20} />} onClick={desmarcar}>
-              Desmarcar
+            <BotonIcono
+              etiqueta="Desmarcar"
+              icono={<X aria-hidden size={20} />}
+              onClick={desmarcar}
+            />
+            <Boton variante="secundario" onClick={() => setCubriendo(true)}>
+              Cubrir
             </Boton>
             <Boton icono={<Syringe aria-hidden size={20} />} onClick={() => setTratando(true)}>
               Tratar
@@ -191,6 +206,14 @@ export function PaginaAnimales() {
           etiqueta="Añadir animal"
           icono={<Plus aria-hidden size={26} />}
           alPulsar={() => setAnadiendo(true)}
+        />
+      )}
+      {cubriendo && (
+        <FormularioEvento
+          animales={seleccionados}
+          tipos={['cubricion', 'inseminacion']}
+          alCerrar={() => setCubriendo(false)}
+          alGuardar={desmarcar}
         />
       )}
       {tratando && (

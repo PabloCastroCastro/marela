@@ -116,6 +116,22 @@ const finSupresion = (t: TratamientoSimulado) =>
     .toISOString()
     .slice(0, 10)
 
+export type EventoSimulado = {
+  id: string
+  animalId: string
+  tipo: 'cubricion' | 'inseminacion' | 'diagnostico' | 'aborto' | 'destete'
+  fecha: string
+  padreId: string | null
+  padreTexto: string | null
+  metodo: 'ecografia' | 'palpacion' | null
+  resultado: 'gestante' | 'vacia' | null
+  observaciones: string | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
+const masDias = (fecha: string, dias: number) =>
+  new Date(Date.parse(`${fecha}T00:00:00Z`) + dias * 86_400_000).toISOString().slice(0, 10)
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -133,6 +149,7 @@ export type EstadoSimulado = {
   animales: AnimalSimulado[]
   pesadas: PesadaSimulada[]
   tratamientos: TratamientoSimulado[]
+  eventos: EventoSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -236,6 +253,7 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
       { id: 'p1', animalId: 'a3', fecha: '2026-02-11', kg: 38, momento: 'nacimiento' },
       { id: 'p2', animalId: 'a3', fecha: '2026-04-12', kg: 98, momento: 'otro' },
     ],
+    eventos: [],
     tratamientos: [
       {
         id: 't1',
@@ -267,6 +285,8 @@ const ANIMALES = /^\/api\/explotaciones\/([^/]+)\/animales(?:\/([^/]+))?$/
 const BAJA = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/baja$/
 const PESOS = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/pesos(?:\/([^/]+))?$/
 const TRATAMIENTOS_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/tratamientos$/
+const REPRODUCCION_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/reproduccion$/
+const REPRODUCCION = /^\/api\/explotaciones\/[^/]+\/reproduccion(?:\/([^/]+)\/anulacion)?$/
 const TRATAMIENTOS = /^\/api\/explotaciones\/[^/]+\/tratamientos(?:\/([^/]+)\/anulacion)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
@@ -345,6 +365,85 @@ export function simularApi(estado: EstadoSimulado) {
       creadoEn: '2026-10-01T10:00:00.000Z',
       modificadoEn: '2026-10-01T10:00:00.000Z',
     })
+    const resumenAnimal = (id: string | null) => {
+      const x = estado.animales.find((y) => y.id === id)
+      return x ? { id: x.id, crotal: x.crotal, nombre: x.nombre } : null
+    }
+    const evento = (e: EventoSimulado) => ({
+      ...e,
+      animal: resumenAnimal(e.animalId),
+      padre: resumenAnimal(e.padreId),
+      fechaPrevistaParto:
+        e.tipo === 'cubricion' || e.tipo === 'inseminacion' ? masDias(e.fecha, 283) : null,
+      creadoEn: '2026-10-01T10:00:00.000Z',
+      modificadoEn: '2026-10-01T10:00:00.000Z',
+    })
+    const deReproduccion = ruta.match(REPRODUCCION_ANIMAL)
+    if (deReproduccion) {
+      const id = deReproduccion[1]
+      const hijos = estado.animales.filter((x) => x.madreId === id).map((x) => x.id)
+      return json(
+        estado.eventos
+          .filter((e) => e.animalId === id || (e.tipo === 'destete' && hijos.includes(e.animalId)))
+          .sort((x, y) => y.fecha.localeCompare(x.fecha))
+          .map(evento),
+      )
+    }
+    const enReproduccion = ruta.match(REPRODUCCION)
+    if (enReproduccion) {
+      const [, eventoId] = enReproduccion
+      if (eventoId) {
+        const e = estado.eventos.find((x) => x.id === eventoId)
+        if (!e) return errorApi(404, 'evento_no_encontrado')
+        e.anulacion = {
+          en: '2026-10-20T10:00:00.000Z',
+          por: estado.usuario.name,
+          motivo: cuerpo.motivo,
+        }
+        return json(evento(e))
+      }
+      const ids = cuerpo.animalIds as string[]
+      const machos = estado.animales.filter((x) => ids.includes(x.id) && x.sexo === 'macho')
+      if (cuerpo.tipo !== 'destete' && machos.length > 0) {
+        return errorApi(400, 'validacion', [
+          {
+            campo: 'animalIds',
+            mensaje: `Solo las hembras; no lo son ${machos.map((x) => x.crotal).join(', ')}`,
+          },
+        ])
+      }
+      if (
+        (cuerpo.tipo === 'cubricion' || cuerpo.tipo === 'inseminacion') &&
+        !cuerpo.padreId &&
+        !cuerpo.padreTexto
+      ) {
+        return errorApi(400, 'validacion', [{ campo: 'padreId', mensaje: 'Indica el toro' }])
+      }
+      const creados = ids.map((animalId, i) => ({
+        id: `e${estado.eventos.length + i + 1}`,
+        animalId,
+        tipo: cuerpo.tipo,
+        fecha: cuerpo.fecha,
+        padreId: cuerpo.padreId ?? null,
+        padreTexto: cuerpo.padreTexto ?? null,
+        metodo: cuerpo.metodo ?? null,
+        resultado: cuerpo.resultado ?? null,
+        observaciones: cuerpo.observaciones || null,
+        anulacion: null,
+      }))
+      estado.eventos.push(...creados)
+      if (cuerpo.tipo === 'destete' && cuerpo.pesoDestete != null) {
+        estado.pesadas.push({
+          id: `p${estado.pesadas.length + 1}`,
+          animalId: ids[0] ?? '',
+          fecha: cuerpo.fecha,
+          kg: cuerpo.pesoDestete,
+          momento: 'destete',
+        })
+      }
+      return json(creados.map(evento), 201)
+    }
+
     if (ruta.endsWith('/tratamientos/opciones')) {
       return json({
         personas: estado.miembros
@@ -501,6 +600,31 @@ export function simularApi(estado: EstadoSimulado) {
         return p ? { id: p.id, crotal: p.crotal, nombre: p.nombre } : null
       }
       const hoy = new Date().toISOString().slice(0, 10)
+      // Como la función gestacion() del backend
+      const gestacion = (a: AnimalSimulado) => {
+        const vivos = estado.eventos.filter((e) => e.animalId === a.id && !e.anulacion)
+        const cierre =
+          vivos
+            .filter(
+              (e) => e.tipo === 'aborto' || (e.tipo === 'diagnostico' && e.resultado === 'vacia'),
+            )
+            .map((e) => e.fecha)
+            .sort()
+            .at(-1) ?? ''
+        const cubricion = vivos
+          .filter((e) => (e.tipo === 'cubricion' || e.tipo === 'inseminacion') && e.fecha > cierre)
+          .sort((x, y) => x.fecha.localeCompare(y.fecha))
+          .at(-1)
+        const positivo = vivos.some(
+          (e) => e.tipo === 'diagnostico' && e.resultado === 'gestante' && e.fecha > cierre,
+        )
+        if (!cubricion && !positivo) return null
+        return {
+          desde: cubricion?.fecha ?? null,
+          fechaPrevistaParto: cubricion ? masDias(cubricion.fecha, 283) : null,
+          confirmada: positivo,
+        }
+      }
       const supresion = (a: AnimalSimulado) =>
         estado.tratamientos
           .filter((t) => t.animalId === a.id && !t.anulacion)
@@ -511,6 +635,7 @@ export function simularApi(estado: EstadoSimulado) {
       const ficha = (a: AnimalSimulado) => ({
         ...a,
         finSupresion: supresion(a),
+        gestacion: gestacion(a),
         madre: resumen(a.madreId),
         padre: resumen(a.padreId),
         creadoEn: '2026-10-01T10:00:00.000Z',
@@ -551,6 +676,7 @@ export function simularApi(estado: EstadoSimulado) {
             .filter((a) => !q.get('estado') || a.estado === q.get('estado'))
             .filter((a) => !q.get('sexo') || a.sexo === q.get('sexo'))
             .filter((a) => !q.get('supresion') || supresion(a) !== null)
+            .filter((a) => !q.get('gestacion') || gestacion(a) !== null)
             .filter(
               (a) =>
                 !texto ||

@@ -646,6 +646,8 @@ export interface paths {
                     sexo?: "hembra" | "macho";
                     /** @description Solo los animales con un periodo de supresión en curso */
                     supresion?: "en_curso";
+                    /** @description Solo las hembras con una gestación en curso, por fecha prevista de parto */
+                    gestacion?: "en_curso";
                 };
                 header?: never;
                 path: {
@@ -1650,6 +1652,247 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/reproduccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial reproductivo de un animal
+         * @description Sus eventos y los destetes de sus hijos.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Del más reciente al más antiguo, anulados incluidos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventoReproductivo"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/reproduccion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registrar un evento reproductivo a uno o varios animales
+         * @description Crea un evento por animal, todos con los mismos datos. Un destete con peso guarda también la pesada al destete.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosEvento"];
+                };
+            };
+            responses: {
+                /** @description Registrados */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventoReproductivo"][];
+                    };
+                };
+                /** @description Datos no válidos, machos en un evento de hembra, animales de otra explotación o fecha fuera de su vida (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/reproduccion/{eventoId}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular un evento reproductivo registrado por error
+         * @description No se borra: queda en el historial como anulado, con el motivo, y deja de contar para la gestación.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    eventoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosAnulacionEvento"];
+                };
+            };
+            responses: {
+                /** @description Anulado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventoReproductivo"];
+                    };
+                };
+                /** @description Falta el motivo (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el evento (evento_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya está anulado (ya_anulado) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -2084,6 +2327,18 @@ export interface components {
              * @description Día en que termina la supresión en curso, si la hay
              */
             finSupresion: string | null;
+            /** @description Gestación en curso, si la hay */
+            gestacion: {
+                /**
+                 * Format: date
+                 * @description Cubrición o inseminación; null si solo hay un diagnóstico
+                 */
+                desde: string | null;
+                /** Format: date */
+                fechaPrevistaParto: string | null;
+                /** @description Con un diagnóstico positivo */
+                confirmada: boolean;
+            } | null;
             /** Format: date-time */
             creadoEn: string;
             /** Format: date-time */
@@ -2264,6 +2519,73 @@ export interface components {
         };
         DatosAnulacion: {
             /** @example Registrado en el animal equivocado */
+            motivo: string;
+        };
+        EventoReproductivo: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            tipo: "cubricion" | "inseminacion" | "diagnostico" | "aborto" | "destete";
+            /** Format: date */
+            fecha: string;
+            /** Format: uuid */
+            animalId: string;
+            /** @description En el historial de una vaca, el ternero destetado */
+            animal: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            };
+            /** Format: uuid */
+            padreId: string | null;
+            padre: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            } | null;
+            padreTexto: string | null;
+            /**
+             * Format: date
+             * @description Cubrición e inseminación: la fecha más 283 días
+             */
+            fechaPrevistaParto: string | null;
+            /** @enum {string|null} */
+            metodo: "ecografia" | "palpacion" | null;
+            /** @enum {string|null} */
+            resultado: "gestante" | "vacia" | null;
+            observaciones: string | null;
+            anulacion: {
+                /** Format: date-time */
+                en: string;
+                por: string;
+                motivo: string;
+            } | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosEvento: {
+            animalIds: string[];
+            /** @enum {string} */
+            tipo: "cubricion" | "inseminacion" | "diagnostico" | "aborto" | "destete";
+            /** Format: date */
+            fecha: string;
+            /** Format: uuid */
+            padreId?: string | null;
+            /** @example Dosis RG-1187 */
+            padreTexto?: string | null;
+            /** @enum {string|null} */
+            metodo?: "ecografia" | "palpacion" | null;
+            /** @enum {string|null} */
+            resultado?: "gestante" | "vacia" | null;
+            pesoDestete?: number | null;
+            observaciones?: string | null;
+        };
+        DatosAnulacionEvento: {
+            /** @example Registrado en la vaca equivocada */
             motivo: string;
         };
         ExplotacionPlataforma: {

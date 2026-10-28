@@ -525,6 +525,39 @@
             "format": "date",
             "description": "Día en que termina la supresión en curso, si la hay"
           },
+          "gestacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "desde": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date",
+                "description": "Cubrición o inseminación; null si solo hay un diagnóstico"
+              },
+              "fechaPrevistaParto": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date"
+              },
+              "confirmada": {
+                "type": "boolean",
+                "description": "Con un diagnóstico positivo"
+              }
+            },
+            "required": [
+              "desde",
+              "fechaPrevistaParto",
+              "confirmada"
+            ],
+            "description": "Gestación en curso, si la hay"
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -556,6 +589,7 @@
           "causaBaja",
           "observaciones",
           "finSupresion",
+          "gestacion",
           "creadoEn",
           "modificadoEn"
         ]
@@ -1196,6 +1230,276 @@
             "type": "string",
             "minLength": 1,
             "example": "Registrado en el animal equivocado"
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "EventoReproductivo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "cubricion",
+              "inseminacion",
+              "diagnostico",
+              "aborto",
+              "destete"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "animalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "animal": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ],
+            "description": "En el historial de una vaca, el ternero destetado"
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "crotal": {
+                "type": "string"
+              },
+              "nombre": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "crotal",
+              "nombre"
+            ]
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fechaPrevistaParto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Cubrición e inseminación: la fecha más 283 días"
+          },
+          "metodo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ecografia",
+              "palpacion",
+              null
+            ]
+          },
+          "resultado": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "gestante",
+              "vacia",
+              null
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "fecha",
+          "animalId",
+          "animal",
+          "padreId",
+          "padre",
+          "padreTexto",
+          "fechaPrevistaParto",
+          "metodo",
+          "resultado",
+          "observaciones",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosEvento": {
+        "type": "object",
+        "properties": {
+          "animalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "cubricion",
+              "inseminacion",
+              "diagnostico",
+              "aborto",
+              "destete"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "padreId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "padreTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Dosis RG-1187"
+          },
+          "metodo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ecografia",
+              "palpacion",
+              null
+            ]
+          },
+          "resultado": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "gestante",
+              "vacia",
+              null
+            ]
+          },
+          "pesoDestete": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 2000
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "animalIds",
+          "tipo",
+          "fecha"
+        ]
+      },
+      "DatosAnulacionEvento": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Registrado en la vaca equivocada"
           }
         },
         "required": [
@@ -2149,6 +2453,19 @@
             "required": false,
             "description": "Solo los animales con un periodo de supresión en curso",
             "name": "supresion",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en_curso"
+              ],
+              "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto"
+            },
+            "required": false,
+            "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto",
+            "name": "gestacion",
             "in": "query"
           }
         ],
@@ -3346,6 +3663,278 @@
           },
           "404": {
             "description": "No existe la explotación o el tratamiento (tratamiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya está anulado (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/reproduccion": {
+      "get": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Historial reproductivo de un animal",
+        "description": "Sus eventos y los destetes de sus hijos.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo, anulados incluidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoReproductivo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/reproduccion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Registrar un evento reproductivo a uno o varios animales",
+        "description": "Crea un evento por animal, todos con los mismos datos. Un destete con peso guarda también la pesada al destete.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosEvento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoReproductivo"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos, machos en un evento de hembra, animales de otra explotación o fecha fuera de su vida (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/reproduccion/{eventoId}/anulacion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Anular un evento reproductivo registrado por error",
+        "description": "No se borra: queda en el historial como anulado, con el motivo, y deja de contar para la gestación.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "eventoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacionEvento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoReproductivo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el evento (evento_no_encontrado)",
             "content": {
               "application/json": {
                 "schema": {

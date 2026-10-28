@@ -85,6 +85,20 @@
       "when": 1793171283803,
       "tag": "0011_tratamientos_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793176347198,
+      "tag": "0012_reproduccion",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793176348860,
+      "tag": "0013_reproduccion_triggers",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import { migrar } from './migrar.js'
 import {
   account,
   animales,
+  eventosReproductivos,
   member,
   organization,
   pesos,
@@ -42,6 +43,7 @@ const MIEMBRO = 4
 const ANIMAL = 5
 const PESADA = 6
 const TRATAMIENTO = 7
+const EVENTO = 8
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -226,9 +228,10 @@ const pesadasVeiga = [
 
 // Tratamientos: una desparasitación y una vacuna de las adultas, y la ternera con neumonía hace tres
 // días, para que haya una supresión en curso. Uno anulado, registrado en el animal equivocado.
-const haceTresDias = new Date(Date.parse(`${hoyEnMadrid()}T12:00:00Z`) - 3 * 864e5)
-  .toISOString()
-  .slice(0, 10)
+// Fecha de hace n días: lo que depende de hoy (supresiones, gestaciones) sigue en curso
+const haceDias = (n: number) =>
+  new Date(Date.parse(`${hoyEnMadrid()}T12:00:00Z`) - n * 864e5).toISOString().slice(0, 10)
+const haceTresDias = haceDias(3)
 
 type TratamientoEjemplo = Omit<typeof tratamientos.$inferInsert, 'animalId'> & {
   animal: number
@@ -286,6 +289,45 @@ const tratamientosVeiga: TratamientoEjemplo[] = [
   },
 ]
 
+// Eventos reproductivos: Marela, cubierta por Moreno y después inseminada y confirmada gestante;
+// Bonita, cubierta por Lucero sin diagnóstico; Pinta, inseminada y vacía, con una cubrición anulada; y
+// el destete de la ternera de Marela
+type EventoEjemplo = Omit<typeof eventosReproductivos.$inferInsert, 'animalId' | 'padreId'> & {
+  animal: number
+  padre?: number
+  anulado?: string
+}
+
+const eventosVeiga: EventoEjemplo[] = [
+  { animal: 1, tipo: 'cubricion', fecha: '2025-04-20', padre: 4 },
+  { animal: 6, tipo: 'destete', fecha: '2026-08-28' },
+  { animal: 1, tipo: 'inseminacion', fecha: haceDias(65), padreTexto: 'Dosis RG-1187' },
+  {
+    animal: 1,
+    tipo: 'diagnostico',
+    fecha: haceDias(25),
+    metodo: 'ecografia',
+    resultado: 'gestante',
+  },
+  { animal: 2, tipo: 'cubricion', fecha: haceDias(100), padre: 5 },
+  { animal: 3, tipo: 'inseminacion', fecha: haceDias(120), padreTexto: 'Dosis LM-0442' },
+  {
+    animal: 3,
+    tipo: 'cubricion',
+    fecha: haceDias(90),
+    padre: 4,
+    anulado: 'Registrada en la vaca equivocada',
+  },
+  {
+    animal: 3,
+    tipo: 'diagnostico',
+    fecha: haceDias(75),
+    metodo: 'palpacion',
+    resultado: 'vacia',
+    observaciones: 'Repetir la inseminación en el próximo celo',
+  },
+]
+
 await enExplotacion(
   { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
   async (tx) => {
@@ -313,6 +355,20 @@ await enExplotacion(
       await tx
         .insert(pesos)
         .values({ id: sid(PESADA, i + 1), animalId: sid(ANIMAL, animal), fecha, kg, momento })
+        .onConflictDoNothing()
+    }
+    for (const [i, { animal, padre, anulado, ...e }] of eventosVeiga.entries()) {
+      await tx
+        .insert(eventosReproductivos)
+        .values({
+          id: sid(EVENTO, i + 1),
+          animalId: sid(ANIMAL, animal),
+          padreId: padre ? sid(ANIMAL, padre) : null,
+          ...e,
+          ...(anulado
+            ? { anuladoEn: new Date(), anuladoPor: sid(USUARIO, 2), motivoAnulacion: anulado }
+            : {}),
+        })
         .onConflictDoNothing()
     }
     for (const [i, { animal, anulado, ...t }] of tratamientosVeiga.entries()) {
