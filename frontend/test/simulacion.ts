@@ -288,6 +288,18 @@ export type FacturaSimulada = {
   movimientoIds?: string[]
 }
 
+export type ApunteSimulado = {
+  id: string
+  tipo: 'ingreso' | 'gasto'
+  categoria: string
+  fecha: string
+  concepto: string
+  importe: number
+  observaciones: string | null
+  archivo: { nombre: string; tipo: string; tamano: number } | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -316,6 +328,7 @@ export type EstadoSimulado = {
   equipos: EquipoSimulado[]
   tareas: TareaSimulada[]
   facturas: FacturaSimulada[]
+  apuntes: ApunteSimulado[]
   // Régimen fiscal guardado (GH-34); sin él, el de por defecto
   fiscal?: { regimen: 'reagp' | 'general'; compensacionReagp: number; tiposIva: number[] }
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
@@ -643,6 +656,42 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         animalIds: [],
       },
     ],
+    // Una ayuda de la PAC, un seguro y un gasto anulado (GH-37)
+    apuntes: [
+      {
+        id: 'ap1',
+        tipo: 'ingreso',
+        categoria: 'subvencion',
+        fecha: '2026-10-20',
+        concepto: 'Pago básico PAC',
+        importe: 3250.4,
+        observaciones: null,
+        archivo: null,
+        anulacion: null,
+      },
+      {
+        id: 'ap2',
+        tipo: 'gasto',
+        categoria: 'seguro',
+        fecha: '2026-10-10',
+        concepto: 'Seguro del tractor',
+        importe: 420,
+        observaciones: null,
+        archivo: null,
+        anulacion: null,
+      },
+      {
+        id: 'ap3',
+        tipo: 'gasto',
+        categoria: 'combustible',
+        fecha: '2026-10-05',
+        concepto: 'Gasóleo repetido',
+        importe: 80,
+        observaciones: null,
+        archivo: null,
+        anulacion: { en: '2026-10-06T10:00:00.000Z', por: 'Ana Varela', motivo: 'Repetido' },
+      },
+    ],
     ...cambios,
   }
 }
@@ -685,6 +734,8 @@ const TAREAS = /^\/api\/explotaciones\/([^/]+)\/tareas(?:\/([^/]+))?(\/hecha)?$/
 const FACTURAS =
   /^\/api\/explotaciones\/([^/]+)\/facturas(?:\/([^/]+))?(?:\/(pago|archivo|entradas-comida))?$/
 // Las entradas de comida de todos los almacenes, con su factura (GH-36)
+// Los otros ingresos y gastos (GH-37), uno, su anulación o su archivo
+const APUNTES = /^\/api\/explotaciones\/([^/]+)\/apuntes(?:\/([^/]+))?(?:\/(anulacion|archivo))?$/
 const ENTRADAS_COMIDA = /^\/api\/explotaciones\/([^/]+)\/entradas-comida$/
 
 // La factura de una entrada de comida, si la tiene
@@ -1128,6 +1179,69 @@ export function simularApi(estado: EstadoSimulado) {
         configurado: Boolean(estado.fiscal),
         modificadoEn: estado.fiscal ? '2026-10-29T10:00:00.000Z' : null,
       })
+    }
+
+    const deApuntes = ruta.match(APUNTES)
+    if (deApuntes) {
+      const [, explotacionId, apunteId, accion] = deApuntes
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const completo = (ap: ApunteSimulado) => ({
+        ...ap,
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      const datosApunte = () => ({
+        tipo: cuerpo.tipo,
+        categoria: cuerpo.categoria,
+        fecha: cuerpo.fecha,
+        concepto: cuerpo.concepto.trim(),
+        importe: cuerpo.importe,
+        observaciones: cuerpo.observaciones?.trim() || null,
+      })
+      if (!apunteId && metodo === 'GET') {
+        const q = new URL(peticion.url).searchParams
+        return json(
+          estado.apuntes
+            .filter((x) => !q.get('tipo') || x.tipo === q.get('tipo'))
+            .filter((x) => !q.get('categoria') || x.categoria === q.get('categoria'))
+            .filter((x) => q.get('estado') !== 'vigente' || !x.anulacion)
+            .filter((x) => q.get('estado') !== 'anulado' || x.anulacion)
+            .map(completo),
+        )
+      }
+      if (!apunteId) {
+        const nuevo: ApunteSimulado = {
+          id: `ap${estado.apuntes.length + 1}`,
+          archivo: null,
+          anulacion: null,
+          ...datosApunte(),
+        }
+        estado.apuntes.push(nuevo)
+        return json(completo(nuevo), 201)
+      }
+      const ap = estado.apuntes.find((x) => x.id === apunteId)
+      if (!ap) return errorApi(404, 'apunte_no_encontrado')
+      if (metodo === 'GET' && !accion) return json(completo(ap))
+      if (ap.anulacion) return errorApi(409, 'ya_anulado')
+      if (accion === 'anulacion') {
+        ap.anulacion = {
+          en: '2026-10-29T10:00:00.000Z',
+          por: estado.usuario.name,
+          motivo: cuerpo.motivo,
+        }
+        return json(completo(ap))
+      }
+      if (accion === 'archivo') {
+        if (metodo === 'DELETE') ap.archivo = null
+        const archivo = formulario?.get('archivo')
+        if (metodo === 'PUT' && archivo instanceof File)
+          ap.archivo = { nombre: archivo.name, tipo: archivo.type, tamano: archivo.size }
+        return json(completo(ap))
+      }
+      Object.assign(ap, datosApunte())
+      return json(completo(ap))
     }
 
     const deEntradas = ruta.match(ENTRADAS_COMIDA)

@@ -1,13 +1,12 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
-import { bodyLimit } from 'hono/body-limit'
-import { borrarArchivo, guardarArchivo, leerArchivo, TAMANO_MAXIMO_ARCHIVO } from '../archivos.js'
+import { borrarArchivo, guardarArchivo } from '../archivos.js'
 import {
   IMPUESTOS_FACTURA,
   ORIGENES_ENTRADA,
   TIPOS_FACTURA,
   UNIDADES_ALMACEN,
 } from '../db/schema/index.js'
-import { ErrorApi, EsquemaError, validacionFallida } from '../errores.js'
+import { EsquemaError, validacionFallida } from '../errores.js'
 import {
   archivoDe,
   asociarEntradas,
@@ -25,6 +24,13 @@ import {
 } from '../facturas.js'
 import { hoyEnMadrid } from '../fechas.js'
 import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
+import {
+  contenidoArchivo,
+  cuerpoArchivo,
+  enviarArchivo,
+  erroresSubida,
+  limiteSubida,
+} from './archivos.js'
 
 // Facturas (GH-35) y sus entradas de comida (GH-36), en Finanzas: solo el administrador
 
@@ -230,15 +236,6 @@ const borrar = createRoute({
 
 const rutaArchivo = `${ruta}/{facturaId}/archivo`
 
-// Un poco más que el máximo del archivo, por el resto del formulario
-const limiteSubida = bodyLimit({
-  maxSize: TAMANO_MAXIMO_ARCHIVO + 64 * 1024,
-  onError: () => {
-    const mensaje = 'El archivo ocupa más de 10 MB'
-    throw new ErrorApi(413, 'archivo_demasiado_grande', mensaje, [{ campo: 'archivo', mensaje }])
-  },
-})
-
 const subirArchivo = createRoute({
   method: 'put',
   path: rutaArchivo,
@@ -249,24 +246,11 @@ const subirArchivo = createRoute({
   middleware: [permitir('finanzas'), limiteSubida] as const,
   request: {
     params: ParametrosFactura,
-    body: {
-      content: {
-        'multipart/form-data': {
-          schema: z.object({
-            archivo: z
-              .instanceof(File, { message: 'Elige un archivo' })
-              .openapi({ type: 'string', format: 'binary' }),
-          }),
-        },
-      },
-      required: true,
-    },
+    body: cuerpoArchivo,
   },
   responses: {
     200: json(Factura, 'La factura con su archivo'),
-    400: error('Falta el archivo (validacion)'),
-    413: error('El archivo ocupa más de 10 MB (archivo_demasiado_grande)'),
-    415: error('No es un PDF ni una foto (tipo_de_archivo)'),
+    ...erroresSubida,
     ...comunes,
   },
 })
@@ -280,13 +264,7 @@ const descargarArchivo = createRoute({
   middleware: [permitir('finanzas')] as const,
   request: { params: ParametrosFactura },
   responses: {
-    200: {
-      description: 'El PDF o la foto',
-      content: {
-        'application/pdf': { schema: z.string().openapi({ format: 'binary' }) },
-        'image/*': { schema: z.string().openapi({ format: 'binary' }) },
-      },
-    },
+    200: contenidoArchivo,
     ...comunes,
     404: error('No existe la explotación, la factura o su archivo (archivo_no_encontrado)'),
   },
@@ -416,15 +394,7 @@ export const rutasFacturas = () =>
     .openapi(descargarArchivo, async (c) => {
       const { facturaId } = c.req.valid('param')
       const archivo = await enLaExplotacion(c, (tx) => archivoDe(tx, facturaId))
-      const contenido = await leerArchivo(archivo.ruta).catch(() => {
-        throw new ErrorApi(404, 'archivo_no_encontrado', 'No se encuentra el archivo de la factura')
-      })
-      return c.body(new Uint8Array(contenido), 200, {
-        'content-type': archivo.tipo,
-        'content-disposition': `inline; filename*=UTF-8''${encodeURIComponent(archivo.nombre)}`,
-        'cache-control': 'private, no-store',
-        'x-content-type-options': 'nosniff',
-      })
+      return enviarArchivo(c, archivo)
     })
     .openapi(quitarArchivo, async (c) => {
       const { facturaId } = c.req.valid('param')

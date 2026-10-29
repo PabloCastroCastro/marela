@@ -40,7 +40,7 @@ const finanzas = (explotacionId = A_VEIGA.id) => `/explotaciones/${explotacionId
 describe('régimen fiscal (GH-34)', () => {
   it('sin configurar, muestra REAGP con el 10,5 % y los tipos de IVA, como valores por defecto', async () => {
     simularApi(estado)
-    abrir(finanzas())
+    abrir(`${finanzas()}?vista=regimen`)
     const tarjeta = await screen.findByRole('region', { name: 'Régimen fiscal' })
     expect(await within(tarjeta).findByText('Régimen especial agrario (REAGP)')).toBeInTheDocument()
     expect(within(tarjeta).getByText('10,5 %')).toBeInTheDocument()
@@ -51,7 +51,7 @@ describe('régimen fiscal (GH-34)', () => {
   it('el administrador cambia el régimen, la compensación y los tipos de IVA', async () => {
     simularApi(estado)
     const usuario = userEvent.setup()
-    abrir(finanzas())
+    abrir(`${finanzas()}?vista=regimen`)
     const tarjeta = await screen.findByRole('region', { name: 'Régimen fiscal' })
     await usuario.click(await within(tarjeta).findByRole('button', { name: 'Editar' }))
     const hoja = await screen.findByRole('dialog', { name: 'Régimen fiscal' })
@@ -80,7 +80,7 @@ describe('régimen fiscal (GH-34)', () => {
   it('no deja guardar sin ningún tipo de IVA ni una compensación fuera de 0 a 100', async () => {
     simularApi(estado)
     const usuario = userEvent.setup()
-    abrir(finanzas())
+    abrir(`${finanzas()}?vista=regimen`)
     await usuario.click(await screen.findByRole('button', { name: 'Editar' }))
     const hoja = await screen.findByRole('dialog', { name: 'Régimen fiscal' })
     for (const t of ['21 %', '10 %', '4 %'])
@@ -268,5 +268,89 @@ describe('entradas de comida de una factura (GH-36)', () => {
     abrir(`${finanzas()}/facturas/fa2`)
     expect(await screen.findByRole('heading', { name: 'Factura 2026-0006' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Entradas de comida' })).not.toBeInTheDocument()
+  })
+})
+
+describe('otros ingresos y gastos (GH-37)', () => {
+  const apuntes = () => `${finanzas()}?vista=apuntes`
+
+  it('las pestañas de Finanzas: facturas, otros ingresos y gastos y régimen fiscal', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(finanzas())
+    expect(await screen.findByRole('table', { name: 'Facturas' })).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Otros ingresos y gastos' }))
+    expect(
+      await screen.findByRole('table', { name: 'Otros ingresos y gastos' }),
+    ).toBeInTheDocument()
+    expect(router.state.location.search).toBe('?vista=apuntes')
+    await usuario.click(screen.getByRole('button', { name: 'Régimen fiscal' }))
+    expect(await screen.findByRole('region', { name: 'Régimen fiscal' })).toBeInTheDocument()
+  })
+
+  it('lista los vigentes con su signo y filtra por tipo y estado', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(apuntes())
+    const tabla = await screen.findByRole('table', { name: 'Otros ingresos y gastos' })
+    expect(within(tabla).getByText('+3.250,40 €')).toBeInTheDocument()
+    expect(within(tabla).getByText('−420,00 €')).toBeInTheDocument()
+    expect(within(tabla).queryByText('Gasóleo repetido')).not.toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Gastos' }))
+    await waitFor(() => expect(within(tabla).queryByText('+3.250,40 €')).not.toBeInTheDocument())
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /Estado/ }), 'anulado')
+    expect(await within(tabla).findByText('Gasóleo repetido')).toBeInTheDocument()
+    expect(within(tabla).getByText('Anulado')).toBeInTheDocument()
+  })
+
+  it('registra un gasto con su categoría y abre su ficha', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(apuntes())
+    await usuario.click(await screen.findByRole('button', { name: 'Nuevo' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nuevo ingreso o gasto' })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Gasto' }))
+    // Las categorías, las del tipo
+    const categoria = within(hoja).getByRole('combobox', { name: /Categoría/ })
+    expect(within(categoria).queryByRole('option', { name: /Subvención/ })).not.toBeInTheDocument()
+    await usuario.selectOptions(categoria, 'veterinario')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Concepto/ }), 'Visita de campo')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Importe/ }), '1.200,5')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByRole('heading', { name: 'Visita de campo' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(`${finanzas()}/apuntes/ap4`)
+    expect(estado.apuntes.at(-1)).toMatchObject({
+      tipo: 'gasto',
+      categoria: 'veterinario',
+      importe: 1200.5,
+    })
+  })
+
+  it('no deja guardar sin concepto ni con importe 0', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(apuntes())
+    await usuario.click(await screen.findByRole('button', { name: 'Nuevo' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nuevo ingreso o gasto' })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Importe/ }), '0')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(within(hoja).getByText(/Indica el concepto/)).toBeInTheDocument()
+    expect(within(hoja).getByText(/Indica el importe/)).toBeInTheDocument()
+    expect(estado.apuntes).toHaveLength(3)
+  })
+
+  it('se anula con motivo desde la ficha; anulado, ya no se corrige', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${finanzas()}/apuntes/ap2`)
+    expect(await screen.findByRole('heading', { name: 'Seguro del tractor' })).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Anular' }))
+    const hoja = await screen.findByRole('dialog', { name: /¿Anular/ })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Motivo/ }), 'Estaba repetido')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Anular' }))
+    expect(await screen.findByText(/Estaba repetido/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Corregir' })).not.toBeInTheDocument()
+    expect(estado.apuntes[1]?.anulacion?.motivo).toBe('Estaba repetido')
   })
 })

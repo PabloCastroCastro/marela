@@ -297,7 +297,10 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 ### Otros ingresos y gastos
 
 - Movimientos sin factura: subvenciones PAC, seguros, tickets...
-- Datos: tipo (ingreso o gasto), fecha, concepto, importe, archivo adjunto opcional y observaciones.
+- Datos: tipo (ingreso o gasto), categoría, fecha, concepto, importe, archivo adjunto opcional y observaciones.
+- Categorías fijas, para los informes (GH-37). De ingreso: subvención (PAC u otra), indemnización del seguro y otro ingreso. De gasto: seguro, veterinario, combustible, reparaciones y mantenimiento, suministros, impuestos y tasas, y otro gasto.
+- Se corrigen. Uno registrado por error no se borra: se anula con su motivo, sigue a la vista como anulado y deja de contar en los totales.
+- Finanzas se organiza en pestañas: Facturas, Otros ingresos y gastos y Régimen fiscal (las ventas y los informes se añadirán).
 
 ### Ventas
 

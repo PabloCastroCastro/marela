@@ -11,11 +11,13 @@ import {
   pgEnum,
   pgTable,
   text,
+  timestamp,
   unique,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
 import { animales } from './animales.js'
+import { user } from './auth.js'
 import { movimientosComida } from './comida.js'
 import { id } from './comun.js'
 import { auditoria, deExplotacion, separacionPorExplotacion } from './explotacion.js'
@@ -215,6 +217,76 @@ export const facturasMovimientosComida = pgTable(
     unique('facturas_movimientos_comida_movimiento_unico').on(t.movimientoId),
     index('facturas_movimientos_comida_explotacion_idx').on(t.explotacionId),
     index('facturas_movimientos_comida_factura_idx').on(t.facturaId),
+    separacionPorExplotacion(),
+  ],
+)
+
+// Otros ingresos y gastos (GH-37): los movimientos sin factura, como las subvenciones de la PAC, los
+// seguros o los tickets. Se corrigen; uno registrado por error se anula con su motivo y sigue a la
+// vista, sin contar en los totales.
+export const TIPOS_APUNTE = ['ingreso', 'gasto'] as const
+
+export const tipoApunte = pgEnum('tipo_apunte', TIPOS_APUNTE)
+
+// Categorías fijas, para los informes (GH-39). Cada una es de ingreso o de gasto.
+export const CATEGORIAS_INGRESO = ['subvencion', 'indemnizacion_seguro', 'otro_ingreso'] as const
+export const CATEGORIAS_GASTO = [
+  'seguro',
+  'veterinario',
+  'combustible',
+  'reparaciones',
+  'suministros',
+  'impuestos',
+  'otro_gasto',
+] as const
+export const CATEGORIAS_APUNTE = [...CATEGORIAS_INGRESO, ...CATEGORIAS_GASTO] as const
+
+export const categoriaApunte = pgEnum('categoria_apunte', CATEGORIAS_APUNTE)
+
+const lista = (valores: readonly string[]) => sql.raw(valores.map((v) => `'${v}'`).join(', '))
+
+export const apuntes = pgTable(
+  'apuntes',
+  {
+    id: id(),
+    ...deExplotacion(),
+    tipo: tipoApunte('tipo').notNull(),
+    categoria: categoriaApunte('categoria').notNull(),
+    fecha: date('fecha', { mode: 'string' }).notNull(),
+    concepto: text('concepto').notNull(),
+    importe: importe('importe').notNull(),
+    observaciones: text('observaciones'),
+    // Archivo adjunto opcional (el ticket, la resolución de la ayuda…), como en las facturas
+    archivoRuta: text('archivo_ruta'),
+    archivoNombre: text('archivo_nombre'),
+    archivoTipo: text('archivo_tipo'),
+    archivoTamano: integer('archivo_tamano'),
+    anuladoEn: timestamp('anulado_en', { withTimezone: true }),
+    anuladoPor: uuid('anulado_por').references(() => user.id),
+    motivoAnulacion: text('motivo_anulacion'),
+    ...auditoria(),
+  },
+  (t) => [
+    index('apuntes_explotacion_fecha_idx').on(t.explotacionId, t.fecha),
+    check('apuntes_concepto_no_vacio', sql`btrim(${t.concepto}) <> ''`),
+    check('apuntes_importe', sql`${t.importe} > 0`),
+    check(
+      'apuntes_categoria',
+      sql`(${t.tipo} = 'ingreso' and ${t.categoria} in (${lista(CATEGORIAS_INGRESO)}))
+        or (${t.tipo} = 'gasto' and ${t.categoria} in (${lista(CATEGORIAS_GASTO)}))`,
+    ),
+    check(
+      'apuntes_archivo',
+      sql`(${t.archivoRuta} is null) = (${t.archivoNombre} is null)
+        and (${t.archivoRuta} is null) = (${t.archivoTipo} is null)
+        and (${t.archivoRuta} is null) = (${t.archivoTamano} is null)`,
+    ),
+    check(
+      'apuntes_anulacion',
+      sql`(${t.anuladoEn} is null and ${t.anuladoPor} is null and ${t.motivoAnulacion} is null)
+        or (${t.anuladoEn} is not null and ${t.anuladoPor} is not null
+          and btrim(coalesce(${t.motivoAnulacion}, '')) <> '')`,
+    ),
     separacionPorExplotacion(),
   ],
 )
