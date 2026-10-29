@@ -8,6 +8,7 @@ import { registrarPeticiones } from './peticiones.js'
 import { rutasAlmacenes } from './rutas/almacenes.js'
 import { rutasAnimales } from './rutas/animales.js'
 import { rutasAplicaciones } from './rutas/aplicaciones.js'
+import { rutasApuntes } from './rutas/apuntes.js'
 import { rutasCartografia } from './rutas/cartografia.js'
 import { rutasEquipos } from './rutas/equipos.js'
 import { rutasExplotaciones } from './rutas/explotaciones.js'
@@ -85,6 +86,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasEquipos())
   app.route('/', rutasFiscal())
   app.route('/', rutasFacturas())
+  app.route('/', rutasApuntes())
   app.route('/', rutasTareas())
   app.route('/', rutasCartografia())
   app.route('/', rutasPlataforma())

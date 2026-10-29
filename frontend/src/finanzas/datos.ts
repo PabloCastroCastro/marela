@@ -135,3 +135,81 @@ export const tamano = (bytes: number) =>
   bytes < 1024 * 1024
     ? `${numero(Math.max(1, Math.round(bytes / 1024)))} KB`
     : `${numero(bytes / (1024 * 1024), 1)} MB`
+
+// Otros ingresos y gastos (GH-37)
+export type Apunte = components['schemas']['Apunte']
+export type DatosApunte = components['schemas']['DatosApunte']
+export type TipoApunte = Apunte['tipo']
+export type CategoriaApunte = Apunte['categoria']
+
+export const TIPOS_APUNTE: Record<TipoApunte, string> = { ingreso: 'Ingreso', gasto: 'Gasto' }
+
+// Las categorías de cada tipo, en el orden en que se ofrecen
+export const CATEGORIAS: Record<TipoApunte, [CategoriaApunte, string][]> = {
+  ingreso: [
+    ['subvencion', 'Subvención (PAC u otra)'],
+    ['indemnizacion_seguro', 'Indemnización del seguro'],
+    ['otro_ingreso', 'Otro ingreso'],
+  ],
+  gasto: [
+    ['seguro', 'Seguro'],
+    ['veterinario', 'Veterinario'],
+    ['combustible', 'Combustible'],
+    ['reparaciones', 'Reparaciones y mantenimiento'],
+    ['suministros', 'Suministros (luz, agua…)'],
+    ['impuestos', 'Impuestos y tasas'],
+    ['otro_gasto', 'Otro gasto'],
+  ],
+}
+
+export const CATEGORIA: Record<CategoriaApunte, string> = Object.fromEntries([
+  ...CATEGORIAS.ingreso,
+  ...CATEGORIAS.gasto,
+]) as Record<CategoriaApunte, string>
+
+export type FiltrosApuntes = {
+  tipo?: TipoApunte
+  categoria?: CategoriaApunte
+  estado?: 'vigente' | 'anulado'
+  q?: string
+}
+
+export const useApuntes = (explotacionId: string, filtros: FiltrosApuntes = {}) =>
+  useQuery({
+    queryKey: [...CLAVE_FINANZAS, explotacionId, 'apuntes', filtros],
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/apuntes', {
+          params: { path: { explotacionId }, query: filtros },
+        }),
+      ),
+    placeholderData: keepPreviousData,
+  })
+
+export const useApunte = (explotacionId: string, apunteId: string) =>
+  useQuery({
+    queryKey: [...CLAVE_FINANZAS, explotacionId, 'apunte', apunteId],
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/apuntes/{apunteId}', {
+          params: { path: { explotacionId, apunteId } },
+        }),
+      ),
+  })
+
+export const urlArchivoApunte = (explotacionId: string, apunteId: string) =>
+  `/api/explotaciones/${explotacionId}/apuntes/${apunteId}/archivo`
+
+// Como subirArchivo, el de las facturas
+export const subirArchivoApunte = (explotacionId: string, apunteId: string, archivo: File) =>
+  datos(
+    api.PUT('/api/explotaciones/{explotacionId}/apuntes/{apunteId}/archivo', {
+      params: { path: { explotacionId, apunteId } },
+      body: { archivo: archivo as unknown as string },
+      bodySerializer: () => {
+        const formulario = new FormData()
+        formulario.set('archivo', archivo)
+        return formulario
+      },
+    }),
+  )

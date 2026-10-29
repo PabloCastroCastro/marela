@@ -364,7 +364,16 @@ Tabla `facturas_movimientos_comida` (migraciones `0036` y `0037`): solo facturas
 
 Tablas `facturas` y `facturas_animales` (migraciones `0034` y `0035`, con reglas e historial de cambios). La base de datos comprueba el formato del NIF, que el total sea la suma y que solo las recibidas tengan animales.
 
-**Archivos adjuntos** (`src/archivos.ts`): en `ARCHIVOS_DIR`, como `{explotación}/{carpeta}/{uuid}.{extensión}`, nunca con el nombre original, que solo se guarda para mostrarlo. La base de datos guarda la ruta relativa. Un archivo sustituido o de una factura borrada se borra cuando se confirma la transacción.
+**Otros ingresos y gastos** (GH-37), en `src/rutas/apuntes.ts`:
+
+- **`GET /api/explotaciones/{id}/apuntes`:** del más reciente al más antiguo, con los anulados. Filtros `tipo` (`ingreso` o `gasto`), `categoria`, `estado` (`vigente` o `anulado`), `desde`, `hasta` y `q` (concepto u observaciones).
+- **`POST` y `GET`, `PUT /api/explotaciones/{id}/apuntes[/{apunteId}]`:** `{ tipo, categoria, fecha, concepto, importe, observaciones? }`. El importe, positivo y al céntimo; la categoría, del tipo: de ingreso `subvencion`, `indemnizacion_seguro` y `otro_ingreso`; de gasto `seguro`, `veterinario`, `combustible`, `reparaciones`, `suministros`, `impuestos` y `otro_gasto`.
+- **`POST /api/explotaciones/{id}/apuntes/{apunteId}/anulacion`:** `{ motivo }`. No se borran: uno anulado sigue en el listado con `anulacion: { en, por, motivo }`, ya no se cambia (409 `ya_anulado`) y no cuenta en los totales.
+- **`PUT`, `GET` y `DELETE /api/explotaciones/{id}/apuntes/{apunteId}/archivo`:** el archivo adjunto opcional, como en las facturas.
+
+Tabla `apuntes` (migraciones `0038` y `0039`, con historial de cambios). La base de datos comprueba que la categoría sea del tipo, el importe y la anulación.
+
+**Archivos adjuntos** (`src/archivos.ts`, y las piezas de sus rutas en `src/rutas/archivos.ts`): en `ARCHIVOS_DIR`, como `{explotación}/{carpeta}/{uuid}.{extensión}`, nunca con el nombre original, que solo se guarda para mostrarlo. La base de datos guarda la ruta relativa. Un archivo sustituido o de una factura borrada se borra cuando se confirma la transacción.
 
 ## Historial de cambios
 

@@ -385,3 +385,23 @@
 .casillas li > span {
   padding-left: calc(48px + var(--espacio-2));
 }
+
+/* Otros ingresos y gastos (GH-37): el importe con su signo y su color */
+.importe {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-medio);
+  white-space: nowrap;
+}
+
+.ingreso {
+  color: var(--color-exito);
+}
+
+.gasto {
+  color: var(--color-peligro);
+}
+
+.anulado {
+  color: var(--color-texto-suave);
+  text-decoration: line-through;
+}

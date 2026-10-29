@@ -267,6 +267,20 @@
       "when": 1793289261440,
       "tag": "0037_facturas_comida_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793291209861,
+      "tag": "0038_apuntes",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793291211317,
+      "tag": "0039_apuntes_historial",
+      "breakpoints": true
     }
   ]
 }
