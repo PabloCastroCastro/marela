@@ -1,27 +1,32 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, RotateCcw, Wheat } from 'lucide-react'
+import { Plus, RotateCcw, Wheat } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { api, datos } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
-import { Boton, BotonIcono } from '../componentes/Boton'
+import { Boton } from '../componentes/Boton'
 import { BotonFlotante } from '../componentes/BotonFlotante'
+import { clases } from '../componentes/clases'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
+import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import estilos from './Comida.module.css'
 import { type Almacen, CLAVE_COMIDA, cantidad, TIPOS_ALMACEN, useAlmacenes } from './datos'
 import { FormularioAlmacen } from './FormularioAlmacen'
+import { MenuRegistrarComida } from './MenuRegistrarComida'
+import { InsigniaNegativo } from './PaginaAlmacen'
 
-// Comida: el stock de cada almacén, en una tarjeta (GH-29). El administrador crea, edita, desactiva
-// y reactiva los almacenes; el empleado solo los ve.
+// Comida: el stock de cada almacén, en una tarjeta (GH-29), en rojo si es negativo, con "Registrar" a
+// mano para la ración de cada día (GH-30). Cada tarjeta lleva a la ficha del almacén. El
+// administrador crea y reactiva los almacenes; los edita y desactiva desde su ficha.
 export function PaginaComida() {
   const explotacion = useExplotacionActual()
   const administrador = explotacion.modulos.includes('administracion')
   const almacenes = useAlmacenes(explotacion.id)
   const cliente = useQueryClient()
   const { avisar } = useAvisos()
-  // undefined: cerrado; null: uno nuevo
-  const [editando, setEditando] = useState<Almacen | null>()
+  const [anadiendo, setAnadiendo] = useState(false)
 
   const reactivar = useMutation({
     mutationFn: (a: Almacen) =>
@@ -40,7 +45,7 @@ export function PaginaComida() {
 
   const activos = almacenes.data?.filter((a) => a.activo) ?? []
   const desactivados = almacenes.data?.filter((a) => !a.activo) ?? []
-  const anadir = administrador ? () => setEditando(null) : undefined
+  const anadir = administrador ? () => setAnadiendo(true) : undefined
 
   return (
     <section className={estilos.pagina}>
@@ -80,19 +85,24 @@ export function PaginaComida() {
         <ul className={estilos.almacenes} aria-label="Almacenes">
           {activos.map((a) => (
             <li key={a.id}>
-              <Tarjeta aria-label={a.nombre} className={estilos.almacen}>
-                <div className={estilos.cabeceraAlmacen}>
-                  <h2>{a.nombre}</h2>
-                  {administrador && (
-                    <BotonIcono
-                      etiqueta={`Editar ${a.nombre}`}
-                      icono={<Pencil aria-hidden size={18} />}
-                      onClick={() => setEditando(a)}
-                    />
-                  )}
+              <Tarjeta
+                aria-label={a.nombre}
+                className={clases(estilos.almacen, a.stock < 0 && estilos.almacenNegativo)}
+              >
+                <h2 className={estilos.nombreAlmacen}>
+                  {/* Toda la tarjeta lleva a la ficha, salvo el botón de registrar */}
+                  <Link to={`${rutaExplotacion(explotacion.id)}/comida/${a.id}`}>{a.nombre}</Link>
+                </h2>
+                <p className={clases(estilos.stock, a.stock < 0 && estilos.negativo)}>
+                  {cantidad(a.stock, a.unidad)}
+                </p>
+                <div className={estilos.pieAlmacen}>
+                  <span className={estilos.insignias}>
+                    <span className={estilos.suave}>{TIPOS_ALMACEN[a.tipo]}</span>
+                    {a.stock < 0 && <InsigniaNegativo />}
+                  </span>
+                  <MenuRegistrarComida almacen={a} tamano="compacto" />
                 </div>
-                <p className={estilos.stock}>{cantidad(a.stock, a.unidad)}</p>
-                <p className={estilos.suave}>{TIPOS_ALMACEN[a.tipo]}</p>
               </Tarjeta>
             </li>
           ))}
@@ -108,7 +118,7 @@ export function PaginaComida() {
             {desactivados.map((a) => (
               <li key={a.id}>
                 <div>
-                  <span>{a.nombre}</span>
+                  <Link to={`${rutaExplotacion(explotacion.id)}/comida/${a.id}`}>{a.nombre}</Link>
                   <span className={estilos.suave}>{TIPOS_ALMACEN[a.tipo]}</span>
                 </div>
                 <Boton
@@ -134,12 +144,7 @@ export function PaginaComida() {
           alPulsar={anadir}
         />
       )}
-      {editando !== undefined && (
-        <FormularioAlmacen
-          almacen={editando ?? undefined}
-          alCerrar={() => setEditando(undefined)}
-        />
-      )}
+      {anadiendo && <FormularioAlmacen alCerrar={() => setAnadiendo(false)} />}
     </section>
   )
 }

@@ -6,6 +6,7 @@ import {
   DatosAlmacen,
   editarAlmacen,
   listarAlmacenes,
+  verAlmacen,
 } from '../almacenes.js'
 import { TIPOS_ALMACEN, UNIDADES_ALMACEN } from '../db/schema/index.js'
 import { EsquemaError, validacionFallida } from '../errores.js'
@@ -14,24 +15,29 @@ import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
 // Almacenes de comida de la explotación (GH-29). Los ven todos los que acceden a Comida; los crea,
 // edita y desactiva el administrador.
 
-const Almacen = z
+export const Almacen = z
   .object({
     id: z.uuid(),
     nombre: z.string(),
     tipo: z.enum(TIPOS_ALMACEN).openapi({ description: 'Qué comida guarda' }),
     unidad: z.enum(UNIDADES_ALMACEN),
     activo: z.boolean(),
-    stock: z.number().openapi({ description: 'Cantidad actual, en su unidad' }),
+    stock: z.number().openapi({
+      description: 'Cantidad actual, en su unidad, de sus movimientos. Puede ser negativa.',
+    }),
+    conMovimientos: z
+      .boolean()
+      .openapi({ description: 'Si tiene movimientos, la unidad no cambia' }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
   .openapi('Almacen')
 
-const Parametros = z.object({
+export const Parametros = z.object({
   explotacionId: z.string().openapi({ param: { name: 'explotacionId', in: 'path' } }),
 })
 
-const ParametrosAlmacen = Parametros.extend({
+export const ParametrosAlmacen = Parametros.extend({
   almacenId: z.uuid().openapi({ param: { name: 'almacenId', in: 'path' } }),
 })
 
@@ -78,6 +84,21 @@ const listar = createRoute({
   },
 })
 
+const ver = createRoute({
+  method: 'get',
+  path: `${ruta}/{almacenId}`,
+  tags: ['Comida'],
+  summary: 'Un almacén, con su stock',
+  security: [{ sesion: [] }],
+  middleware: [permitir('comida')] as const,
+  request: { params: ParametrosAlmacen },
+  responses: {
+    200: json(Almacen, 'El almacén'),
+    ...comunes,
+    403: error('Sin acceso a la explotación o a su comida'),
+  },
+})
+
 const crear = createRoute({
   method: 'post',
   path: ruta,
@@ -108,7 +129,9 @@ const editar = createRoute({
     400: error('Datos no válidos (validacion)'),
     ...comunes,
     403: soloAdministrador,
-    409: error('Ya hay un almacén con ese nombre (nombre_en_uso)'),
+    409: error(
+      'Ya hay un almacén con ese nombre, o cambia la unidad de uno con movimientos (nombre_en_uso, unidad_con_movimientos)',
+    ),
   },
 })
 
@@ -132,6 +155,10 @@ export const rutasAlmacenes = () =>
     .openapi(listar, async (c) =>
       c.json(await enLaExplotacion(c, (tx) => listarAlmacenes(tx, c.req.valid('query'))), 200),
     )
+    .openapi(ver, async (c) => {
+      const { almacenId } = c.req.valid('param')
+      return c.json(await enLaExplotacion(c, (tx) => verAlmacen(tx, almacenId)), 200)
+    })
     .openapi(crear, async (c) =>
       c.json(await enLaExplotacion(c, (tx) => crearAlmacen(tx, c.req.valid('json'))), 201),
     )

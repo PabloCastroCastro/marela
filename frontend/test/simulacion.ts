@@ -221,8 +221,33 @@ export type AlmacenSimulado = {
   tipo: 'hierba_verde' | 'hierba_seca' | 'maiz' | 'pienso' | 'otro'
   unidad: 'unidades' | 'kg'
   activo: boolean
-  stock: number
 }
+
+export type MovimientoSimulado = {
+  id: string
+  almacenId: string
+  tipo: 'entrada' | 'salida' | 'ajuste'
+  fecha: string
+  cantidad: number
+  origen: 'compra' | 'produccion_propia' | null
+  fincaId: string | null
+  ajuste: 'recuento' | 'merma' | null
+  motivo: string | null
+  observaciones: string | null
+}
+
+export const movimientoSimulado = (
+  datos: Partial<MovimientoSimulado> &
+    Pick<MovimientoSimulado, 'id' | 'almacenId' | 'tipo' | 'cantidad'>,
+): MovimientoSimulado => ({
+  fecha: '2026-10-01',
+  origen: datos.tipo === 'entrada' ? 'compra' : null,
+  fincaId: null,
+  ajuste: null,
+  motivo: null,
+  observaciones: null,
+  ...datos,
+})
 
 export type EstadoSimulado = {
   usuario: {
@@ -248,6 +273,7 @@ export type EstadoSimulado = {
   aplicaciones: AplicacionSimulada[]
   pastoreos: PastoreoSimulado[]
   almacenes: AlmacenSimulado[]
+  movimientos: MovimientoSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -470,7 +496,6 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         tipo: 'hierba_verde',
         unidad: 'unidades',
         activo: true,
-        stock: 0,
       },
       {
         id: 'al2',
@@ -478,19 +503,18 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         tipo: 'hierba_seca',
         unidad: 'unidades',
         activo: true,
-        stock: 0,
       },
-      { id: 'al3', nombre: 'Silo de maíz', tipo: 'maiz', unidad: 'kg', activo: true, stock: 0 },
-      { id: 'al4', nombre: 'Silo de pienso', tipo: 'pienso', unidad: 'kg', activo: true, stock: 0 },
+      { id: 'al3', nombre: 'Silo de maíz', tipo: 'maiz', unidad: 'kg', activo: true },
+      { id: 'al4', nombre: 'Silo de pienso', tipo: 'pienso', unidad: 'kg', activo: true },
       {
         id: 'al5',
         nombre: 'Pacas de paja',
         tipo: 'otro',
         unidad: 'unidades',
         activo: false,
-        stock: 0,
       },
     ],
+    movimientos: [],
     ...cambios,
   }
 }
@@ -525,6 +549,36 @@ const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labor
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
 // Los almacenes de comida, uno o su estado
 const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
+// Los movimientos de un almacén, el registro o uno
+const MOVIMIENTOS = /^\/api\/explotaciones\/[^/]+\/almacenes\/([^/]+)\/movimientos(?:\/([^/]+))?$/
+
+// Como movimientos_con_stock: cada movimiento en orden, con lo que cambió el stock y el que dejó. Un
+// recuento fija el stock en lo contado.
+function conStock(estado: EstadoSimulado, almacenId: string) {
+  const orden = estado.movimientos
+    .map((m, i) => ({ m, i }))
+    .filter(({ m }) => m.almacenId === almacenId)
+    .sort((a, b) => a.m.fecha.localeCompare(b.m.fecha) || a.i - b.i)
+  let stock = 0
+  return orden.map(({ m }) => {
+    const antes = stock
+    stock =
+      m.ajuste === 'recuento'
+        ? m.cantidad
+        : m.tipo === 'entrada'
+          ? stock + m.cantidad
+          : stock - m.cantidad
+    const finca = estado.fincas.find((x) => x.id === m.fincaId)
+    return {
+      ...m,
+      finca: finca ? { id: finca.id, nombre: finca.nombre } : null,
+      diferencia: stock - antes,
+      stock,
+      creadoEn: '2026-10-01T10:00:00.000Z',
+      modificadoEn: '2026-10-01T10:00:00.000Z',
+    }
+  })
+}
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -874,6 +928,53 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...a, ...sello })
     }
 
+    const deMovimientos = ruta.match(MOVIMIENTOS)
+    if (deMovimientos) {
+      const [, almacenId = '', movimientoId] = deMovimientos
+      const a = estado.almacenes.find((x) => x.id === almacenId)
+      if (!a) return errorApi(404, 'almacen_no_encontrado')
+      const ver = (id: string) => conStock(estado, almacenId).find((m) => m.id === id)
+      const datosMovimiento = () => ({
+        tipo: cuerpo.tipo,
+        fecha: cuerpo.fecha,
+        cantidad: cuerpo.cantidad,
+        origen: cuerpo.origen ?? null,
+        fincaId: cuerpo.fincaId ?? null,
+        ajuste: cuerpo.ajuste ?? null,
+        motivo: cuerpo.motivo || null,
+        observaciones: cuerpo.observaciones || null,
+      })
+      if (!movimientoId && metodo === 'GET') {
+        const q = new URL(peticion.url).searchParams
+        return json(
+          conStock(estado, almacenId)
+            .filter((m) => !q.get('tipo') || m.tipo === q.get('tipo'))
+            .filter((m) => !q.get('desde') || m.fecha >= (q.get('desde') ?? ''))
+            .filter((m) => !q.get('hasta') || m.fecha <= (q.get('hasta') ?? ''))
+            .reverse(),
+        )
+      }
+      if (!movimientoId) {
+        if (!a.activo) return errorApi(409, 'almacen_desactivado')
+        const nuevo: MovimientoSimulado = {
+          id: `mv${estado.movimientos.length + 1}`,
+          almacenId,
+          ...datosMovimiento(),
+        }
+        estado.movimientos.push(nuevo)
+        return json(ver(nuevo.id), 201)
+      }
+      const m = estado.movimientos.find((x) => x.id === movimientoId && x.almacenId === almacenId)
+      if (!m) return errorApi(404, 'movimiento_no_encontrado')
+      if (metodo === 'DELETE') {
+        const borrado = ver(m.id)
+        estado.movimientos = estado.movimientos.filter((x) => x !== m)
+        return json(borrado)
+      }
+      Object.assign(m, datosMovimiento())
+      return json(ver(m.id))
+    }
+
     const deAlmacenes = ruta.match(ALMACENES)
     if (deAlmacenes) {
       const [, explotacionId, almacenId, estadoAlmacen] = deAlmacenes
@@ -881,10 +982,16 @@ export function simularApi(estado: EstadoSimulado) {
       if (!e) return errorApi(404, 'explotacion_no_encontrada')
       const completo = (a: AlmacenSimulado) => ({
         ...a,
+        stock: conStock(estado, a.id).at(-1)?.stock ?? 0,
+        conMovimientos: estado.movimientos.some((m) => m.almacenId === a.id),
         creadoEn: '2026-10-01T10:00:00.000Z',
         modificadoEn: '2026-10-01T10:00:00.000Z',
       })
-      if (metodo === 'GET') return json(estado.almacenes.map(completo))
+      if (metodo === 'GET' && !almacenId) return json(estado.almacenes.map(completo))
+      if (metodo === 'GET') {
+        const a = estado.almacenes.find((x) => x.id === almacenId)
+        return a ? json(completo(a)) : errorApi(404, 'almacen_no_encontrado')
+      }
       if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
       const repetido = (nombre: string, id?: string) =>
         estado.almacenes.some(
@@ -902,7 +1009,6 @@ export function simularApi(estado: EstadoSimulado) {
           tipo: cuerpo.tipo,
           unidad: cuerpo.unidad,
           activo: true,
-          stock: 0,
         }
         estado.almacenes.push(nuevo)
         return json(completo(nuevo), 201)
@@ -912,6 +1018,10 @@ export function simularApi(estado: EstadoSimulado) {
       if (estadoAlmacen) a.activo = cuerpo.activo
       else {
         if (repetido(cuerpo.nombre, a.id)) return nombreEnUso()
+        if (cuerpo.unidad !== a.unidad && estado.movimientos.some((m) => m.almacenId === a.id))
+          return errorApi(409, 'unidad_con_movimientos', [
+            { campo: 'unidad', mensaje: 'El almacén ya tiene movimientos: su unidad no cambia' },
+          ])
         Object.assign(a, { nombre: cuerpo.nombre.trim(), tipo: cuerpo.tipo, unidad: cuerpo.unidad })
       }
       return json(completo(a))

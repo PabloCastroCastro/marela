@@ -184,15 +184,22 @@ export function FormularioAlmacen({
         </fieldset>
         <fieldset className={estilos.grupo}>
           <legend>Se mide en</legend>
-          <Chips
-            etiqueta="Se mide en"
-            opciones={(Object.keys(UNIDADES_ALMACEN) as UnidadAlmacen[]).map((u) => ({
-              valor: u,
-              texto: UNIDADES_ALMACEN[u],
-            }))}
-            seleccion={f.unidad}
-            alCambiar={(u) => setF((v) => ({ ...v, unidad: u }))}
-          />
+          {/* Con movimientos, la unidad ya no cambia: sus cantidades dejarían de tener sentido */}
+          {almacen?.conMovimientos ? (
+            <p className={estilos.suave}>
+              {UNIDADES_ALMACEN[almacen.unidad]}. No se puede cambiar: ya tiene movimientos.
+            </p>
+          ) : (
+            <Chips
+              etiqueta="Se mide en"
+              opciones={(Object.keys(UNIDADES_ALMACEN) as UnidadAlmacen[]).map((u) => ({
+                valor: u,
+                texto: UNIDADES_ALMACEN[u],
+              }))}
+              seleccion={f.unidad}
+              alCambiar={(u) => setF((v) => ({ ...v, unidad: u }))}
+            />
+          )}
           {errores.unidad && (
             <p className={estilos.error} role="alert">
               {errores.unidad}

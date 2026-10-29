@@ -9,12 +9,14 @@ import { migrar } from './migrar.js'
 import { RECINTOS_EJEMPLO } from './recintos-ejemplo.js'
 import {
   account,
+  almacenes,
   animales,
   aplicaciones,
   eventosReproductivos,
   fincas,
   labores,
   member,
+  movimientosComida,
   organization,
   parcelas,
   partos,
@@ -59,6 +61,7 @@ const PARCELA = 11
 const LABOR = 12
 const APLICACION = 13
 const PASTOREO = 14
+const MOVIMIENTO = 15
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -716,6 +719,76 @@ await enExplotacion(
       await tx
         .insert(pastoreos)
         .values({ id: sid(PASTOREO, i + 1), fincaId: sid(FINCA, finca), ...p })
+        .onConflictDoNothing()
+    }
+  },
+)
+
+// Movimientos de los almacenes de A Veiga, registrados por Ana: la hierba seca de Agra de abaixo, el
+// pienso comprado y lo que se les da a diario. El silo de pienso queda en negativo, en rojo.
+const movimientosVeiga = [
+  {
+    almacen: 'Pacas de hierba seca',
+    dias: 40,
+    tipo: 'entrada' as const,
+    cantidad: 120,
+    origen: 'produccion_propia' as const,
+    finca: 1,
+  },
+  { almacen: 'Pacas de hierba seca', dias: 20, tipo: 'salida' as const, cantidad: 30 },
+  {
+    almacen: 'Pacas de hierba seca',
+    dias: 10,
+    tipo: 'ajuste' as const,
+    ajuste: 'recuento' as const,
+    cantidad: 86,
+    motivo: 'Recuento del pajar',
+  },
+  { almacen: 'Pacas de hierba seca', dias: 2, tipo: 'salida' as const, cantidad: 6 },
+  {
+    almacen: 'Silo de maíz',
+    dias: 30,
+    tipo: 'entrada' as const,
+    cantidad: 18_500,
+    origen: 'produccion_propia' as const,
+    finca: 2,
+  },
+  { almacen: 'Silo de maíz', dias: 5, tipo: 'salida' as const, cantidad: 2_400 },
+  {
+    almacen: 'Silo de maíz',
+    dias: 3,
+    tipo: 'ajuste' as const,
+    ajuste: 'merma' as const,
+    cantidad: 350,
+    motivo: 'Capa estropeada al abrir el silo',
+  },
+  {
+    almacen: 'Silo de pienso',
+    dias: 25,
+    tipo: 'entrada' as const,
+    cantidad: 3_000,
+    origen: 'compra' as const,
+  },
+  { almacen: 'Silo de pienso', dias: 4, tipo: 'salida' as const, cantidad: 3_200 },
+]
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    const suyos = await tx.select({ id: almacenes.id, nombre: almacenes.nombre }).from(almacenes)
+    const almacenId = new Map(suyos.map((x) => [x.nombre, x.id]))
+    for (const [i, { almacen, dias, finca, ...m }] of movimientosVeiga.entries()) {
+      const id = almacenId.get(almacen)
+      if (!id) continue
+      await tx
+        .insert(movimientosComida)
+        .values({
+          id: sid(MOVIMIENTO, i + 1),
+          almacenId: id,
+          fecha: haceDias(dias),
+          fincaId: finca ? sid(FINCA, finca) : null,
+          ...m,
+        })
         .onConflictDoNothing()
     }
   },

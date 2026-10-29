@@ -6,11 +6,11 @@ import { Boton } from './Boton'
 // reciente: con los años, una vaca o una finca acumula decenas de registros. El resto, con "Ver todos".
 export const VISIBLES = 3
 
-export function useRecorte<T>(lista: T[]) {
+export function useRecorte<T>(lista: T[], visibles = VISIBLES) {
   const [todo, setTodo] = useState(false)
-  const recortada = lista.length > VISIBLES
+  const recortada = lista.length > visibles
   return {
-    elementos: todo || !recortada ? lista : lista.slice(0, VISIBLES),
+    elementos: todo || !recortada ? lista : lista.slice(0, visibles),
     boton: recortada ? (
       <div>
         <Boton
