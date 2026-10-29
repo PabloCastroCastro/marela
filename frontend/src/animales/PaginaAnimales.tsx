@@ -1,4 +1,4 @@
-import { Plus, Syringe, X } from 'lucide-react'
+import { HandCoins, Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -9,6 +9,7 @@ import { Vaca } from '../componentes/iconos'
 import { Tabla } from '../componentes/Tabla'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
+import { FormularioVenta } from '../finanzas/FormularioVenta'
 import { edad, fecha } from '../formato'
 import estilos from './Animales.module.css'
 import { type EstadoAnimal, identificacion, SEXOS, type Sexo, useAnimales } from './datos'
@@ -39,6 +40,9 @@ export function PaginaAnimales() {
   const [anadiendo, setAnadiendo] = useState(false)
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set())
   const [tratando, setTratando] = useState(false)
+  // Vender los seleccionados (GH-38): solo el administrador, que accede a Finanzas
+  const [vendiendo, setVendiendo] = useState(false)
+  const vende = explotacion.modulos.includes('finanzas')
   const [cubriendo, setCubriendo] = useState(false)
 
   const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
@@ -211,6 +215,15 @@ export function PaginaAnimales() {
               icono={<X aria-hidden size={20} />}
               onClick={desmarcar}
             />
+            {vende && seleccionados.some((a) => a.estado === 'activo') && (
+              <Boton
+                variante="secundario"
+                icono={<HandCoins aria-hidden size={20} />}
+                onClick={() => setVendiendo(true)}
+              >
+                Vender
+              </Boton>
+            )}
             <Boton variante="secundario" onClick={() => setCubriendo(true)}>
               Cubrir
             </Boton>
@@ -232,6 +245,16 @@ export function PaginaAnimales() {
           tipos={['cubricion', 'inseminacion']}
           alCerrar={() => setCubriendo(false)}
           alGuardar={desmarcar}
+        />
+      )}
+      {vendiendo && (
+        <FormularioVenta
+          animalesIniciales={seleccionados.filter((a) => a.estado === 'activo')}
+          alCerrar={() => setVendiendo(false)}
+          alGuardar={(v) => {
+            desmarcar()
+            navegar(`${rutaExplotacion(explotacion.id)}/finanzas/ventas/${v.id}`)
+          }}
         />
       )}
       {tratando && (

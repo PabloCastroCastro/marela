@@ -18,6 +18,7 @@ import { PaginaEquipo } from './explotaciones/PaginaEquipo'
 import { PaginaApunte } from './finanzas/PaginaApunte'
 import { PaginaFactura } from './finanzas/PaginaFactura'
 import { PaginaFinanzas } from './finanzas/PaginaFinanzas'
+import { PaginaVenta } from './finanzas/PaginaVenta'
 import { PaginaFinca } from './fincas/PaginaFinca'
 import { PaginaFincas } from './fincas/PaginaFincas'
 import { PaginaFichaEquipo } from './mantenimiento/PaginaFichaEquipo'
@@ -132,6 +133,14 @@ export const rutas: RouteObject[] = [
             element: (
               <SoloModulo modulo="finanzas">
                 <PaginaFinanzas />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'finanzas/ventas/:ventaId',
+            element: (
+              <SoloModulo modulo="finanzas">
+                <PaginaVenta />
               </SoloModulo>
             ),
           },

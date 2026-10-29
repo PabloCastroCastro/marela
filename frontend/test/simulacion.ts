@@ -300,6 +300,17 @@ export type ApunteSimulado = {
   anulacion: { en: string; por: string; motivo: string } | null
 }
 
+export type VentaSimulada = {
+  id: string
+  fecha: string
+  comprador: string
+  modoPrecio: 'total' | 'por_animal' | 'por_kg'
+  precio: number
+  animales: { animalId: string; kg: number | null }[]
+  facturaId: string | null
+  observaciones: string | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -329,6 +340,7 @@ export type EstadoSimulado = {
   tareas: TareaSimulada[]
   facturas: FacturaSimulada[]
   apuntes: ApunteSimulado[]
+  ventas: VentaSimulada[]
   // Régimen fiscal guardado (GH-34); sin él, el de por defecto
   fiscal?: { regimen: 'reagp' | 'general'; compensacionReagp: number; tiposIva: number[] }
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
@@ -656,6 +668,7 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         animalIds: [],
       },
     ],
+    ventas: [],
     // Una ayuda de la PAC, un seguro y un gasto anulado (GH-37)
     apuntes: [
       {
@@ -734,6 +747,24 @@ const TAREAS = /^\/api\/explotaciones\/([^/]+)\/tareas(?:\/([^/]+))?(\/hecha)?$/
 const FACTURAS =
   /^\/api\/explotaciones\/([^/]+)\/facturas(?:\/([^/]+))?(?:\/(pago|archivo|entradas-comida))?$/
 // Las entradas de comida de todos los almacenes, con su factura (GH-36)
+// Las ventas (GH-38), una o su factura
+const VENTAS = /^\/api\/explotaciones\/([^/]+)\/ventas(?:\/([^/]+))?(\/factura)?$/
+
+// Como el backend: el total repartido, por animal o por kg
+const importesVenta = (v: VentaSimulada) => {
+  const n = v.animales.length
+  const total = Math.round(v.precio * 100)
+  const centimos =
+    v.modoPrecio === 'total'
+      ? v.animales.map(
+          (_, i) => Math.floor(total / n) + (i < total - Math.floor(total / n) * n ? 1 : 0),
+        )
+      : v.modoPrecio === 'por_animal'
+        ? v.animales.map(() => total)
+        : v.animales.map((a) => Math.round((a.kg ?? 0) * v.precio * 100))
+  return centimos.map((c) => c / 100)
+}
+
 // Los otros ingresos y gastos (GH-37), uno, su anulación o su archivo
 const APUNTES = /^\/api\/explotaciones\/([^/]+)\/apuntes(?:\/([^/]+))?(?:\/(anulacion|archivo))?$/
 const ENTRADAS_COMIDA = /^\/api\/explotaciones\/([^/]+)\/entradas-comida$/
@@ -1181,6 +1212,147 @@ export function simularApi(estado: EstadoSimulado) {
       })
     }
 
+    const deVentas = ruta.match(VENTAS)
+    if (deVentas) {
+      const [, explotacionId, ventaId, conFactura] = deVentas
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const completa = (v: VentaSimulada) => {
+        const importes = importesVenta(v)
+        const fa = estado.facturas.find((x) => x.id === v.facturaId)
+        return {
+          id: v.id,
+          fecha: v.fecha,
+          comprador: v.comprador,
+          modoPrecio: v.modoPrecio,
+          precio: v.precio,
+          total: Math.round(importes.reduce((s, x) => s + x, 0) * 100) / 100,
+          kg: v.animales.every((a) => a.kg !== null)
+            ? v.animales.reduce((s, a) => s + (a.kg ?? 0), 0)
+            : null,
+          animales: v.animales.map((a, i) => {
+            const animal = estado.animales.find((x) => x.id === a.animalId)
+            return {
+              id: a.animalId,
+              crotal: animal?.crotal ?? null,
+              nombre: animal?.nombre ?? null,
+              kg: a.kg,
+              importe: importes[i] ?? 0,
+            }
+          }),
+          factura: fa
+            ? {
+                id: fa.id,
+                numero: fa.numero,
+                total: fa.lineas.reduce((s, l) => s + l.base + l.cuota, 0),
+              }
+            : null,
+          observaciones: v.observaciones,
+          creadoEn: '2026-10-01T10:00:00.000Z',
+          modificadoEn: '2026-10-01T10:00:00.000Z',
+        }
+      }
+      // Los animales vuelven a estar activos, o pasan a vendidos
+      const soltar = (v: VentaSimulada) => {
+        for (const a of v.animales) {
+          const animal = estado.animales.find((x) => x.id === a.animalId)
+          if (animal)
+            Object.assign(animal, {
+              estado: 'activo',
+              tipoBaja: null,
+              fechaBaja: null,
+              causaBaja: null,
+            })
+        }
+      }
+      const vender = (v: VentaSimulada) => {
+        for (const a of v.animales) {
+          const animal = estado.animales.find((x) => x.id === a.animalId)
+          if (animal)
+            Object.assign(animal, {
+              estado: 'vendido',
+              tipoBaja: 'venta',
+              fechaBaja: v.fecha,
+              causaBaja: `Venta a ${v.comprador}`,
+            })
+        }
+      }
+      // Sin excepciones: ningún animal con la supresión en curso
+      const enSupresion = () => {
+        const detalles = (cuerpo.animales as { animalId: string }[]).flatMap((a, i) => {
+          const hasta = estado.tratamientos
+            .filter((t) => t.animalId === a.animalId && !t.anulacion)
+            .map(finSupresion)
+            .filter((f) => f > cuerpo.fecha)
+            .sort()
+            .at(-1)
+          const animal = estado.animales.find((x) => x.id === a.animalId)
+          return hasta
+            ? [
+                {
+                  campo: `animales.${i}.animalId`,
+                  mensaje: `${animal?.crotal} tiene la supresión hasta el ${hasta.split('-').reverse().join('/')}`,
+                  hasta,
+                },
+              ]
+            : []
+        })
+        return detalles.length > 0
+          ? json(
+              {
+                error: {
+                  codigo: 'supresion_en_curso',
+                  mensaje: `No se puede vender: ${detalles.map((d) => d.mensaje).join('; ')}`,
+                  detalles,
+                },
+              },
+              409,
+            )
+          : null
+      }
+      const datosVenta = (id: string): VentaSimulada => ({
+        id,
+        fecha: cuerpo.fecha,
+        comprador: cuerpo.comprador.trim(),
+        modoPrecio: cuerpo.modoPrecio,
+        precio: cuerpo.precio,
+        animales: (cuerpo.animales as { animalId: string; kg?: number | null }[]).map((a) => ({
+          animalId: a.animalId,
+          kg: a.kg ?? null,
+        })),
+        facturaId: cuerpo.facturaId ?? null,
+        observaciones: cuerpo.observaciones?.trim() || null,
+      })
+      if (!ventaId && metodo === 'GET') return json(estado.ventas.map(completa))
+      if (!ventaId) {
+        const bloqueo = enSupresion()
+        if (bloqueo) return bloqueo
+        const nueva = datosVenta(`ve${estado.ventas.length + 1}`)
+        estado.ventas.push(nueva)
+        vender(nueva)
+        return json(completa(nueva), 201)
+      }
+      const v = estado.ventas.find((x) => x.id === ventaId)
+      if (!v) return errorApi(404, 'venta_no_encontrada')
+      if (conFactura) {
+        v.facturaId = cuerpo.facturaId
+        return json(completa(v))
+      }
+      if (metodo === 'GET') return json(completa(v))
+      if (metodo === 'DELETE') {
+        soltar(v)
+        estado.ventas = estado.ventas.filter((x) => x !== v)
+        return new Response(null, { status: 204 })
+      }
+      const bloqueo = enSupresion()
+      if (bloqueo) return bloqueo
+      soltar(v)
+      Object.assign(v, datosVenta(v.id))
+      vender(v)
+      return json(completa(v))
+    }
+
     const deApuntes = ruta.match(APUNTES)
     if (deApuntes) {
       const [, explotacionId, apunteId, accion] = deApuntes
@@ -1278,6 +1450,7 @@ export function simularApi(estado: EstadoSimulado) {
           entradasComida: estado.movimientos
             .filter((m) => fa.movimientoIds?.includes(m.id))
             .map((m) => entradaDe(estado, m)),
+          ventaId: estado.ventas.find((v) => v.facturaId === fa.id)?.id ?? null,
           creadoEn: '2026-10-01T10:00:00.000Z',
           modificadoEn: '2026-10-01T10:00:00.000Z',
         }

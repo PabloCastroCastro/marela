@@ -10,18 +10,20 @@ import estilos from './Finanzas.module.css'
 import { FormularioFiscal } from './FormularioFiscal'
 import { ListaApuntes } from './ListaApuntes'
 import { ListaFacturas } from './ListaFacturas'
+import { ListaVentas } from './ListaVentas'
 
-type Vista = 'facturas' | 'apuntes' | 'regimen'
+type Vista = 'facturas' | 'ventas' | 'apuntes' | 'regimen'
 
 const VISTAS: { valor: Vista; texto: string }[] = [
   { valor: 'facturas', texto: 'Facturas' },
+  { valor: 'ventas', texto: 'Ventas' },
   { valor: 'apuntes', texto: 'Otros ingresos y gastos' },
   { valor: 'regimen', texto: 'Régimen fiscal' },
 ]
 
-// Finanzas, solo para el administrador, en pestañas: las facturas (GH-35), los otros ingresos y
-// gastos (GH-37) y el régimen fiscal (GH-34). Las ventas y los informes llegan después, en el ciclo
-// 7. La pestaña, en la dirección para que se conserve al volver de una ficha.
+// Finanzas, solo para el administrador, en pestañas: las facturas (GH-35), las ventas de animales
+// (GH-38), los otros ingresos y gastos (GH-37) y el régimen fiscal (GH-34). Los informes llegan
+// después, en el ciclo 7. La pestaña, en la dirección para que se conserve al volver de una ficha.
 export function PaginaFinanzas() {
   const [busqueda, setBusqueda] = useSearchParams()
   const vista = VISTAS.find((v) => v.valor === busqueda.get('vista'))?.valor ?? 'facturas'
@@ -37,6 +39,7 @@ export function PaginaFinanzas() {
         alCambiar={(v) => setBusqueda(v === 'facturas' ? {} : { vista: v }, { replace: true })}
       />
       {vista === 'facturas' && <ListaFacturas />}
+      {vista === 'ventas' && <ListaVentas />}
       {vista === 'apuntes' && <ListaApuntes />}
       {vista === 'regimen' && <TarjetaRegimen />}
     </section>

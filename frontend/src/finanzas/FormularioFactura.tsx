@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Paperclip, Plus, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
-import { consultaAnimales, identificacion } from '../animales/datos'
+import { identificacion } from '../animales/datos'
 import { api, datos, erroresPorCampo } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -11,6 +11,7 @@ import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, hoy } from '../formato'
+import { type AnimalElegido, BuscarAnimal } from './BuscarAnimal'
 import {
   ARCHIVOS_ADMITIDOS,
   CLAVE_FINANZAS,
@@ -34,7 +35,6 @@ import {
 import estilos from './Finanzas.module.css'
 
 type Linea = { base: string; porcentaje: number }
-type AnimalElegido = { id: string; crotal: string | null; nombre?: string | null }
 
 const LINEAS_MAXIMO = 8
 
@@ -46,11 +46,14 @@ const centimos = (n: number) => Math.round(n * 100)
 // propone el siguiente número del año. El archivo se sube al guardar.
 export function FormularioFactura({
   factura,
+  inicial,
   alCerrar,
   alGuardar,
 }: {
   // Para corregirla
   factura?: Factura
+  // Para una nueva, con datos ya puestos: la factura de una venta (GH-38)
+  inicial?: { tipo: TipoFactura; fecha: string; tercero: string; concepto: string; base: number }
   alCerrar: () => void
   alGuardar?: (f: Factura) => void
 }) {
@@ -63,12 +66,12 @@ export function FormularioFactura({
   const compensacion = fiscal?.compensacionReagp ?? 10.5
 
   const [f, setF] = useState({
-    tipo: (factura?.tipo ?? 'recibida') as TipoFactura,
-    fecha: factura?.fecha ?? hoy(),
-    tercero: factura?.tercero ?? '',
+    tipo: (factura?.tipo ?? inicial?.tipo ?? 'recibida') as TipoFactura,
+    fecha: factura?.fecha ?? inicial?.fecha ?? hoy(),
+    tercero: factura?.tercero ?? inicial?.tercero ?? '',
     nif: factura?.nif ?? '',
     nifExtranjero: factura?.nifExtranjero ?? false,
-    concepto: factura?.concepto ?? '',
+    concepto: factura?.concepto ?? inicial?.concepto ?? '',
     pagada: Boolean(factura?.pagadaEn),
     pagadaEn: factura?.pagadaEn ?? hoy(),
   })
@@ -77,7 +80,7 @@ export function FormularioFactura({
   const [impuesto, setImpuesto] = useState<ImpuestoFactura | null>(factura?.impuesto ?? null)
   const [lineas, setLineas] = useState<Linea[]>(
     factura?.lineas.map((l) => ({ base: texto(l.base), porcentaje: l.porcentaje })) ?? [
-      { base: '', porcentaje: Number.NaN },
+      { base: inicial ? texto(inicial.base) : '', porcentaje: Number.NaN },
     ],
   )
   const [animales, setAnimales] = useState<AnimalElegido[]>(factura?.animales ?? [])
@@ -481,17 +484,6 @@ function AnimalesComprados({
   alCambiar: (animales: AnimalElegido[]) => void
   error?: string
 }) {
-  const explotacion = useExplotacionActual()
-  const [q, setQ] = useState('')
-  const buscando = q.trim().length >= 2
-  const encontrados = useQuery({
-    ...consultaAnimales(explotacion.id, { q: q.trim() }),
-    enabled: buscando,
-  })
-  const elegibles = (encontrados.data ?? [])
-    .filter((a) => !animales.some((e) => e.id === a.id))
-    .slice(0, 5)
-
   return (
     <fieldset className={estilos.grupo}>
       <legend>Animales comprados</legend>
@@ -510,38 +502,12 @@ function AnimalesComprados({
           ))}
         </ul>
       )}
-      <Campo
-        etiqueta="Buscar animal"
+      <BuscarAnimal
+        elegidos={animales}
+        alElegir={(a) => alCambiar([...animales, a])}
         ayuda="Solo si es una compra de animales; por crotal o nombre"
-        type="search"
-        autoComplete="off"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
         error={error}
       />
-      {buscando && encontrados.data && (
-        <ul className={estilos.encontrados} aria-label="Animales encontrados">
-          {elegibles.length === 0 ? (
-            <li className={estilos.suave}>Ningún animal coincide</li>
-          ) : (
-            elegibles.map((a) => (
-              <li key={a.id}>
-                <Boton
-                  variante="texto"
-                  tamano="compacto"
-                  icono={<Plus aria-hidden size={18} />}
-                  onClick={() => {
-                    alCambiar([...animales, a])
-                    setQ('')
-                  }}
-                >
-                  {identificacion(a)}
-                </Boton>
-              </li>
-            ))
-          )}
-        </ul>
-      )}
     </fieldset>
   )
 }

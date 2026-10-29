@@ -300,7 +300,7 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 - Datos: tipo (ingreso o gasto), categoría, fecha, concepto, importe, archivo adjunto opcional y observaciones.
 - Categorías fijas, para los informes (GH-37). De ingreso: subvención (PAC u otra), indemnización del seguro y otro ingreso. De gasto: seguro, veterinario, combustible, reparaciones y mantenimiento, suministros, impuestos y tasas, y otro gasto.
 - Se corrigen. Uno registrado por error no se borra: se anula con su motivo, sigue a la vista como anulado y deja de contar en los totales.
-- Finanzas se organiza en pestañas: Facturas, Otros ingresos y gastos y Régimen fiscal (las ventas y los informes se añadirán).
+- Finanzas se organiza en pestañas: Facturas, Ventas, Otros ingresos y gastos y Régimen fiscal (los informes se añadirán).
 
 ### Ventas
 
@@ -309,6 +309,11 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 - Precio: se introduce el total, el precio por animal o el precio por kg, y el resto se calcula.
 - Si algún animal tiene un periodo de supresión en curso, la venta se bloquea hasta que termine. Bloqueo sin excepciones, también para el administrador.
 - Al registrar la venta, los animales pasan automáticamente a estado "vendido", con fecha y causa de baja.
+- Detalle (GH-38):
+  - Se registra en la pestaña Ventas de Finanzas o, para el administrador, con «Vender» al seleccionar animales en la lista de Animales.
+  - El precio es sin IVA ni compensación. Con el total, se reparte a partes iguales entre los animales; por kg, hay que pesarlos todos. El peso de cada uno queda como su pesada de venta.
+  - La factura es opcional: se elige una emitida o se crea desde la venta con sus datos (cliente, concepto y base), y se puede asociar después.
+  - Se corrige (también los animales) o se deshace entera: los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura se queda.
 
 ### Salidas e informes
 

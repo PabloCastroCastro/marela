@@ -213,3 +213,57 @@ export const subirArchivoApunte = (explotacionId: string, apunteId: string, arch
       },
     }),
   )
+
+// Ventas de animales (GH-38)
+export type Venta = components['schemas']['Venta']
+export type DatosVenta = components['schemas']['DatosVenta']
+export type ModoPrecio = Venta['modoPrecio']
+
+export const MODOS_PRECIO: Record<ModoPrecio, string> = {
+  total: 'Total',
+  por_animal: 'Por animal',
+  por_kg: 'Por kg',
+}
+
+// Como el backend: el total, repartido a partes iguales (los céntimos que sobran, a los primeros); por
+// animal, el mismo a cada uno; por kg, su peso por el precio. Sin peso, 0.
+export function calcularImportes(modo: ModoPrecio, precio: number, kgs: (number | null)[]) {
+  let centimos: number[]
+  if (!Number.isFinite(precio) || precio <= 0 || kgs.length === 0) centimos = kgs.map(() => 0)
+  else if (modo === 'total') {
+    const total = Math.round(precio * 100)
+    const parte = Math.floor(total / kgs.length)
+    const resto = total - parte * kgs.length
+    centimos = kgs.map((_, i) => parte + (i < resto ? 1 : 0))
+  } else if (modo === 'por_animal') centimos = kgs.map(() => Math.round(precio * 100))
+  else centimos = kgs.map((kg) => Math.round((kg ?? 0) * precio * 100))
+  return {
+    importes: centimos.map((c) => c / 100),
+    total: centimos.reduce((s, c) => s + c, 0) / 100,
+  }
+}
+
+export type FiltrosVentas = { factura?: 'con' | 'sin'; q?: string }
+
+export const useVentas = (explotacionId: string, filtros: FiltrosVentas = {}) =>
+  useQuery({
+    queryKey: [...CLAVE_FINANZAS, explotacionId, 'ventas', filtros],
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/ventas', {
+          params: { path: { explotacionId }, query: filtros },
+        }),
+      ),
+    placeholderData: keepPreviousData,
+  })
+
+export const useVenta = (explotacionId: string, ventaId: string) =>
+  useQuery({
+    queryKey: [...CLAVE_FINANZAS, explotacionId, 'venta', ventaId],
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/ventas/{ventaId}', {
+          params: { path: { explotacionId, ventaId } },
+        }),
+      ),
+  })

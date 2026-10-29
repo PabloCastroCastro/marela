@@ -76,6 +76,7 @@ const Factura = z
     animales: z.array(
       z.object({ id: z.uuid(), crotal: z.string().nullable(), nombre: z.string().nullable() }),
     ),
+    ventaId: z.uuid().nullable().openapi({ description: 'La venta de una emitida (GH-38)' }),
     entradasComida: z
       .array(z.object(campoEntrada))
       .openapi({ description: 'Entradas de comida compradas con la factura (GH-36)' }),

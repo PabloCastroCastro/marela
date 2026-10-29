@@ -156,6 +156,8 @@ const columnas = {
   archivoNombre: facturas.archivoNombre,
   archivoTipo: facturas.archivoTipo,
   archivoTamano: facturas.archivoTamano,
+  // La venta de una emitida (GH-38), si la tiene
+  ventaId: sql<string | null>`(select v.id from ventas v where v.factura_id = "facturas"."id")`,
   creadoEn: facturas.creadoEn,
   modificadoEn: facturas.modificadoEn,
 }

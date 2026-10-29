@@ -354,3 +354,170 @@ describe('otros ingresos y gastos (GH-37)', () => {
     expect(estado.apuntes[1]?.anulacion?.motivo).toBe('Estaba repetido')
   })
 })
+
+describe('ventas de animales (GH-38)', () => {
+  const ventas = () => `${finanzas()}?vista=ventas`
+
+  it('registra una venta por kg, con los importes al momento, y los animales pasan a vendidos', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(ventas())
+    await usuario.click(await screen.findByRole('button', { name: 'Nueva venta' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva venta' })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Comprador/ }), 'Carnes Galegas')
+    for (const crotal of ['ES041503457001', 'ES041503456812']) {
+      await usuario.type(within(hoja).getByRole('searchbox', { name: /Buscar animal/ }), crotal)
+      await usuario.click(await within(hoja).findByRole('button', { name: new RegExp(crotal) }))
+    }
+    await usuario.click(within(hoja).getByRole('button', { name: 'Por kg' }))
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Precio por kg/ }), '4,125')
+    await usuario.type(
+      within(hoja).getByRole('textbox', { name: /Peso de ES041503457001/ }),
+      '230,5',
+    )
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Peso de Moreno/ }), '251')
+    const totales = within(within(hoja).getByLabelText('Totales de la venta'))
+    expect(totales.getByText('481,5 kg')).toBeInTheDocument()
+    expect(totales.getByText('1.986,19 €')).toBeInTheDocument()
+    await usuario.click(within(hoja).getByRole('button', { name: 'Vender' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Venta a Carnes Galegas' }),
+    ).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(`${finanzas()}/ventas/ve1`)
+    expect(estado.animales.find((a) => a.id === 'a3')).toMatchObject({
+      estado: 'vendido',
+      tipoBaja: 'venta',
+    })
+    expect(estado.ventas[0]).toMatchObject({
+      modoPrecio: 'por_kg',
+      precio: 4.125,
+      animales: [
+        { animalId: 'a3', kg: 230.5 },
+        { animalId: 'a2', kg: 251 },
+      ],
+    })
+  })
+
+  it('con el precio por kg, pide el peso de cada animal', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(ventas())
+    await usuario.click(await screen.findByRole('button', { name: 'Nueva venta' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva venta' })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Comprador/ }), 'Carnes Galegas')
+    await usuario.type(
+      within(hoja).getByRole('searchbox', { name: /Buscar animal/ }),
+      'ES041503457001',
+    )
+    await usuario.click(await within(hoja).findByRole('button', { name: /ES041503457001/ }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Por kg' }))
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Precio por kg/ }), '4')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Vender' }))
+    expect(within(hoja).getByText('Con el precio por kg, indica el peso')).toBeInTheDocument()
+    expect(estado.ventas).toHaveLength(0)
+  })
+
+  it('no vende un animal con la supresión en curso, y dice cuál y hasta cuándo', async () => {
+    estado.tratamientos.push({
+      ...(estado.tratamientos[0] as (typeof estado.tratamientos)[number]),
+      id: 't9',
+      animalId: 'a3',
+      fecha: '2026-10-20',
+      diasSupresion: 60,
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(ventas())
+    await usuario.click(await screen.findByRole('button', { name: 'Nueva venta' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva venta' })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Comprador/ }), 'Carnes Galegas')
+    await usuario.type(
+      within(hoja).getByRole('searchbox', { name: /Buscar animal/ }),
+      'ES041503457001',
+    )
+    await usuario.click(await within(hoja).findByRole('button', { name: /ES041503457001/ }))
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Precio total/ }), '900')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Vender' }))
+    expect(await within(hoja).findByRole('alert')).toHaveTextContent(
+      'No se puede vender: ES041503457001 tiene la supresión hasta el 19/12/2026',
+    )
+    expect(estado.animales.find((a) => a.id === 'a3')?.estado).toBe('activo')
+  })
+
+  it('se vende desde la selección de la lista de animales', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`/explotaciones/${A_VEIGA.id}/animales`)
+    await usuario.click(
+      within(await screen.findByRole('table', { name: 'Animales' })).getByRole('checkbox', {
+        name: /Moreno/,
+      }),
+    )
+    await usuario.click(screen.getByRole('button', { name: 'Vender' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva venta' })
+    expect(
+      within(within(hoja).getByRole('list', { name: 'Animales vendidos' })).getByText(
+        'Moreno · ES041503456812',
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it('el empleado no ve «Vender» en la lista de animales', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`/explotaciones/${O_SOUTO.id}/animales`)
+    await usuario.click(
+      within(await screen.findByRole('table', { name: 'Animales' })).getByRole('checkbox', {
+        name: /Moreno/,
+      }),
+    )
+    expect(screen.getByRole('button', { name: 'Tratar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Vender' })).not.toBeInTheDocument()
+  })
+
+  it('crea la factura con los datos de la venta y se deshace la venta', async () => {
+    estado.ventas.push({
+      id: 've1',
+      fecha: '2026-10-20',
+      comprador: 'Carnes Galegas',
+      modoPrecio: 'por_animal',
+      precio: 900,
+      animales: [{ animalId: 'a3', kg: null }],
+      facturaId: null,
+      observaciones: null,
+    })
+    Object.assign(estado.animales[2] as object, {
+      estado: 'vendido',
+      tipoBaja: 'venta',
+      fechaBaja: '2026-10-20',
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(`${finanzas()}/ventas/ve1`)
+    await usuario.click(await screen.findByRole('button', { name: 'Crear la factura' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva factura' })
+    expect(within(hoja).getByRole('textbox', { name: /Cliente/ })).toHaveValue('Carnes Galegas')
+    expect(within(hoja).getByRole('textbox', { name: 'Base imponible' })).toHaveValue('900')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /NIF/ }), '12345678Z')
+    await waitFor(() =>
+      expect(within(hoja).getByRole('textbox', { name: /Número/ })).toHaveValue('2026-0007'),
+    )
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByRole('link', { name: /Factura 2026-0007/ })).toBeInTheDocument()
+    expect(estado.ventas[0]?.facturaId).toBe('fa3')
+    expect(estado.facturas.at(-1)).toMatchObject({
+      tipo: 'emitida',
+      impuesto: 'compensacion',
+      lineas: [{ base: 900, porcentaje: 10.5, cuota: 94.5 }],
+    })
+
+    await usuario.click(screen.getByRole('button', { name: 'Deshacer la venta' }))
+    await usuario.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Deshacer la venta' }),
+    )
+    await waitFor(() => expect(router.state.location.search).toBe('?vista=ventas'))
+    expect(estado.ventas).toHaveLength(0)
+    expect(estado.animales[2]?.estado).toBe('activo')
+  })
+})

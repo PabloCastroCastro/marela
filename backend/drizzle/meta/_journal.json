@@ -281,6 +281,20 @@
       "when": 1793291211317,
       "tag": "0039_apuntes_historial",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793297531253,
+      "tag": "0040_ventas",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793297532708,
+      "tag": "0041_ventas_reglas",
+      "breakpoints": true
     }
   ]
 }
