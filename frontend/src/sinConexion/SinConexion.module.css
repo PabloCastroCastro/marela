@@ -103,3 +103,37 @@
     display: inline;
   }
 }
+
+/* Registros sin enviar en una ficha (GH-32) */
+.sinEnviar {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sinEnviar button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  width: 100%;
+  min-height: var(--altura-tactil);
+  padding: var(--espacio-2) 0;
+  border: 0;
+  border-top: 1px solid var(--color-borde);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.sinEnviar button > span:first-child {
+  min-width: 0;
+}
+
+.sinEnviar button:focus-visible {
+  outline: 2px solid var(--color-foco);
+  outline-offset: 2px;
+}

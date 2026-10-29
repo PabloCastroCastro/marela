@@ -8,6 +8,7 @@ import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, hectareas } from '../formato'
+import { RegistrosSinEnviar } from '../sinConexion/RegistrosSinEnviar'
 import { type Aplicacion, dosis, TIPOS_ABONO, useAplicaciones } from './aplicaciones'
 import { CLAVE_FINCAS, type FincaDetalle } from './datos'
 import estilos from './Fincas.module.css'
@@ -102,6 +103,14 @@ export function TarjetaAplicaciones({ finca }: { finca: FincaDetalle }) {
           <InsigniaSeguridad fin={finca.finSeguridad} />
         </div>
       )}
+      <RegistrosSinEnviar
+        etiqueta="Abonos y tratamientos sin enviar"
+        de={(p) =>
+          (p.tipo === 'aplicacion' &&
+            (p.cuerpo as { fincaIds?: string[] }).fincaIds?.includes(finca.id)) ??
+          false
+        }
+      />
       {contenido}
       {recorte.boton}
       {anulando && (

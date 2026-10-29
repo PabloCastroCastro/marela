@@ -120,7 +120,7 @@ const crear = createRoute({
   tags: ['Fincas'],
   summary: 'Registrar un abonado o tratamiento fitosanitario en una o varias fincas',
   description:
-    'Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.',
+    'Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.',
   security: [{ sesion: [] }],
   middleware: [permitir('fincas')] as const,
   request: {
@@ -131,6 +131,7 @@ const crear = createRoute({
     201: json(z.array(Aplicacion), 'Registrados'),
     400: error('Datos no válidos, fincas desactivadas o de otra explotación (validacion)'),
     ...comunes,
+    409: error('Algún id es de otro registro (id_en_uso)'),
   },
 })
 

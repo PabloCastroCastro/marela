@@ -6,12 +6,13 @@ import { Tarjeta } from '../componentes/Etiquetas'
 import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
+import { RegistrosSinEnviar } from '../sinConexion/RegistrosSinEnviar'
 import type { FincaDetalle } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioPastoreo } from './FormularioPastoreo'
 import { FormularioSalida } from './FormularioSalida'
 import { InsigniaPastoreo } from './InsigniaPastoreo'
-import { animales, type Pastoreo, usePastoreos } from './pastoreos'
+import { animales, type Pastoreo, usePastoreoEnCurso, usePastoreos } from './pastoreos'
 
 // Días entre la entrada y la salida
 const dias = (p: Pastoreo) =>
@@ -35,6 +36,7 @@ export function TarjetaPastoreos({ finca }: { finca: FincaDetalle }) {
   const [corrigiendo, setCorrigiendo] = useState<Pastoreo>()
   const [saliendo, setSaliendo] = useState(false)
   const recorte = useRecorte(pastoreos.data ?? [])
+  const enCurso = usePastoreoEnCurso(finca)
 
   let contenido: ReactNode
   if (pastoreos.isPending) {
@@ -71,9 +73,15 @@ export function TarjetaPastoreos({ finca }: { finca: FincaDetalle }) {
       <h2 id="finca-pastoreos" className={estilos.tituloTarjeta}>
         Pastoreo
       </h2>
-      {finca.pastoreo && (
+      <RegistrosSinEnviar
+        etiqueta="Pastoreos sin enviar"
+        de={(p) =>
+          (p.tipo === 'pastoreo' || p.tipo === 'salida') && p.contexto.fincaId === finca.id
+        }
+      />
+      {enCurso && (
         <div className={estilos.enCurso}>
-          <InsigniaPastoreo pastoreo={finca.pastoreo} />
+          <InsigniaPastoreo pastoreo={enCurso} />
           <Boton
             variante="secundario"
             tamano="compacto"
@@ -93,8 +101,8 @@ export function TarjetaPastoreos({ finca }: { finca: FincaDetalle }) {
           alCerrar={() => setCorrigiendo(undefined)}
         />
       )}
-      {saliendo && finca.pastoreo && (
-        <FormularioSalida pastoreo={finca.pastoreo} alCerrar={() => setSaliendo(false)} />
+      {saliendo && enCurso && (
+        <FormularioSalida pastoreo={enCurso} finca={finca} alCerrar={() => setSaliendo(false)} />
       )}
     </Tarjeta>
   )

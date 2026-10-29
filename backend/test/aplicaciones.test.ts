@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { crearApp } from '../src/app.js'
@@ -227,6 +227,23 @@ describe('abonos y fitosanitarios', () => {
       },
     )
     expect(res.status).toBe(404)
+  })
+})
+
+describe('sin conexión (GH-32)', () => {
+  it('con los ids del dispositivo, reenviar el abonado no lo duplica', async () => {
+    const fincas = [await finca(), await finca()]
+    const ids: string[] = [randomUUID(), randomUUID()]
+    expect((await abonar(fincas, { ids })).status).toBe(201)
+    const reenvio = await abonar(fincas, { ids })
+    expect(reenvio.status).toBe(201)
+    expect(((await reenvio.json()) as { id: string }[]).map((x) => x.id).sort()).toEqual(
+      [...ids].sort(),
+    )
+    const suyas = (await (await deLaFinca(fincas[1] ?? '')).json()) as { id: string }[]
+    expect(suyas.filter((x) => ids.includes(x.id))).toHaveLength(1)
+    const deB = await abonar([await finca(2, b, carla.cookie)], { ids: [ids[1]] }, b, carla.cookie)
+    expect([deB.status, await codigo(deB)]).toEqual([409, 'id_en_uso'])
   })
 })
 

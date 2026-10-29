@@ -730,10 +730,18 @@ export function simularApi(estado: EstadoSimulado) {
         )
       }
       if (!laborId && metodo === 'POST') {
+        // Reenviadas con los ids del dispositivo (GH-32): las que ya se guardaron
+        const ids = cuerpo.ids as string[] | undefined
+        const ya = estado.labores.filter((x) => ids?.includes(x.id))
+        if (ids?.length && ya.length === ids.length)
+          return json(
+            ya.map((l) => ({ ...l, ...sello })),
+            201,
+          )
         const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
           const f = estado.fincas.find((x) => x.id === id)
           const nueva: LaborSimulada = {
-            id: `l${estado.labores.length + i + 1}`,
+            id: ids?.[i] ?? `l${estado.labores.length + i + 1}`,
             fincaId: id,
             superficie: cuerpo.superficie ?? f?.parcelas.reduce((t, x) => t + x.superficie, 0) ?? 0,
             ...datosDe(cuerpo),
@@ -776,9 +784,12 @@ export function simularApi(estado: EstadoSimulado) {
         )
       }
       if (!pastoreoId && metodo === 'POST') {
+        // Reenviado con el id del dispositivo (GH-32): el que ya se guardó
+        const ya = estado.pastoreos.find((x) => cuerpo.id && x.id === cuerpo.id)
+        if (ya) return json({ ...ya, ...sello }, 201)
         if (!cuerpo.fechaSalida && enCurso(cuerpo.fincaId)) return ocupada
         const nuevo: PastoreoSimulado = {
-          id: `ps${estado.pastoreos.length + 1}`,
+          id: (cuerpo.id as string | undefined) ?? `ps${estado.pastoreos.length + 1}`,
           fincaId: cuerpo.fincaId,
           fechaEntrada: cuerpo.fechaEntrada,
           fechaSalida: cuerpo.fechaSalida || null,
@@ -790,8 +801,11 @@ export function simularApi(estado: EstadoSimulado) {
       }
       const p = estado.pastoreos.find((x) => x.id === pastoreoId)
       if (!p) return errorApi(404, 'pastoreo_no_encontrado')
-      if (salida) p.fechaSalida = cuerpo.fechaSalida
-      else if (metodo === 'DELETE') estado.pastoreos = estado.pastoreos.filter((x) => x !== p)
+      if (salida) {
+        if (p.fechaSalida && p.fechaSalida !== cuerpo.fechaSalida)
+          return errorApi(409, 'ya_salieron')
+        p.fechaSalida = cuerpo.fechaSalida
+      } else if (metodo === 'DELETE') estado.pastoreos = estado.pastoreos.filter((x) => x !== p)
       else {
         if (!cuerpo.fechaSalida && enCurso(p.fincaId, p.id)) return ocupada
         Object.assign(p, {
@@ -886,10 +900,17 @@ export function simularApi(estado: EstadoSimulado) {
         const m = estado.miembros.find((x) => x.usuarioId === cuerpo.aplicadoPorId)
         const fito = cuerpo.tipo === 'fitosanitario'
         const dias = fito ? (cuerpo.diasSeguridad as number) : 0
+        const ids = cuerpo.ids as string[] | undefined
+        const ya = estado.aplicaciones.filter((x) => ids?.includes(x.id))
+        if (ids?.length && ya.length === ids.length)
+          return json(
+            ya.map((a) => ({ ...a, ...sello })),
+            201,
+          )
         const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
           const f = estado.fincas.find((x) => x.id === id)
           const nueva: AplicacionSimulada = {
-            id: `ap${estado.aplicaciones.length + i + 1}`,
+            id: ids?.[i] ?? `ap${estado.aplicaciones.length + i + 1}`,
             fincaId: id,
             tipo: cuerpo.tipo,
             fecha: cuerpo.fecha,

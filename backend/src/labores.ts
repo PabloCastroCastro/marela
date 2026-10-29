@@ -15,6 +15,7 @@ import {
 import { ErrorApi } from './errores.js'
 import { hoyEnMadrid } from './fechas.js'
 import { verFinca } from './fincas.js'
+import { comprobarIds, IdsCliente, reenvio, sinChoqueDeId } from './idCliente.js'
 
 // Siembras, cosechas y otras labores de las fincas (GH-26). Como en fincas.ts, todas las funciones
 // reciben la transacción de enLaExplotacion. Se corrigen o se borran; los cambios quedan en el
@@ -69,9 +70,12 @@ export const DatosLabor = Campos.extend({
     .min(1, 'Elige al menos una finca')
     .max(200)
     .transform((ids) => [...new Set(ids)]),
+  // Sin conexión (GH-32): los del dispositivo
+  ids: IdsCliente,
 })
   .superRefine((l, ctx) => {
     comprobarCampos(l, ctx)
+    comprobarIds(l, ctx)
     if (l.superficie != null && l.fincaIds.length > 1)
       ctx.addIssue({
         code: 'custom',
@@ -186,6 +190,9 @@ const valores = (l: Campos) => ({
 
 // Registra la misma labor en una o varias fincas activas: una por finca, todas o ninguna
 export async function crearLabores(tx: Transaccion, datos: DatosLabor) {
+  // Reenviadas desde el dispositivo: las que ya se guardaron
+  const ya = await reenvio(datos.ids, (ids) => consulta(tx).where(inArray(labores.id, ids)))
+  if (ya) return ya.map(labor)
   const suyas = await superficies(tx, datos.fincaIds)
   if (suyas.size < datos.fincaIds.length)
     throw invalido('fincaIds', 'Alguna finca no está entre las de la explotación')
@@ -199,16 +206,19 @@ export async function crearLabores(tx: Transaccion, datos: DatosLabor) {
       `No puede pasar de la de la finca (${String(unica.superficie).replace('.', ',')} ha)`,
     )
   await comprobarPersona(tx, datos.realizadaPorId)
-  const creadas = await tx
-    .insert(labores)
-    .values(
-      datos.fincaIds.map((fincaId) => ({
-        fincaId,
-        superficie: datos.superficie ?? suyas.get(fincaId)?.superficie ?? 0,
-        ...valores(datos),
-      })),
-    )
-    .returning({ id: labores.id })
+  const creadas = await sinChoqueDeId('labores', () =>
+    tx
+      .insert(labores)
+      .values(
+        datos.fincaIds.map((fincaId, i) => ({
+          ...(datos.ids ? { id: datos.ids[i] } : {}),
+          fincaId,
+          superficie: datos.superficie ?? suyas.get(fincaId)?.superficie ?? 0,
+          ...valores(datos),
+        })),
+      )
+      .returning({ id: labores.id }),
+  )
   const filas = await consulta(tx).where(
     inArray(
       labores.id,

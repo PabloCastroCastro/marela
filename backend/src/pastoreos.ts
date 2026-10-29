@@ -5,6 +5,7 @@ import { ANIMALES_PASTOREO_MAXIMO, fincas, pastoreos } from './db/schema/index.j
 import { ErrorApi } from './errores.js'
 import { hoyEnMadrid } from './fechas.js'
 import { verFinca } from './fincas.js'
+import { IdCliente, idEnUso, sinChoqueDeId } from './idCliente.js'
 
 // Pastoreos de las fincas (GH-28). Como en labores.ts, todas las funciones reciben la transacción de
 // enLaExplotacion. Se corrigen o se borran; los cambios quedan en el historial.
@@ -51,7 +52,11 @@ function comprobarFechas(
 }
 
 // Registrar la entrada de los animales en una finca (y su salida, si ya salieron)
-export const DatosPastoreo = Campos.extend({ fincaId: z.uuid() })
+export const DatosPastoreo = Campos.extend({
+  fincaId: z.uuid(),
+  // Sin conexión (GH-32): el del dispositivo
+  id: IdCliente,
+})
   .superRefine(comprobarFechas)
   .openapi('DatosPastoreo')
 
@@ -129,6 +134,12 @@ async function comprobarEnCurso(tx: Transaccion, fincaId: string, excepto?: stri
 }
 
 export async function crearPastoreo(tx: Transaccion, datos: z.output<typeof DatosPastoreo>) {
+  // Reenviado desde el dispositivo: el que ya se guardó
+  if (datos.id) {
+    const [ya] = await tx.select(columnas).from(pastoreos).where(eq(pastoreos.id, datos.id))
+    if (ya && ya.fincaId !== datos.fincaId) throw idEnUso()
+    if (ya) return pastoreo(ya)
+  }
   const [finca] = await tx
     .select({ activa: fincas.activa })
     .from(fincas)
@@ -136,16 +147,19 @@ export async function crearPastoreo(tx: Transaccion, datos: z.output<typeof Dato
   if (!finca) throw invalido('fincaId', 'La finca no está entre las de la explotación')
   if (!finca.activa) throw invalido('fincaId', 'La finca está desactivada')
   if (!datos.fechaSalida) await comprobarEnCurso(tx, datos.fincaId)
-  const [creado] = await tx
-    .insert(pastoreos)
-    .values({
-      fincaId: datos.fincaId,
-      fechaEntrada: datos.fechaEntrada,
-      fechaSalida: datos.fechaSalida ?? null,
-      animales: datos.animales,
-      observaciones: datos.observaciones ?? null,
-    })
-    .returning({ id: pastoreos.id })
+  const [creado] = await sinChoqueDeId('pastoreos', () =>
+    tx
+      .insert(pastoreos)
+      .values({
+        ...(datos.id ? { id: datos.id } : {}),
+        fincaId: datos.fincaId,
+        fechaEntrada: datos.fechaEntrada,
+        fechaSalida: datos.fechaSalida ?? null,
+        animales: datos.animales,
+        observaciones: datos.observaciones ?? null,
+      })
+      .returning({ id: pastoreos.id }),
+  )
   return verPastoreo(tx, creado?.id ?? '')
 }
 
@@ -175,6 +189,8 @@ export async function registrarSalida(
   { fechaSalida }: z.output<typeof DatosSalida>,
 ) {
   const actual = await verPastoreo(tx, pastoreoId)
+  // La misma salida, reenviada desde el dispositivo (GH-32): ya está
+  if (actual.fechaSalida === fechaSalida) return actual
   if (actual.fechaSalida)
     throw new ErrorApi(409, 'ya_salieron', 'Los animales ya salieron de la finca')
   if (fechaSalida > hoyEnMadrid()) throw invalido('fechaSalida', 'La fecha no puede ser futura')
