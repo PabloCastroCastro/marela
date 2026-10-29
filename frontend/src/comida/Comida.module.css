@@ -1,0 +1,140 @@
+.pagina {
+  display: grid;
+  gap: var(--espacio-4);
+  /* Hueco para que el botón flotante no tape la última tarjeta en el móvil */
+  padding-bottom: calc(56px + var(--espacio-4));
+}
+
+.titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.soloAncho {
+  display: none;
+}
+
+.suave {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.tituloTarjeta {
+  margin-bottom: var(--espacio-3);
+  font-size: var(--texto-lg);
+}
+
+/* Stock: una tarjeta por almacén, con la cantidad bien grande */
+.almacenes {
+  display: grid;
+  gap: var(--espacio-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.almacen {
+  display: grid;
+  gap: var(--espacio-1);
+  height: 100%;
+}
+
+.cabeceraAlmacen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  /* Que el botón de editar no estire la cabecera de las tarjetas sin él */
+  min-height: 48px;
+}
+
+.cabeceraAlmacen h2 {
+  min-width: 0;
+  font-size: var(--texto-lg);
+  overflow-wrap: anywhere;
+}
+
+.stock {
+  font-size: var(--texto-2xl);
+  font-weight: var(--peso-fuerte);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* Almacenes desactivados, para reactivarlos */
+.desactivados {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desactivados li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+  min-height: 56px;
+  padding: var(--espacio-2) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.desactivados li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Formulario */
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.grupo {
+  display: grid;
+  gap: var(--espacio-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo legend {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.error {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}
+
+.peligro {
+  color: var(--color-peligro);
+}
+
+@media (min-width: 40rem) {
+  .almacenes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .pagina {
+    padding-bottom: 0;
+  }
+
+  .soloAncho {
+    display: block;
+  }
+
+  .almacenes {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

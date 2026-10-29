@@ -5,6 +5,7 @@ import { PaginaHistorial } from './animales/PaginaHistorial'
 import { PaginaCambiarContrasena } from './auth/PaginaCambiarContrasena'
 import { PaginaEntrar } from './auth/PaginaEntrar'
 import { RUTA_CAMBIAR_CONTRASENA, RUTA_ENTRAR, RutaProtegida } from './auth/RutaProtegida'
+import { PaginaComida } from './comida/PaginaComida'
 import { Aplicacion } from './diseno/Aplicacion'
 import { SoloModulo } from './explotaciones/ExplotacionActual'
 import { PaginaDatosExplotacion } from './explotaciones/PaginaDatosExplotacion'
@@ -77,7 +78,7 @@ export const rutas: RouteObject[] = [
             path: 'comida',
             element: (
               <SoloModulo modulo="comida">
-                <PaginaSeccion titulo="Comida" />
+                <PaginaComida />
               </SoloModulo>
             ),
           },

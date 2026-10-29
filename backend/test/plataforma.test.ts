@@ -14,6 +14,8 @@ import {
 } from './utilidades.js'
 
 const app = crearApp()
+// Los que registran los módulos (los almacenes de comida): los de cada test se quitan después
+const registrados = alCrearExplotacion.length
 
 const pedir = (metodo: string, ruta: string, cookie: string, cuerpo?: object): Promise<Response> =>
   Promise.resolve(
@@ -55,7 +57,7 @@ beforeAll(async () => {
 })
 
 afterEach(() => {
-  alCrearExplotacion.length = 0
+  alCrearExplotacion.length = registrados
 })
 
 afterAll(async () => {

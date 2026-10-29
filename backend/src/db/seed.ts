@@ -1,5 +1,6 @@
 import { hashPassword } from 'better-auth/crypto'
 import { eq } from 'drizzle-orm'
+import { crearAlmacenesPorDefecto } from '../almacenes.js'
 import { config } from '../config.js'
 import { hoyEnMadrid } from '../fechas.js'
 import { db, pool } from './cliente.js'
@@ -139,6 +140,12 @@ await db.transaction(async (tx) => {
       })),
     )
     .onConflictDoNothing()
+
+  // Los almacenes de comida por defecto, como al crear una explotación, a nombre de su administrador
+  for (const [, explotacion, usuario, role] of miembros) {
+    if (role === 'administrador')
+      await crearAlmacenesPorDefecto(tx, sid(EXPLOTACION, explotacion), sid(USUARIO, usuario))
+  }
 })
 
 // Animales de A Veiga, dados de alta por Ana: vacas, un toro propio, un toro comprado y terneros con
