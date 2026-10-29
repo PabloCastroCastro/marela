@@ -1,5 +1,6 @@
-import { CircleAlert, LoaderCircle, RotateCw } from 'lucide-react'
+import { CircleAlert, CloudOff, LoaderCircle, RotateCw } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useConexion } from '../sinConexion/conexion'
 import { Boton } from './Boton'
 import { clases } from './clases'
 import estilos from './Estados.module.css'
@@ -88,6 +89,15 @@ export function Esqueleto({
   bloques = [{}, { ancho: '80%' }, { ancho: '60%' }],
   texto = 'Cargando…',
 }: PropsEsqueleto) {
+  const conexion = useConexion()
+  // Sin conexión y sin nada guardado, no va a cargar hasta que vuelva: se dice (GH-31)
+  if (!conexion)
+    return (
+      <p className={estilos.sinConexion} role="status">
+        <CloudOff aria-hidden size={20} />
+        Sin conexión. Esto no está guardado en el dispositivo: se cargará al recuperarla.
+      </p>
+    )
   return (
     <div className={estilos.esqueleto} role="status" aria-label={texto}>
       {bloques.map((b, i) => (

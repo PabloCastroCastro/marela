@@ -83,3 +83,19 @@
     animation: none;
   }
 }
+
+/* Sin conexión y sin el dato guardado en el dispositivo (GH-31) */
+.sinConexion {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-aviso-suave);
+  color: var(--color-aviso);
+  font-size: var(--texto-sm);
+}
+
+.sinConexion svg {
+  flex: none;
+}

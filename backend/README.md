@@ -178,7 +178,7 @@ Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
 
 - **`GET /api/explotaciones/{id}/animales/{animalId}/pesos`:** las pesadas, de la más antigua a la más reciente. La ganancia entre pesadas la calcula el frontend.
-- **`POST /api/explotaciones/{id}/animales/{animalId}/pesos`:** `{ fecha, kg, momento }` registra una pesada. `momento` es `nacimiento`, `destete`, `venta` u `otro` (por defecto); los tres primeros, como mucho una vez por animal (409 `momento_repetido`).
+- **`POST /api/explotaciones/{id}/animales/{animalId}/pesos`:** `{ id?, fecha, kg, momento }` registra una pesada. `momento` es `nacimiento`, `destete`, `venta` u `otro` (por defecto); los tres primeros, como mucho una vez por animal (409 `momento_repetido`). `id` es el que genera el dispositivo (sin conexión, GH-31): si ya hay una pesada con él, se devuelve esa en lugar de crear otra; si es de otro registro, 409 `id_en_uso` (`src/idCliente.ts`).
 - **`PUT /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** corrige una pesada.
 - **`DELETE /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** borra una pesada registrada por error y la devuelve, para poder deshacerlo. Queda en el historial.
 

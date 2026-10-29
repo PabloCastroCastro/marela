@@ -1,0 +1,105 @@
+/* Indicador de la cabecera: sin conexión y registros sin enviar (GH-31) */
+.indicador {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  min-width: var(--altura-tactil);
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-3);
+  border: 0;
+  border-radius: var(--radio-completo);
+  background: var(--color-aviso-suave);
+  color: var(--color-aviso);
+  font: inherit;
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.indicador:focus-visible {
+  outline: 2px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.conError {
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+}
+
+.numero {
+  font-variant-numeric: tabular-nums;
+}
+
+/* En el móvil, solo el icono: la cabecera es estrecha */
+.texto {
+  display: none;
+}
+
+.contenido {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.estado {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-fondo);
+  font-size: var(--texto-sm);
+}
+
+.suave {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.lista li > div:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.descripcion {
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.estadoPendiente {
+  color: var(--color-aviso);
+  font-size: var(--texto-sm);
+}
+
+.fallido {
+  color: var(--color-peligro);
+}
+
+.acciones {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.peligro {
+  color: var(--color-peligro);
+}
+
+@media (min-width: 40rem) {
+  .texto {
+    display: inline;
+  }
+}

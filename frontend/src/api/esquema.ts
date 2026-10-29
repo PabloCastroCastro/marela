@@ -1129,7 +1129,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** Registrar una pesada */
+        /**
+         * Registrar una pesada
+         * @description Con id, la registrada sin conexión: si ya se guardó, se devuelve la misma en lugar de duplicarla.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1142,11 +1145,11 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["DatosPesada"];
+                    "application/json": components["schemas"]["NuevaPesada"];
                 };
             };
             responses: {
-                /** @description Registrada */
+                /** @description Registrada, o la que ya se registró con ese id */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -1191,7 +1194,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Ya hay una pesada al nacer, al destete o a la venta (momento_repetido) */
+                /** @description Ya hay una pesada al nacer, al destete o a la venta, o el id es de otro registro (momento_repetido, id_en_uso) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5031,6 +5034,22 @@ export interface components {
             creadoEn: string;
             /** Format: date-time */
             modificadoEn: string;
+        };
+        NuevaPesada: {
+            /** Format: date */
+            fecha: string;
+            /** @example 412.5 */
+            kg: number;
+            /**
+             * @default otro
+             * @enum {string}
+             */
+            momento: "nacimiento" | "destete" | "venta" | "otro";
+            /**
+             * Format: uuid
+             * @description Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica.
+             */
+            id?: string;
         };
         DatosPesada: {
             /** Format: date */
