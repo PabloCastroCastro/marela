@@ -5,6 +5,7 @@ import { config } from './config.js'
 import { comprobarBaseDeDatos } from './db/cliente.js'
 import { manejarError, rutaNoEncontrada, soloMismoOrigen, validacionFallida } from './errores.js'
 import { registrarPeticiones } from './peticiones.js'
+import { rutasAlmacenes } from './rutas/almacenes.js'
 import { rutasAnimales } from './rutas/animales.js'
 import { rutasAplicaciones } from './rutas/aplicaciones.js'
 import { rutasCartografia } from './rutas/cartografia.js'
@@ -12,6 +13,7 @@ import { rutasExplotaciones } from './rutas/explotaciones.js'
 import { rutasFincas } from './rutas/fincas.js'
 import { rutasLabores } from './rutas/labores.js'
 import { rutasMiembros } from './rutas/miembros.js'
+import { rutasMovimientos } from './rutas/movimientos.js'
 import { rutasPartos } from './rutas/partos.js'
 import { rutasPastoreos } from './rutas/pastoreos.js'
 import { rutasPesos } from './rutas/pesos.js'
@@ -24,7 +26,7 @@ export const infoOpenApi = {
   openapi: '3.1.0',
   info: {
     title: 'API de Marela',
-    version: '0.5.0',
+    version: '0.6.0',
     description:
       'API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }.',
   },
@@ -74,6 +76,8 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasLabores())
   app.route('/', rutasAplicaciones())
   app.route('/', rutasPastoreos())
+  app.route('/', rutasAlmacenes())
+  app.route('/', rutasMovimientos())
   app.route('/', rutasCartografia())
   app.route('/', rutasPlataforma())
 

@@ -176,6 +176,34 @@
       "when": 1793204243375,
       "tag": "0024_parcelas_mapa",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793259541626,
+      "tag": "0025_almacenes",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793259543126,
+      "tag": "0026_almacenes_historial",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793261075949,
+      "tag": "0027_movimientos_comida",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793261077359,
+      "tag": "0028_movimientos_comida_stock",
+      "breakpoints": true
     }
   ]
 }
