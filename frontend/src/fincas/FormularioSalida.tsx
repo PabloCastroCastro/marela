@@ -7,35 +7,79 @@ import { CampoFecha } from '../componentes/Campo'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha as formatoFecha, hoy } from '../formato'
+import { nuevoId, type Pendiente, reemplazar } from '../sinConexion/cola'
+import { AVISO_GUARDADO, useRegistrar } from '../sinConexion/useRegistrar'
 import { CLAVE_FINCAS } from './datos'
 import estilos from './Fincas.module.css'
 import { animales } from './pastoreos'
 
-// La salida de los animales de un pastoreo en curso (GH-28)
+export type PastoreoEnCurso = { id: string; desde: string; animales: number }
+
+// "Salida del pastoreo · 12 animales · 10/06/2026 · Agra de abaixo", para la lista de pendientes
+// (GH-32)
+const descripcion = (p: PastoreoEnCurso, fechaSalida: string, finca: string) =>
+  `Salida del pastoreo · ${animales(p.animales)} · ${formatoFecha(fechaSalida)} · ${finca}`
+
+// La salida de los animales de un pastoreo en curso (GH-28). Sin conexión, se guarda en el móvil y
+// se envía sola al recuperarla, también la de un pastoreo cuya entrada aún no se ha enviado: van en
+// orden. Con `pendiente`, se corrige la que no se pudo enviar (GH-32).
 export function FormularioSalida({
   pastoreo,
+  finca,
+  pendiente,
   alCerrar,
 }: {
-  pastoreo: { id: string; desde: string; animales: number }
+  pastoreo: PastoreoEnCurso
+  finca: { id: string; nombre: string }
+  pendiente?: Pendiente
   alCerrar: () => void
 }) {
   const explotacion = useExplotacionActual()
   const cliente = useQueryClient()
   const { avisar } = useAvisos()
-  const [fechaSalida, setFechaSalida] = useState(hoy())
+  const registrar = useRegistrar()
+  const [fechaSalida, setFechaSalida] = useState(
+    (pendiente?.cuerpo as { fechaSalida?: string } | undefined)?.fechaSalida ?? hoy(),
+  )
   const [errorLocal, setErrorLocal] = useState<string>()
 
   const guardar = useMutation({
-    mutationFn: () =>
-      datos(
-        api.PATCH('/api/explotaciones/{explotacionId}/pastoreos/{pastoreoId}/salida', {
-          params: { path: { explotacionId: explotacion.id, pastoreoId: pastoreo.id } },
-          body: { fechaSalida },
-        }),
-      ),
-    onSuccess: async () => {
-      await cliente.invalidateQueries({ queryKey: [...CLAVE_FINCAS, explotacion.id] })
-      avisar({ tipo: 'exito', mensaje: 'Salida registrada' })
+    mutationFn: async () => {
+      if (pendiente) {
+        reemplazar(pendiente.id, { fechaSalida }, descripcion(pastoreo, fechaSalida, finca.nombre))
+        return 'Salida corregida: se volverá a enviar'
+      }
+      const resultado = await registrar(
+        {
+          id: nuevoId(),
+          tipo: 'salida',
+          metodo: 'PATCH',
+          ruta: `/api/explotaciones/${explotacion.id}/pastoreos/${pastoreo.id}/salida`,
+          cuerpo: { fechaSalida },
+          descripcion: descripcion(pastoreo, fechaSalida, finca.nombre),
+          contexto: {
+            fincaId: finca.id,
+            finca: JSON.stringify({ id: finca.id, nombre: finca.nombre }),
+            pastoreo: JSON.stringify(pastoreo),
+          },
+          claves: [[...CLAVE_FINCAS, explotacion.id]],
+        },
+        () =>
+          datos(
+            api.PATCH('/api/explotaciones/{explotacionId}/pastoreos/{pastoreoId}/salida', {
+              params: { path: { explotacionId: explotacion.id, pastoreoId: pastoreo.id } },
+              body: { fechaSalida },
+            }),
+          ),
+      )
+      return 'enviado' in resultado ? 'Salida registrada' : AVISO_GUARDADO
+    },
+    onSuccess: async (mensaje) => {
+      // En la cola, o corregida en ella: no ha cambiado nada en el servidor, y sin conexión
+      // refrescar se quedaría esperando
+      const enCola = mensaje !== 'Salida registrada'
+      if (!enCola) await cliente.invalidateQueries({ queryKey: [...CLAVE_FINCAS, explotacion.id] })
+      avisar({ tipo: enCola ? 'info' : 'exito', mensaje })
       alCerrar()
     },
   })

@@ -6,6 +6,7 @@ import { Tarjeta } from '../componentes/Etiquetas'
 import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
+import { RegistrosSinEnviar } from '../sinConexion/RegistrosSinEnviar'
 import type { FincaDetalle } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioLabor } from './FormularioLabor'
@@ -63,6 +64,14 @@ export function TarjetaLabores({ finca }: { finca: FincaDetalle }) {
       <h2 id="finca-labores" className={estilos.tituloTarjeta}>
         Labores
       </h2>
+      <RegistrosSinEnviar
+        etiqueta="Labores sin enviar"
+        de={(p) =>
+          (p.tipo === 'labor' &&
+            (p.cuerpo as { fincaIds?: string[] }).fincaIds?.includes(finca.id)) ??
+          false
+        }
+      />
       {contenido}
       {recorte.boton}
       {corrigiendo && (

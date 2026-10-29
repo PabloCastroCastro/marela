@@ -256,3 +256,128 @@ describe('registrar sin conexión', () => {
     ).toBeInTheDocument()
   })
 })
+
+describe('fincas sin conexión (GH-32)', () => {
+  const fincas = `/explotaciones/${A_VEIGA.id}/fincas`
+
+  async function elegir(usuario: ReturnType<typeof userEvent.setup>, opcion: string) {
+    await usuario.click(await screen.findByRole('button', { name: 'Registrar' }))
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: 'Registrar' })).getByRole('button', {
+        name: opcion,
+      }),
+    )
+  }
+
+  it('registra una labor en varias fincas sin conexión y la envía, una por finca y sin duplicar', async () => {
+    estado.fincas[1] = { ...(estado.fincas[1] as (typeof estado.fincas)[number]), activa: true }
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(fincas)
+    await screen.findByRole('list', { name: 'Fincas' })
+    estado.sinRed = true
+    await usuario.click(
+      within(screen.getByRole('table', { name: 'Fincas' })).getByRole('checkbox', {
+        name: 'Seleccionar todos',
+      }),
+    )
+    await elegir(usuario, 'Otra labor')
+    const hoja = screen.getByRole('dialog', { name: 'Registrar en 2 fincas' })
+    await usuario.type(within(hoja).getByLabelText(/^Labor/), 'Encalado')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(
+      await screen.findByText(
+        'Sin conexión: se ha guardado en el móvil y se enviará al recuperarla',
+      ),
+    ).toBeInTheDocument()
+    await waitFor(() => expect(verCola()).toHaveLength(1))
+    const [pendiente] = verCola()
+    expect(pendiente).toMatchObject({
+      tipo: 'labor',
+      descripcion: expect.stringMatching(/^Encalado · .* · 2 fincas$/),
+    })
+    const ids = (pendiente?.cuerpo as { ids: string[] } | undefined)?.ids ?? []
+    expect(ids).toHaveLength(2)
+
+    estado.sinRed = false
+    act(() => marcarConConexion())
+    expect(await screen.findByText('Se ha enviado 1 registro pendiente')).toBeInTheDocument()
+    expect(estado.labores.filter((l) => ids.includes(l.id)).map((l) => l.fincaId)).toEqual([
+      'f1',
+      'f2',
+    ])
+  })
+
+  it('entrada y salida del pastoreo sin conexión: la salida se ofrece ya y se envían en orden', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Pastoreo' })
+    await within(tarjeta).findByText('Sin pastoreos registrados')
+    estado.sinRed = true
+
+    await elegir(usuario, 'Entrada a pastar')
+    let hoja = screen.getByRole('dialog', { name: 'Pastoreo · Agra de abaixo' })
+    await usuario.type(within(hoja).getByLabelText(/^Número de animales/), '12')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    await screen.findByText(/se ha guardado en el móvil/)
+    const sinEnviar = within(tarjeta).getByRole('list', { name: 'Pastoreos sin enviar' })
+    expect(within(sinEnviar).getByText(/^Entrada a pastar · 12 animales/)).toBeInTheDocument()
+
+    // La entrada aún no ha llegado, pero ya se puede registrar su salida
+    await elegir(usuario, 'Salida del pastoreo')
+    hoja = screen.getByRole('dialog', { name: 'Registrar la salida' })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(verCola().map((p) => p.tipo)).toEqual(['pastoreo', 'salida']))
+
+    estado.sinRed = false
+    act(() => marcarConConexion())
+    expect(await screen.findByText('Se han enviado 2 registros pendientes')).toBeInTheDocument()
+    expect(estado.pastoreos).toMatchObject([{ fincaId: 'f1', animales: 12 }])
+    expect(estado.pastoreos[0]?.fechaSalida).not.toBeNull()
+  })
+
+  it('un abonado rechazado al enviarlo se corrige desde la lista con su formulario', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    await screen.findByRole('region', { name: 'Abonado y fitosanitarios' })
+    estado.sinRed = true
+    await elegir(usuario, 'Abono')
+    let hoja = screen.getByRole('dialog', { name: /Registrar · Agra de abaixo/ })
+    await usuario.type(within(hoja).getByLabelText(/^Abono/), 'Cal viva')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Mineral' }))
+    await usuario.type(within(hoja).getByLabelText(/^Dosis/), '2')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    await screen.findByText(/se ha guardado en el móvil/)
+
+    // Al volver, el servidor lo rechaza la primera vez
+    estado.sinRed = false
+    let rechazar = true
+    const original = globalThis.fetch
+    vi.stubGlobal('fetch', async (entrada: RequestInfo | URL, opciones?: RequestInit) => {
+      if (rechazar && String(entrada).endsWith('/aplicaciones') && opciones?.method === 'POST') {
+        rechazar = false
+        return Response.json(
+          { error: { codigo: 'validacion', mensaje: 'La dosis es demasiado alta' } },
+          { status: 400 },
+        )
+      }
+      return original(entrada, opciones)
+    })
+    act(() => marcarConConexion())
+    await usuario.click(await screen.findByRole('button', { name: 'Ver' }))
+    const lista = await screen.findByRole('dialog', { name: 'Registros sin enviar' })
+    expect(within(lista).getByText(/La dosis es demasiado alta/)).toBeInTheDocument()
+    await usuario.click(within(lista).getByRole('button', { name: /^Corregir Abono · Cal viva/ }))
+    hoja = await screen.findByRole('dialog', { name: /Registrar · Agra de abaixo/ })
+    expect(within(hoja).getByLabelText(/^Abono/)).toHaveValue('Cal viva')
+    const dosis = within(hoja).getByLabelText(/^Dosis/)
+    expect(dosis).toHaveValue('2')
+    await usuario.clear(dosis)
+    await usuario.type(dosis, '1,5')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText('Se ha enviado 1 registro pendiente')).toBeInTheDocument()
+    expect(estado.aplicaciones.at(-1)).toMatchObject({ producto: 'Cal viva', dosis: 1.5 })
+  })
+})

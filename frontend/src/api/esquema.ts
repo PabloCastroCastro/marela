@@ -2705,7 +2705,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar una labor en una o varias fincas
-         * @description Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca.
+         * @description Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), las registradas sin conexión: si ya se guardaron, se devuelven las mismas.
          */
         post: {
             parameters: {
@@ -2760,6 +2760,15 @@ export interface paths {
                 };
                 /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún id es de otro registro (id_en_uso) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3052,7 +3061,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar un abonado o tratamiento fitosanitario en una o varias fincas
-         * @description Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.
+         * @description Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.
          */
         post: {
             parameters: {
@@ -3107,6 +3116,15 @@ export interface paths {
                 };
                 /** @description No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada) */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún id es de otro registro (id_en_uso) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3290,7 +3308,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar la entrada de animales a pastar en una finca
-         * @description Con fecha de salida, un pastoreo que ya terminó.
+         * @description Con fecha de salida, un pastoreo que ya terminó. Con id, el registrado sin conexión: si ya se guardó, se devuelve el mismo.
          */
         post: {
             parameters: {
@@ -3352,7 +3370,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description La finca ya tiene un pastoreo en curso (pastoreo_en_curso) */
+                /** @description La finca ya tiene un pastoreo en curso, o el id es de otro registro (pastoreo_en_curso, id_en_uso) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -3585,7 +3603,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Los animales ya salieron (ya_salieron) */
+                /** @description Los animales ya salieron, en otra fecha (ya_salieron) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5426,6 +5444,8 @@ export interface components {
             realizadaPorTexto?: string | null;
             observaciones?: string | null;
             fincaIds: string[];
+            /** @description Uno por finca, en el orden de fincaIds, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica. */
+            ids?: string[];
         };
         CambioLabor: {
             /** @enum {string} */
@@ -5506,6 +5526,8 @@ export interface components {
         };
         DatosAplicacion: {
             fincaIds: string[];
+            /** @description Uno por finca, en el orden de fincaIds, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica. */
+            ids?: string[];
             /** @enum {string} */
             tipo: "abono" | "fitosanitario";
             /** Format: date */
@@ -5562,6 +5584,11 @@ export interface components {
             observaciones?: string | null;
             /** Format: uuid */
             fincaId: string;
+            /**
+             * Format: uuid
+             * @description Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica.
+             */
+            id?: string;
         };
         CambioPastoreo: {
             /** Format: date */

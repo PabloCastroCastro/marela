@@ -2,36 +2,57 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2, TriangleAlert } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { api, datos, erroresPorCampo } from '../api/cliente'
+import type { components } from '../api/esquema'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { AreaTexto, Campo, CampoFecha } from '../componentes/Campo'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha as formatoFecha, hoy } from '../formato'
+import { nuevoId, type Pendiente, reemplazar } from '../sinConexion/cola'
+import { AVISO_GUARDADO, useRegistrar } from '../sinConexion/useRegistrar'
 import { CLAVE_FINCAS, type Finca } from './datos'
 import estilos from './Fincas.module.css'
-import type { Pastoreo } from './pastoreos'
+import { animales, type Pastoreo } from './pastoreos'
+
+type CuerpoPastoreo = components['schemas']['DatosPastoreo']
+
+// Lo que el formulario necesita de la finca: también sirve la que se guardó con un pendiente
+export type FincaPastoreo = Pick<Finca, 'id' | 'nombre' | 'finSeguridad'>
+
+// "Entrada a pastar · 12 animales · 01/06/2026 · Agra de abaixo", para la lista de pendientes
+// (GH-32)
+const descripcion = (c: CuerpoPastoreo, finca: FincaPastoreo) =>
+  `Entrada a pastar · ${animales(c.animales)} · ${formatoFecha(c.fechaEntrada)} · ${finca.nombre}`
 
 // Registrar la entrada de animales a pastar en una finca, o corregir o borrar un pastoreo (GH-28).
-// Si la finca está en plazo de seguridad, lo avisa, pero deja guardar.
+// Si la finca está en plazo de seguridad, lo avisa, pero deja guardar. Sin conexión, la entrada se
+// guarda en el móvil y se envía sola al recuperarla; con `pendiente`, se corrige la que no se pudo
+// enviar (GH-32).
 export function FormularioPastoreo({
   finca,
   pastoreo,
+  pendiente,
   alCerrar,
 }: {
-  finca: Finca
+  finca: FincaPastoreo
   // Para corregirlo o borrarlo
   pastoreo?: Pastoreo
+  pendiente?: Pendiente
   alCerrar: () => void
 }) {
   const explotacion = useExplotacionActual()
   const cliente = useQueryClient()
   const { avisar } = useAvisos()
+  const registrar = useRegistrar()
+  const previo = pastoreo ?? (pendiente?.cuerpo as CuerpoPastoreo | undefined)
+  // El id del pastoreo nuevo, el mismo en cada intento: reenviarlo no lo duplica
+  const [id] = useState(() => pendiente?.id ?? nuevoId())
   const [f, setF] = useState({
-    fechaEntrada: pastoreo?.fechaEntrada ?? hoy(),
-    fechaSalida: pastoreo?.fechaSalida ?? '',
-    animales: pastoreo ? String(pastoreo.animales) : '',
-    observaciones: pastoreo?.observaciones ?? '',
+    fechaEntrada: previo?.fechaEntrada ?? hoy(),
+    fechaSalida: previo?.fechaSalida ?? '',
+    animales: previo ? String(previo.animales) : '',
+    observaciones: previo?.observaciones ?? '',
   })
   const [erroresLocales, setErroresLocales] = useState<Record<string, string>>({})
   const cambiar = <K extends keyof typeof f>(campo: K, valor: (typeof f)[K]) =>
@@ -57,17 +78,44 @@ export function FormularioPastoreo({
         )
         return 'Pastoreo corregido'
       }
-      await datos(
-        api.POST('/api/explotaciones/{explotacionId}/pastoreos', {
-          params: { path: { explotacionId: explotacion.id } },
-          body: { fincaId: finca.id, ...cuerpo() },
-        }),
+      const nuevo: CuerpoPastoreo = { fincaId: finca.id, id, ...cuerpo() }
+      if (pendiente) {
+        reemplazar(pendiente.id, nuevo, descripcion(nuevo, finca))
+        return 'Pastoreo corregido: se volverá a enviar'
+      }
+      const resultado = await registrar(
+        {
+          id,
+          tipo: 'pastoreo',
+          ruta: `/api/explotaciones/${explotacion.id}/pastoreos`,
+          cuerpo: nuevo,
+          descripcion: descripcion(nuevo, finca),
+          contexto: {
+            fincaId: finca.id,
+            finca: JSON.stringify({
+              id: finca.id,
+              nombre: finca.nombre,
+              finSeguridad: finca.finSeguridad,
+            }),
+          },
+          claves: [[...CLAVE_FINCAS, explotacion.id]],
+        },
+        () =>
+          datos(
+            api.POST('/api/explotaciones/{explotacionId}/pastoreos', {
+              params: { path: { explotacionId: explotacion.id } },
+              body: nuevo,
+            }),
+          ),
       )
-      return 'Pastoreo registrado'
+      return 'enviado' in resultado ? 'Pastoreo registrado' : AVISO_GUARDADO
     },
     onSuccess: async (mensaje) => {
-      await refrescar()
-      avisar({ tipo: 'exito', mensaje })
+      // En la cola, o corregido en ella: no ha cambiado nada en el servidor, y sin conexión
+      // refrescar se quedaría esperando
+      const enCola = mensaje === AVISO_GUARDADO || Boolean(pendiente)
+      if (!enCola) await refrescar()
+      avisar({ tipo: enCola ? 'info' : 'exito', mensaje })
       alCerrar()
     },
   })

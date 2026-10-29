@@ -355,6 +355,7 @@ Decisión de GH-31. El código está en `frontend/src/sinConexion/`; GH-32 (Finc
 - **Cerrar sesión:** borra del dispositivo las consultas guardadas y los pendientes del usuario. Si quedan sin enviar, avisa antes y se puede cancelar.
 - **Ampliarlo a otro registro:** que su alta en el backend acepte el id del dispositivo (`IdCliente` en `backend/src/idCliente.ts`); en su formulario, `enviarOGuardar` con su ruta, su descripción y las consultas que refresca; mostrar sus pendientes en la ficha (`useCola`) y, para corregirlo desde la lista, su formulario en `sinConexion/registros.tsx`. Para consultar otra sección sin conexión, su clave en `SE_GUARDAN` (`sinConexion/persistencia.ts`).
 - **Prueba de concepto:** las pesadas, de principio a fin.
+- **Fincas (GH-32):** se registran sin conexión las labores, los abonados y tratamientos y el pastoreo (entrada y salida). La labor o el abonado de varias fincas lleva un id por finca. Si la entrada a pastar aún no se ha enviado, el menú ya ofrece su salida: van en orden, y la salida usa el id que la entrada generó en el dispositivo. Corregir, borrar o anular lo que ya está en el servidor sigue necesitando cobertura.
 
 ## Alojamiento y acceso
 
