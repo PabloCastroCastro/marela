@@ -7,7 +7,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - Vacuno de carne de cría (vacas nodrizas), solo España. No es cebo: los terneros nacen y se crían en la explotación.
 - Cada animal se gestiona de forma individual; no hay lotes ni grupos.
 - Multiexplotación: dar de alta una explotación nueva debe ser fácil.
-- Cuatro secciones: Animales, Comida, Fincas y Finanzas.
+- Cinco secciones: Animales, Comida, Fincas, Mantenimiento y Finanzas.
 - Primera versión sencilla; se evolucionará después.
 
 ## Usuarios y accesos
@@ -20,7 +20,7 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 - Desactivar a alguien es solo para esa explotación: deja de poder entrar en ella, pero conserva sus otras explotaciones y lo que haya registrado. Una explotación siempre tiene al menos un administrador activo.
 - El administrador puede dar una contraseña temporal nueva solo a quien pertenece únicamente a su explotación. Para quien está en varias, lo hace el propietario de la plataforma, para que ningún administrador pueda entrar en explotaciones ajenas.
 - Un usuario puede pertenecer a varias explotaciones, con un rol distinto en cada una.
-- El empleado accede a Animales, Comida y Fincas, pero no a Finanzas.
+- El empleado accede a Animales, Comida, Fincas y Mantenimiento, pero no a Finanzas.
 - El administrador accede a todo en su explotación.
 
 ### Autenticación
@@ -256,6 +256,14 @@ Decisiones (GH-28):
 - Tener en cuenta la normativa (cuaderno de explotación / SIEX).
 - Posible conexión entre cosecha y entrada de comida con origen "producción propia".
 
+## Mantenimiento
+
+Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimientos periódicos.
+
+- **Equipos:** la maquinaria y las infraestructuras de la explotación, con nombre, tipo, una descripción (marca, modelo, matrícula, ubicación…) y si necesitan mantenimiento. No se borran: se desactivan.
+- **Tareas:** lo que hay por hacer ("Cambiar la rueda del tractor"), de un equipo o sueltas, con descripción, fecha límite y prioridad opcionales, y estado pendiente o hecha (con quién y cuándo).
+- **Quién:** cualquiera del equipo da de alta equipos y tareas; el administrador asigna cada tarea a una persona o la deja sin asignar. Cada uno ve en "Mis tareas" las suyas y las sin asignar, y las marca como hechas.
+
 ## Finanzas (solo administrador)
 
 ### Régimen fiscal
@@ -437,6 +445,10 @@ El detalle está en `CONTRIBUTING.md`.
 - Pasa la CI.
 - Incluye migraciones si cambia el esquema.
 - Está mergeada en `develop` mediante pull request.
+
+## Reposición
+
+GH-110. Una vaca con una enfermedad que se transmite a la descendencia (paratuberculosis, leucosis…) se marca como "No dejar hijas para reposición", con el motivo y la fecha. Sus hijas, las ya nacidas y las que nazcan después, muestran el aviso "Madre no apta para reposición" en su ficha y en el listado, que las filtra. La marca se quita igual, y todo queda en el historial.
 
 ## Para más adelante (Animales)
 
