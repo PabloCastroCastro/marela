@@ -521,3 +521,34 @@ describe('ventas de animales (GH-38)', () => {
     expect(estado.animales[2]?.estado).toBe('activo')
   })
 })
+
+describe('informes (GH-39)', () => {
+  it('resume los ingresos y gastos del año por meses, con lo pendiente aparte', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${finanzas()}?vista=informes`)
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: /Año/ }), '2026')
+    const cifras = within(await screen.findByLabelText('Totales del periodo'))
+    // Ingresos: la venta de 2.210 € y la PAC; gastos: el pienso y el seguro (el anulado no cuenta)
+    expect(await cifras.findByText('5.460,40 €')).toBeInTheDocument()
+    expect(cifras.getByText('1.520,00 €')).toBeInTheDocument()
+    expect(cifras.getByText('3.940,40 €')).toBeInTheDocument()
+    expect(cifras.getByText('1.100,00 €')).toBeInTheDocument()
+    const tabla = screen.getByRole('table', { name: 'Resumen por periodo' })
+    expect(within(tabla).getAllByRole('row')).toHaveLength(13)
+    expect(within(tabla).getByText('oct 2026')).toBeInTheDocument()
+  })
+
+  it('las facturas se filtran por fechas', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(finanzas())
+    const tabla = await screen.findByRole('table', { name: 'Facturas' })
+    const desde = screen.getByLabelText(/^Desde/, { selector: 'input[type="date"]' })
+    await usuario.type(desde, '2026-10-18')
+    await waitFor(() =>
+      expect(within(tabla).queryByText('Piensos do Norte')).not.toBeInTheDocument(),
+    )
+    expect(within(tabla).getByText('Carnes Galegas')).toBeInTheDocument()
+  })
+})

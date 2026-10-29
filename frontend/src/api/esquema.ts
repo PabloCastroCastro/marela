@@ -6712,6 +6712,87 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/informes/resumen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resumen de ingresos y gastos por mes, trimestre o año
+         * @description Con impuestos y por la fecha de cada factura o movimiento. Ingresos: facturas emitidas, ventas sin factura y otros ingresos; gastos: facturas recibidas y otros gastos. Sin los anulados. Como mucho 10 años.
+         */
+        get: {
+            parameters: {
+                query: {
+                    periodo?: "mes" | "trimestre" | "anio";
+                    desde: string;
+                    hasta: string;
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description El resumen */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResumenFinanzas"];
+                    };
+                };
+                /** @description Fechas no válidas (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/tareas": {
         parameters: {
             query?: never;
@@ -8935,6 +9016,69 @@ export interface components {
              * @description null para quitarla
              */
             facturaId: string | null;
+        };
+        ResumenFinanzas: {
+            /** @enum {string} */
+            periodo: "mes" | "trimestre" | "anio";
+            /** Format: date */
+            desde: string;
+            /** Format: date */
+            hasta: string;
+            /** @description Cada periodo entre desde y hasta, también los vacíos */
+            filas: {
+                /**
+                 * @description 2026-10, 2026-T4 o 2026
+                 * @example 2026-T4
+                 */
+                clave: string;
+                /** Format: date */
+                desde: string;
+                /** Format: date */
+                hasta: string;
+                ingresos: {
+                    /** @description Facturas emitidas, con impuestos */
+                    facturas: number;
+                    /** @description Ventas sin factura (las que la tienen, por ella) */
+                    ventas: number;
+                    /** @description Otros ingresos vigentes */
+                    otros: number;
+                    total: number;
+                };
+                gastos: {
+                    /** @description Facturas recibidas, con impuestos */
+                    facturas: number;
+                    /** @description Otros gastos vigentes */
+                    otros: number;
+                    total: number;
+                };
+                /** @description Ingresos menos gastos */
+                resultado: number;
+            }[];
+            total: {
+                ingresos: {
+                    /** @description Facturas emitidas, con impuestos */
+                    facturas: number;
+                    /** @description Ventas sin factura (las que la tienen, por ella) */
+                    ventas: number;
+                    /** @description Otros ingresos vigentes */
+                    otros: number;
+                    total: number;
+                };
+                gastos: {
+                    /** @description Facturas recibidas, con impuestos */
+                    facturas: number;
+                    /** @description Otros gastos vigentes */
+                    otros: number;
+                    total: number;
+                };
+                /** @description Ingresos menos gastos */
+                resultado: number;
+            };
+            /** @description Facturas sin fecha de pago del rango: emitidas y recibidas */
+            pendiente: {
+                cobro: number;
+                pago: number;
+            };
         };
         Tarea: {
             /** Format: uuid */

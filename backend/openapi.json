@@ -4603,6 +4603,193 @@
           "facturaId"
         ]
       },
+      "ResumenFinanzas": {
+        "type": "object",
+        "properties": {
+          "periodo": {
+            "type": "string",
+            "enum": [
+              "mes",
+              "trimestre",
+              "anio"
+            ]
+          },
+          "desde": {
+            "type": "string",
+            "format": "date"
+          },
+          "hasta": {
+            "type": "string",
+            "format": "date"
+          },
+          "filas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clave": {
+                  "type": "string",
+                  "example": "2026-T4",
+                  "description": "2026-10, 2026-T4 o 2026"
+                },
+                "desde": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "hasta": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "ingresos": {
+                  "type": "object",
+                  "properties": {
+                    "facturas": {
+                      "type": "number",
+                      "description": "Facturas emitidas, con impuestos"
+                    },
+                    "ventas": {
+                      "type": "number",
+                      "description": "Ventas sin factura (las que la tienen, por ella)"
+                    },
+                    "otros": {
+                      "type": "number",
+                      "description": "Otros ingresos vigentes"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "facturas",
+                    "ventas",
+                    "otros",
+                    "total"
+                  ]
+                },
+                "gastos": {
+                  "type": "object",
+                  "properties": {
+                    "facturas": {
+                      "type": "number",
+                      "description": "Facturas recibidas, con impuestos"
+                    },
+                    "otros": {
+                      "type": "number",
+                      "description": "Otros gastos vigentes"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "facturas",
+                    "otros",
+                    "total"
+                  ]
+                },
+                "resultado": {
+                  "type": "number",
+                  "description": "Ingresos menos gastos"
+                }
+              },
+              "required": [
+                "clave",
+                "desde",
+                "hasta",
+                "ingresos",
+                "gastos",
+                "resultado"
+              ]
+            },
+            "description": "Cada periodo entre desde y hasta, también los vacíos"
+          },
+          "total": {
+            "type": "object",
+            "properties": {
+              "ingresos": {
+                "type": "object",
+                "properties": {
+                  "facturas": {
+                    "type": "number",
+                    "description": "Facturas emitidas, con impuestos"
+                  },
+                  "ventas": {
+                    "type": "number",
+                    "description": "Ventas sin factura (las que la tienen, por ella)"
+                  },
+                  "otros": {
+                    "type": "number",
+                    "description": "Otros ingresos vigentes"
+                  },
+                  "total": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "facturas",
+                  "ventas",
+                  "otros",
+                  "total"
+                ]
+              },
+              "gastos": {
+                "type": "object",
+                "properties": {
+                  "facturas": {
+                    "type": "number",
+                    "description": "Facturas recibidas, con impuestos"
+                  },
+                  "otros": {
+                    "type": "number",
+                    "description": "Otros gastos vigentes"
+                  },
+                  "total": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "facturas",
+                  "otros",
+                  "total"
+                ]
+              },
+              "resultado": {
+                "type": "number",
+                "description": "Ingresos menos gastos"
+              }
+            },
+            "required": [
+              "ingresos",
+              "gastos",
+              "resultado"
+            ]
+          },
+          "pendiente": {
+            "type": "object",
+            "properties": {
+              "cobro": {
+                "type": "number"
+              },
+              "pago": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "cobro",
+              "pago"
+            ],
+            "description": "Facturas sin fecha de pago del rango: emitidas y recibidas"
+          }
+        },
+        "required": [
+          "periodo",
+          "desde",
+          "hasta",
+          "filas",
+          "total",
+          "pendiente"
+        ]
+      },
       "Tarea": {
         "type": "object",
         "properties": {
@@ -13508,6 +13695,114 @@
           },
           "409": {
             "description": "La factura ya es de otra venta (factura_con_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/informes/resumen": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Resumen de ingresos y gastos por mes, trimestre o año",
+        "description": "Con impuestos y por la fecha de cada factura o movimiento. Ingresos: facturas emitidas, ventas sin factura y otros ingresos; gastos: facturas recibidas y otros gastos. Sin los anulados. Como mucho 10 años.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mes",
+                "trimestre",
+                "anio"
+              ],
+              "default": "mes"
+            },
+            "required": false,
+            "name": "periodo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "hasta",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El resumen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenFinanzas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fechas no válidas (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
             "content": {
               "application/json": {
                 "schema": {

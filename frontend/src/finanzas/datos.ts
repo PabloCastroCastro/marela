@@ -71,6 +71,8 @@ export type FiltrosFacturas = {
   tipo?: TipoFactura
   estado?: 'pendiente' | 'pagada'
   q?: string
+  desde?: string
+  hasta?: string
 }
 
 export const useFacturas = (explotacionId: string, filtros: FiltrosFacturas = {}) =>
@@ -172,6 +174,8 @@ export type FiltrosApuntes = {
   categoria?: CategoriaApunte
   estado?: 'vigente' | 'anulado'
   q?: string
+  desde?: string
+  hasta?: string
 }
 
 export const useApuntes = (explotacionId: string, filtros: FiltrosApuntes = {}) =>
@@ -243,7 +247,7 @@ export function calcularImportes(modo: ModoPrecio, precio: number, kgs: (number 
   }
 }
 
-export type FiltrosVentas = { factura?: 'con' | 'sin'; q?: string }
+export type FiltrosVentas = { factura?: 'con' | 'sin'; q?: string; desde?: string; hasta?: string }
 
 export const useVentas = (explotacionId: string, filtros: FiltrosVentas = {}) =>
   useQuery({
@@ -266,4 +270,39 @@ export const useVenta = (explotacionId: string, ventaId: string) =>
           params: { path: { explotacionId, ventaId } },
         }),
       ),
+  })
+
+// Informes (GH-39)
+export type Resumen = components['schemas']['ResumenFinanzas']
+export type PeriodoResumen = Resumen['periodo']
+
+export const PERIODOS: Record<PeriodoResumen, string> = {
+  mes: 'Por meses',
+  trimestre: 'Por trimestres',
+  anio: 'Por años',
+}
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+// "oct 2026", "4.º trim. 2026", "2026"
+export const nombrePeriodo = (clave: string) => {
+  const [anio, parte] = clave.split('-')
+  if (!parte) return anio ?? clave
+  if (parte.startsWith('T')) return `${parte.slice(1)}.º trim. ${anio}`
+  return `${MESES[Number(parte) - 1] ?? parte} ${anio}`
+}
+
+export const useResumen = (
+  explotacionId: string,
+  filtros: { periodo: PeriodoResumen; desde: string; hasta: string },
+) =>
+  useQuery({
+    queryKey: [...CLAVE_FINANZAS, explotacionId, 'resumen', filtros],
+    queryFn: () =>
+      datos(
+        api.GET('/api/explotaciones/{explotacionId}/informes/resumen', {
+          params: { path: { explotacionId }, query: filtros },
+        }),
+      ),
+    placeholderData: keepPreviousData,
   })

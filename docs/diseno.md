@@ -300,7 +300,7 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 - Datos: tipo (ingreso o gasto), categoría, fecha, concepto, importe, archivo adjunto opcional y observaciones.
 - Categorías fijas, para los informes (GH-37). De ingreso: subvención (PAC u otra), indemnización del seguro y otro ingreso. De gasto: seguro, veterinario, combustible, reparaciones y mantenimiento, suministros, impuestos y tasas, y otro gasto.
 - Se corrigen. Uno registrado por error no se borra: se anula con su motivo, sigue a la vista como anulado y deja de contar en los totales.
-- Finanzas se organiza en pestañas: Facturas, Ventas, Otros ingresos y gastos y Régimen fiscal (los informes se añadirán).
+- Finanzas se organiza en pestañas: Facturas, Ventas, Otros ingresos y gastos, Informes y Régimen fiscal.
 
 ### Ventas
 
@@ -318,7 +318,7 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 ### Salidas e informes
 
 - Listados de facturas, otros ingresos y gastos, y ventas con filtros (fechas, proveedor...).
-- Resumen de ingresos y gastos por periodo.
+- Resumen de ingresos y gastos por periodo (GH-39): por meses o trimestres de un año, o por años. Con impuestos (lo que de verdad entra y sale: en el REAGP el IVA de las compras no se recupera y la compensación se cobra) y por la fecha de cada factura o movimiento. Ingresos: facturas emitidas, ventas sin factura (las que la tienen cuentan por ella) y otros ingresos; gastos: facturas recibidas y otros gastos; los anulados no cuentan. Lo pendiente de cobro y de pago, aparte. En la pestaña Informes de Finanzas.
 - Exportación a Excel/CSV para el gestor.
 
 ## Aspectos generales de los datos

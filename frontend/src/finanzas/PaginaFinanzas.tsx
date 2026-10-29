@@ -8,22 +8,23 @@ import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { porcentaje, REGIMENES, useFiscal } from './datos'
 import estilos from './Finanzas.module.css'
 import { FormularioFiscal } from './FormularioFiscal'
+import { Informes } from './Informes'
 import { ListaApuntes } from './ListaApuntes'
 import { ListaFacturas } from './ListaFacturas'
 import { ListaVentas } from './ListaVentas'
 
-type Vista = 'facturas' | 'ventas' | 'apuntes' | 'regimen'
+type Vista = 'facturas' | 'ventas' | 'apuntes' | 'informes' | 'regimen'
 
 const VISTAS: { valor: Vista; texto: string }[] = [
   { valor: 'facturas', texto: 'Facturas' },
   { valor: 'ventas', texto: 'Ventas' },
   { valor: 'apuntes', texto: 'Otros ingresos y gastos' },
+  { valor: 'informes', texto: 'Informes' },
   { valor: 'regimen', texto: 'Régimen fiscal' },
 ]
 
 // Finanzas, solo para el administrador, en pestañas: las facturas (GH-35), las ventas de animales
-// (GH-38), los otros ingresos y gastos (GH-37) y el régimen fiscal (GH-34). Los informes llegan
-// después, en el ciclo 7. La pestaña, en la dirección para que se conserve al volver de una ficha.
+// (GH-38), los otros ingresos y gastos (GH-37), los informes (GH-39) y el régimen fiscal (GH-34). La pestaña, en la dirección para que se conserve al volver de una ficha.
 export function PaginaFinanzas() {
   const [busqueda, setBusqueda] = useSearchParams()
   const vista = VISTAS.find((v) => v.valor === busqueda.get('vista'))?.valor ?? 'facturas'
@@ -41,6 +42,7 @@ export function PaginaFinanzas() {
       {vista === 'facturas' && <ListaFacturas />}
       {vista === 'ventas' && <ListaVentas />}
       {vista === 'apuntes' && <ListaApuntes />}
+      {vista === 'informes' && <Informes />}
       {vista === 'regimen' && <TarjetaRegimen />}
     </section>
   )

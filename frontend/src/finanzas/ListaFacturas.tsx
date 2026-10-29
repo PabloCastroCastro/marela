@@ -10,6 +10,7 @@ import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, fecha } from '../formato'
 import { type Factura, TIPOS_FACTURA, type TipoFactura, useFacturas } from './datos'
+import { type Fechas, FiltroFechas, rangoFechas } from './FiltroFechas'
 import estilos from './Finanzas.module.css'
 import { FormularioFactura } from './FormularioFactura'
 
@@ -32,12 +33,19 @@ export function ListaFacturas() {
   const [tipo, setTipo] = useState<FiltroTipo>('todas')
   const [pago, setPago] = useState<FiltroPago>('todas')
   const [creando, setCreando] = useState(false)
+  const [fechas, setFechas] = useState<Fechas>({ desde: '', hasta: '' })
   const facturas = useFacturas(explotacion.id, {
     q: texto || undefined,
     tipo: tipo === 'todas' ? undefined : tipo,
     estado: pago === 'todas' ? undefined : pago,
+    ...rangoFechas(fechas),
   })
-  const filtrado = texto !== '' || tipo !== 'todas' || pago !== 'todas'
+  const filtrado =
+    texto !== '' ||
+    tipo !== 'todas' ||
+    pago !== 'todas' ||
+    fechas.desde !== '' ||
+    fechas.hasta !== ''
   const ficha = (id: string) => `${rutaExplotacion(explotacion.id)}/finanzas/facturas/${id}`
 
   return (
@@ -83,6 +91,7 @@ export function ListaFacturas() {
           alCambiar={setPago}
         />
       </BarraFiltros>
+      <FiltroFechas valor={fechas} alCambiar={setFechas} />
 
       {facturas.isPending ? (
         <Esqueleto bloques={[{ alto: '4rem' }, { alto: '4rem' }, { alto: '4rem' }]} />
