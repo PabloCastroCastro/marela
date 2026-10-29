@@ -134,6 +134,31 @@ describe('consultas guardadas en el dispositivo', () => {
     // Los servicios externos no se guardan
     expect(despues.getQueryData(['cartografia', 'recinto'])).toBeUndefined()
   })
+
+  it('guarda también lo que no se pudo refrescar, y lo recupera como bueno', async () => {
+    vi.useFakeTimers()
+    const antes = new QueryClient()
+    const parar = guardarConsultas(antes)
+    const clave = ['fincas', A_VEIGA.id, 'lista', { activa: 'true' }]
+    antes.setQueryData(clave, [{ id: 'f1' }])
+    // El último intento de refrescarla falló: sigue con sus datos, pero en error
+    await antes
+      .fetchQuery({
+        queryKey: clave,
+        queryFn: () => Promise.reject(new Error('sin cobertura')),
+        staleTime: 0,
+        retry: false,
+      })
+      .catch(() => undefined)
+    expect(antes.getQueryState(clave)?.status).toBe('error')
+    await vi.advanceTimersByTimeAsync(1100)
+    parar()
+
+    const despues = new QueryClient()
+    await restaurarConsultas(despues)
+    expect(despues.getQueryData(clave)).toEqual([{ id: 'f1' }])
+    expect(despues.getQueryState(clave)?.status).toBe('success')
+  })
 })
 
 describe('registrar sin conexión', () => {
@@ -242,6 +267,24 @@ describe('registrar sin conexión', () => {
       }),
     )
     await waitFor(() => expect(verCola()).toEqual([]))
+  })
+
+  it('con la cobertura que va y viene, el listado sigue a la vista y no pasa a error', async () => {
+    simularApi(estado)
+    const cliente = crearClienteConsultas()
+    abrir(`/explotaciones/${A_VEIGA.id}/animales`, cliente)
+    const lista = await screen.findByRole('list', { name: 'Animales' })
+    const clave = ['animales', A_VEIGA.id, 'lista', { estado: 'activo' }]
+    estado.sinRed = true
+    // Se refresca, falla, parece que vuelve la cobertura, y vuelve a fallar
+    act(() => {
+      void cliente.invalidateQueries({ queryKey: clave })
+    })
+    await waitFor(() => expect(hayConexion()).toBe(false))
+    act(() => marcarConConexion())
+    await waitFor(() => expect(hayConexion()).toBe(false))
+    expect(cliente.getQueryState(clave)?.status).toBe('success')
+    expect(within(lista).getAllByRole('listitem').length).toBeGreaterThan(0)
   })
 
   it('sin conexión y sin la ficha guardada, lo dice en lugar de cargar sin fin', async () => {

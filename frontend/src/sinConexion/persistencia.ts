@@ -39,9 +39,14 @@ export function guardarConsultas(cliente: QueryClient) {
   const volcar = () => {
     pendiente = undefined
     const estado = dehydrate(cliente, {
+      // Todo lo que tenga datos, aunque el último intento de refrescarlo fallara (con la cobertura
+      // que va y viene pasa a cada rato): si no, desaparecería de lo guardado
       shouldDehydrateQuery: (q) =>
-        q.state.status === 'success' && SE_GUARDAN.has(String(q.queryKey[0])),
+        q.state.data !== undefined && SE_GUARDAN.has(String(q.queryKey[0])),
     })
+    // Y se recupera como bueno: es lo último que se supo del servidor
+    for (const q of estado.queries)
+      q.state = { ...q.state, status: 'success', error: null, fetchStatus: 'idle' }
     void guardar(CLAVE, { version: VERSION, guardadoEn: Date.now(), estado } satisfies Guardado)
   }
   const anular = cliente.getQueryCache().subscribe((evento) => {
