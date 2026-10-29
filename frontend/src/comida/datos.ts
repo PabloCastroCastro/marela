@@ -54,6 +54,14 @@ export const cantidad = (n: number, unidad: UnidadAlmacen) =>
 export const diferencia = (n: number, unidad: UnidadAlmacen) =>
   n > 0 ? `+${cantidad(n, unidad)}` : n < 0 ? `−${cantidad(-n, unidad)}` : cantidad(0, unidad)
 
+// "12,5" y "12.5" → 12.5; "3.500" → 3500 (punto de miles); NaN si no es un número
+export const leerCantidad = (texto: string) => {
+  const t = texto.trim().replace(/\s/g, '')
+  if (t.includes(',')) return Number(t.replace(/\./g, '').replace(',', '.'))
+  if (/^\d{1,3}(\.\d{3})+$/.test(t)) return Number(t.replace(/\./g, ''))
+  return Number(t)
+}
+
 // Todas las consultas de comida cuelgan de esta clave, para refrescarlas juntas tras un cambio
 export const CLAVE_COMIDA = ['comida'] as const
 

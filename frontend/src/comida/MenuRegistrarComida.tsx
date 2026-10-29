@@ -10,7 +10,7 @@ import { FormularioMovimiento } from './FormularioMovimiento'
 const ORDEN: TipoMovimiento[] = ['salida', 'entrada', 'ajuste']
 
 // "Registrar" de un almacén: una salida (ración), una entrada o un ajuste de inventario (GH-30). En
-// su ficha y en su tarjeta de la pantalla de Comida.
+// su ficha y, discreto, en su tarjeta de la pantalla de Comida, bajo el contador de la ración.
 export function MenuRegistrarComida({
   almacen,
   tamano,
@@ -24,7 +24,7 @@ export function MenuRegistrarComida({
   return (
     <>
       <Boton
-        variante={tamano ? 'secundario' : undefined}
+        variante={tamano ? 'texto' : undefined}
         tamano={tamano}
         icono={<ChevronDown aria-hidden size={18} />}
         aria-haspopup="dialog"

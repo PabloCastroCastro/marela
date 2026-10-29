@@ -129,7 +129,7 @@ Decisiones (GH-23):
 - Los almacenes son configurables por explotación: nombre, tipo y unidad (unidades o kilos). El tipo es la comida que guarda: hierba verde, hierba seca, maíz, pienso u otra.
 - Almacenes iniciales por defecto: pacas de hierba verde, hierba seca, silo de maíz y silo de pienso. Las pacas se miden en unidades y los silos en kilos.
 - Los crea, edita y desactiva el administrador; el empleado ve el stock y registra los movimientos. Un almacén no se borra: se desactiva y deja de salir en el stock.
-- Cada almacén funciona como un stock con entradas y salidas. La pantalla de Comida muestra una tarjeta por almacén activo con su cantidad actual y "Registrar" para apuntar la ración del día sin entrar en él.
+- Cada almacén funciona como un stock con entradas y salidas. La pantalla de Comida muestra una tarjeta por almacén activo con su cantidad actual. La ración del día se saca desde la propia tarjeta en dos toques: un contador con − y + (empieza en 1 y se puede escribir la cantidad) y "Sacar", que registra la salida de hoy con "Deshacer". Para otra fecha, entradas o ajustes, "Registrar".
 - Cada almacén tiene su ficha: el stock, "Registrar" (salida, entrada o ajuste) y el historial de movimientos, del más reciente al más antiguo, con filtros de tipo y de fechas. Cada movimiento muestra lo que cambió el stock y el que dejó.
 - El stock se calcula de los movimientos, en orden de fecha y, el mismo día, de registro. Las cantidades van en la unidad del almacén, con dos decimales como mucho. Con movimientos, la unidad del almacén ya no cambia.
 - Los movimientos no son datos sanitarios: se corrigen o se borran (con deshacer), y los cambios quedan en el historial. Los registra también el empleado.

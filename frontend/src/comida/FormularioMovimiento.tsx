@@ -16,6 +16,7 @@ import {
   CLAVE_COMIDA,
   type DatosMovimiento,
   cantidad as formatoCantidad,
+  leerCantidad,
   type Movimiento,
   ORIGENES_ENTRADA,
   type OrigenEntrada,
@@ -40,14 +41,6 @@ const BORRADO: Record<TipoMovimiento, string> = {
   entrada: 'Entrada borrada',
   salida: 'Salida borrada',
   ajuste: 'Ajuste borrado',
-}
-
-// "12,5" y "12.5" → 12.5; "3.500" → 3500 (punto de miles); NaN si no es un número
-const leerCantidad = (texto: string) => {
-  const t = texto.trim().replace(/\s/g, '')
-  if (t.includes(',')) return Number(t.replace(/\./g, '').replace(',', '.'))
-  if (/^\d{1,3}(\.\d{3})+$/.test(t)) return Number(t.replace(/\./g, ''))
-  return Number(t)
 }
 
 const aTexto = (n: number) => String(n).replace('.', ',')

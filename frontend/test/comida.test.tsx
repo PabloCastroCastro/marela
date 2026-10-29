@@ -330,3 +330,39 @@ it('con movimientos, el formulario del almacén no deja cambiar la unidad', asyn
   expect(within(hoja).getByText(/No se puede cambiar: ya tiene movimientos/)).toBeInTheDocument()
   expect(within(hoja).queryByRole('button', { name: 'Unidades (pacas)' })).not.toBeInTheDocument()
 })
+
+it('saca la ración desde la tarjeta: empieza en 1, con − y +, y se deshace', async () => {
+  estado.movimientos = [
+    movimientoSimulado({ id: 'm1', almacenId: 'al2', tipo: 'entrada', cantidad: 80 }),
+  ]
+  simularApi(estado)
+  const usuario = userEvent.setup()
+  abrir(comida())
+  const seca = within(await almacenes()).getByRole('region', { name: 'Pacas de hierba seca' })
+  const cifra = within(seca).getByRole('textbox', { name: /Cantidad que sacar/ })
+  expect(cifra).toHaveValue('1')
+  expect(within(seca).getByRole('button', { name: 'Una menos' })).toBeDisabled()
+  await usuario.click(within(seca).getByRole('button', { name: 'Una más' }))
+  await usuario.click(within(seca).getByRole('button', { name: 'Una más' }))
+  await usuario.click(within(seca).getByRole('button', { name: 'Una menos' }))
+  expect(cifra).toHaveValue('2')
+
+  await usuario.click(within(seca).getByRole('button', { name: 'Sacar de Pacas de hierba seca' }))
+  expect(
+    await screen.findByText('Salida de 2 unidades de Pacas de hierba seca'),
+  ).toBeInTheDocument()
+  expect(estado.movimientos.at(-1)).toMatchObject({ tipo: 'salida', cantidad: 2, fecha: hoy() })
+  expect(await within(seca).findByText('78 unidades')).toBeInTheDocument()
+  // Vuelve a 1 para la siguiente
+  expect(cifra).toHaveValue('1')
+
+  await usuario.click(screen.getByRole('button', { name: 'Deshacer' }))
+  await vi.waitFor(() => expect(estado.movimientos).toHaveLength(1))
+  expect(await within(seca).findByText('80 unidades')).toBeInTheDocument()
+
+  // Se puede escribir la cantidad, con decimales
+  await usuario.clear(cifra)
+  await usuario.type(cifra, '2,5')
+  await usuario.click(within(seca).getByRole('button', { name: 'Sacar de Pacas de hierba seca' }))
+  await vi.waitFor(() => expect(estado.movimientos.at(-1)?.cantidad).toBe(2.5))
+})

@@ -16,9 +16,11 @@ import { type Almacen, CLAVE_COMIDA, cantidad, TIPOS_ALMACEN, useAlmacenes } fro
 import { FormularioAlmacen } from './FormularioAlmacen'
 import { MenuRegistrarComida } from './MenuRegistrarComida'
 import { InsigniaNegativo } from './PaginaAlmacen'
+import { SacarRacion } from './SacarRacion'
 
-// Comida: el stock de cada almacén, en una tarjeta (GH-29), en rojo si es negativo, con "Registrar" a
-// mano para la ración de cada día (GH-30). Cada tarjeta lleva a la ficha del almacén. El
+// Comida: el stock de cada almacén, en una tarjeta (GH-29), en rojo si es negativo, con la ración del
+// día en dos toques (contador y "Sacar") y "Registrar" para lo demás (GH-30). Cada tarjeta lleva a
+// la ficha del almacén. El
 // administrador crea y reactiva los almacenes; los edita y desactiva desde su ficha.
 export function PaginaComida() {
   const explotacion = useExplotacionActual()
@@ -96,11 +98,12 @@ export function PaginaComida() {
                 <p className={clases(estilos.stock, a.stock < 0 && estilos.negativo)}>
                   {cantidad(a.stock, a.unidad)}
                 </p>
+                <span className={estilos.insignias}>
+                  <span className={estilos.suave}>{TIPOS_ALMACEN[a.tipo]}</span>
+                  {a.stock < 0 && <InsigniaNegativo />}
+                </span>
                 <div className={estilos.pieAlmacen}>
-                  <span className={estilos.insignias}>
-                    <span className={estilos.suave}>{TIPOS_ALMACEN[a.tipo]}</span>
-                    {a.stock < 0 && <InsigniaNegativo />}
-                  </span>
+                  <SacarRacion almacen={a} />
                   <MenuRegistrarComida almacen={a} tamano="compacto" />
                 </div>
               </Tarjeta>

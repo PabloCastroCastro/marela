@@ -82,9 +82,46 @@
 }
 
 /* Por encima del enlace que cubre la tarjeta */
-.pieAlmacen button {
+.pieAlmacen button,
+.pieAlmacen input {
   position: relative;
   z-index: 1;
+}
+
+/* Ración del día: contador con − y + y "Sacar" */
+.racion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.contador {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-m);
+}
+
+.cifraRacion {
+  width: 4.5rem;
+  min-height: var(--altura-tactil);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--texto-base);
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.cifraRacion:focus-visible {
+  outline: 2px solid var(--color-foco);
+  outline-offset: -2px;
+}
+
+.cifraRacion[aria-invalid] {
+  color: var(--color-peligro);
 }
 
 /* Stock negativo: en rojo hasta que una entrada o un ajuste lo corrija (GH-30) */
