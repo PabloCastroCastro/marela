@@ -3,6 +3,12 @@
   gap: var(--espacio-4);
 }
 
+/* Lo de dentro no ensancha la página: una tabla ancha se desplaza en su tarjeta */
+.pagina > *,
+.tarjeta > * {
+  min-width: 0;
+}
+
 .suave {
   color: var(--color-texto-suave);
   font-size: var(--texto-sm);
@@ -438,4 +444,62 @@
   color: var(--color-peligro);
   font-size: var(--texto-sm);
   font-weight: var(--peso-medio);
+}
+
+/* Informes (GH-39): el periodo y el año, y las cifras del periodo */
+.controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+}
+
+.anio {
+  min-width: 8rem;
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--espacio-3);
+  margin: 0;
+}
+
+.cifras div {
+  display: grid;
+  gap: 2px;
+  padding: var(--espacio-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+}
+
+/* El nombre (dt) y la cifra (dd) */
+.cifras div > :first-child {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.cifras div > :last-child {
+  margin: 0;
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Desde y hasta en los listados */
+.fechas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espacio-3);
+  max-width: 28rem;
+}
+
+/* La tabla del resumen, con muchas columnas, se desplaza de lado si no cabe. Dentro de su caja, la
+   cabecera fija va arriba del todo (no bajo la de la aplicación). */
+.desplazable {
+  overflow-x: auto;
+}
+
+.desplazable :global(th) {
+  top: 0;
 }

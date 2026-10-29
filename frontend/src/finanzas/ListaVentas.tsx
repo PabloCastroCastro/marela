@@ -10,6 +10,7 @@ import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, fecha, kilos } from '../formato'
 import { useVentas } from './datos'
+import { type Fechas, FiltroFechas, rangoFechas } from './FiltroFechas'
 import estilos from './Finanzas.module.css'
 import { FormularioVenta } from './FormularioVenta'
 
@@ -23,9 +24,11 @@ export function ListaVentas() {
   const [texto, setTexto] = useState('')
   const [factura, setFactura] = useState<FiltroFactura>('todas')
   const [creando, setCreando] = useState(false)
+  const [fechas, setFechas] = useState<Fechas>({ desde: '', hasta: '' })
   const ventas = useVentas(explotacion.id, {
     q: texto || undefined,
     factura: factura === 'todas' ? undefined : factura,
+    ...rangoFechas(fechas),
   })
   const ficha = (id: string) => `${rutaExplotacion(explotacion.id)}/finanzas/ventas/${id}`
 
@@ -58,13 +61,14 @@ export function ListaVentas() {
           alCambiar={setFactura}
         />
       </BarraFiltros>
+      <FiltroFechas valor={fechas} alCambiar={setFechas} />
 
       {ventas.isPending ? (
         <Esqueleto bloques={[{ alto: '4rem' }, { alto: '4rem' }, { alto: '4rem' }]} />
       ) : ventas.isError && !ventas.data ? (
         <EstadoError alReintentar={() => ventas.refetch()} reintentando={ventas.isFetching} />
       ) : ventas.data.length === 0 ? (
-        texto || factura !== 'todas' ? (
+        texto || factura !== 'todas' || fechas.desde || fechas.hasta ? (
           <EstadoVacio
             titulo="Nada coincide"
             descripcion="Prueba con otra búsqueda o con otro filtro."

@@ -378,6 +378,14 @@ Tablas `facturas` y `facturas_animales` (migraciones `0034` y `0035`, con reglas
 
 Tablas `ventas` y `ventas_animales` (migraciones `0040` y `0041`, con historial de cambios). La base de datos comprueba que la factura sea emitida (y que no deje de serlo), que un animal se venda una sola vez y que esté de baja por venta. Al borrar la factura, la venta se queda sin ella.
 
+**Informes** (GH-39), en `src/rutas/informes.ts`:
+
+- **`GET /api/explotaciones/{id}/informes/resumen?periodo=&desde=&hasta=`:** ingresos y gastos por `mes`, `trimestre` o `anio`, cada periodo del rango aunque esté vacío (como mucho 10 años), con el total y lo pendiente de cobro y de pago (facturas sin fecha de pago).
+  - Con impuestos y por la fecha de cada factura o movimiento (devengo).
+  - Ingresos: facturas emitidas (su total), ventas sin factura (las que la tienen cuentan por ella) y otros ingresos. Gastos: facturas recibidas y otros gastos. Los anulados no cuentan.
+
+Los listados de facturas, ventas y otros ingresos y gastos se filtran también por `desde` y `hasta`.
+
 **Otros ingresos y gastos** (GH-37), en `src/rutas/apuntes.ts`:
 
 - **`GET /api/explotaciones/{id}/apuntes`:** del más reciente al más antiguo, con los anulados. Filtros `tipo` (`ingreso` o `gasto`), `categoria`, `estado` (`vigente` o `anulado`), `desde`, `hasta` y `q` (concepto u observaciones).

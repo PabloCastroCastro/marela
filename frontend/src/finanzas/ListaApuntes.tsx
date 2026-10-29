@@ -19,6 +19,7 @@ import {
   type TipoApunte,
   useApuntes,
 } from './datos'
+import { type Fechas, FiltroFechas, rangoFechas } from './FiltroFechas'
 import estilos from './Finanzas.module.css'
 import { FormularioApunte } from './FormularioApunte'
 
@@ -50,13 +51,21 @@ export function ListaApuntes() {
   const [categoria, setCategoria] = useState<FiltroCategoria>('todas')
   const [estado, setEstado] = useState<FiltroEstado>('vigente')
   const [creando, setCreando] = useState(false)
+  const [fechas, setFechas] = useState<Fechas>({ desde: '', hasta: '' })
   const apuntes = useApuntes(explotacion.id, {
     q: texto || undefined,
     tipo: tipo === 'todos' ? undefined : tipo,
     categoria: categoria === 'todas' ? undefined : categoria,
     estado: estado === 'todos' ? undefined : estado,
+    ...rangoFechas(fechas),
   })
-  const filtrado = texto !== '' || tipo !== 'todos' || categoria !== 'todas' || estado !== 'vigente'
+  const filtrado =
+    texto !== '' ||
+    tipo !== 'todos' ||
+    categoria !== 'todas' ||
+    estado !== 'vigente' ||
+    fechas.desde !== '' ||
+    fechas.hasta !== ''
   const ficha = (id: string) => `${rutaExplotacion(explotacion.id)}/finanzas/apuntes/${id}`
   // Las categorías del tipo elegido, o todas
   const categorias =
@@ -114,6 +123,7 @@ export function ListaApuntes() {
           alCambiar={setEstado}
         />
       </BarraFiltros>
+      <FiltroFechas valor={fechas} alCambiar={setFechas} />
 
       {apuntes.isPending ? (
         <Esqueleto bloques={[{ alto: '4rem' }, { alto: '4rem' }, { alto: '4rem' }]} />

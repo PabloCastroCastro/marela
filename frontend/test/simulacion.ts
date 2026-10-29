@@ -1212,6 +1212,50 @@ export function simularApi(estado: EstadoSimulado) {
       })
     }
 
+    if (/^\/api\/explotaciones\/[^/]+\/informes\/resumen$/.test(ruta)) {
+      const q = new URL(peticion.url).searchParams
+      const desde = q.get('desde') ?? ''
+      const hasta = q.get('hasta') ?? ''
+      const anio = desde.slice(0, 4)
+      const cifras = (de: (fecha: string) => boolean) => {
+        const sumar = (xs: number[]) => Math.round(xs.reduce((a, b) => a + b, 0) * 100) / 100
+        const fs = estado.facturas.filter((f) => de(f.fecha))
+        const total = (f: FacturaSimulada) => sumar(f.lineas.map((l) => l.base + l.cuota))
+        const as = estado.apuntes.filter((a) => de(a.fecha) && !a.anulacion)
+        const ingresos = {
+          facturas: sumar(fs.filter((f) => f.tipo === 'emitida').map(total)),
+          ventas: 0,
+          otros: sumar(as.filter((a) => a.tipo === 'ingreso').map((a) => a.importe)),
+          total: 0,
+        }
+        ingresos.total = sumar([ingresos.facturas, ingresos.otros])
+        const gastos = {
+          facturas: sumar(fs.filter((f) => f.tipo === 'recibida').map(total)),
+          otros: sumar(as.filter((a) => a.tipo === 'gasto').map((a) => a.importe)),
+          total: 0,
+        }
+        gastos.total = sumar([gastos.facturas, gastos.otros])
+        return { ingresos, gastos, resultado: sumar([ingresos.total, -gastos.total]) }
+      }
+      const enRango = (f: string) => f >= desde && f <= hasta
+      return json({
+        periodo: 'mes',
+        desde,
+        hasta,
+        filas: Array.from({ length: 12 }, (_, i) => {
+          const mes = `${anio}-${String(i + 1).padStart(2, '0')}`
+          return {
+            clave: mes,
+            desde: `${mes}-01`,
+            hasta: `${mes}-28`,
+            ...cifras((f) => f.startsWith(mes)),
+          }
+        }),
+        total: cifras(enRango),
+        pendiente: { cobro: 0, pago: 1100 },
+      })
+    }
+
     const deVentas = ruta.match(VENTAS)
     if (deVentas) {
       const [, explotacionId, ventaId, conFactura] = deVentas
@@ -1473,6 +1517,8 @@ export function simularApi(estado: EstadoSimulado) {
             .filter((x) => !q.get('tipo') || x.tipo === q.get('tipo'))
             .filter((x) => q.get('estado') !== 'pendiente' || !x.pagadaEn)
             .filter((x) => q.get('estado') !== 'pagada' || x.pagadaEn)
+            .filter((x) => !q.get('desde') || x.fecha >= (q.get('desde') ?? ''))
+            .filter((x) => !q.get('hasta') || x.fecha <= (q.get('hasta') ?? ''))
             .filter(
               (x) =>
                 !texto || [x.tercero, x.numero, x.nif].some((t) => t.toLowerCase().includes(texto)),
