@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API de Marela",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
@@ -936,6 +936,40 @@
           "modificadoEn"
         ]
       },
+      "NuevaPesada": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "kg": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 2000,
+            "example": 412.5
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "nacimiento",
+              "destete",
+              "venta",
+              "otro"
+            ],
+            "default": "otro"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
+          }
+        },
+        "required": [
+          "fecha",
+          "kg"
+        ]
+      },
       "DatosPesada": {
         "type": "object",
         "properties": {
@@ -1160,6 +1194,15 @@
             },
             "minItems": 1,
             "maxItems": 500
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 200,
+            "description": "Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
           },
           "fecha": {
             "type": "string",
@@ -1708,6 +1751,11 @@
       "DatosParto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
+          },
           "fecha": {
             "type": "string",
             "format": "date"
@@ -1758,6 +1806,11 @@
                     "hembra",
                     "macho"
                   ]
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
                 },
                 "estado": {
                   "type": "string",
@@ -2469,6 +2522,15 @@
             },
             "minItems": 1,
             "maxItems": 200
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 200,
+            "description": "Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
           }
         },
         "required": [
@@ -2796,6 +2858,15 @@
             "minItems": 1,
             "maxItems": 200
           },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 200,
+            "description": "Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
+          },
           "tipo": {
             "type": "string",
             "enum": [
@@ -2991,6 +3062,11 @@
           "fincaId": {
             "type": "string",
             "format": "uuid"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
           }
         },
         "required": [
@@ -5024,6 +5100,7 @@
           "Animales"
         ],
         "summary": "Registrar una pesada",
+        "description": "Con id, la registrada sin conexión: si ya se guardó, se devuelve la misma en lugar de duplicarla.",
         "security": [
           {
             "sesion": []
@@ -5053,14 +5130,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DatosPesada"
+                "$ref": "#/components/schemas/NuevaPesada"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Registrada",
+            "description": "Registrada, o la que ya se registró con ese id",
             "content": {
               "application/json": {
                 "schema": {
@@ -5110,7 +5187,7 @@
             }
           },
           "409": {
-            "description": "Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)",
+            "description": "Ya hay una pesada al nacer, al destete o a la venta, o el id es de otro registro (momento_repetido, id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5465,7 +5542,7 @@
           "Animales"
         ],
         "summary": "Registrar un tratamiento a uno o varios animales",
-        "description": "Crea un tratamiento por animal, todos con los mismos datos.",
+        "description": "Crea un tratamiento por animal, todos con los mismos datos. Con ids (uno por animal), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.",
         "security": [
           {
             "sesion": []
@@ -5537,6 +5614,16 @@
           },
           "404": {
             "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún id es de otro registro (id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6006,7 +6093,7 @@
           "Animales"
         ],
         "summary": "Registrar un parto y crear las fichas de sus terneros",
-        "description": "Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado \"muerto\". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación.",
+        "description": "Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado \"muerto\". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación. Con id (y los de sus terneros), el registrado sin conexión: si ya se guardó, se devuelve el mismo.",
         "security": [
           {
             "sesion": []
@@ -6093,7 +6180,7 @@
             }
           },
           "409": {
-            "description": "El crotal de un ternero ya está en uso (crotal_en_uso)",
+            "description": "El crotal de un ternero ya está en uso, o un id es de otro registro (crotal_en_uso, id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6918,7 +7005,7 @@
           "Fincas"
         ],
         "summary": "Registrar una labor en una o varias fincas",
-        "description": "Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca.",
+        "description": "Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), las registradas sin conexión: si ya se guardaron, se devuelven las mismas.",
         "security": [
           {
             "sesion": []
@@ -6990,6 +7077,16 @@
           },
           "404": {
             "description": "No existe la explotación, la finca o la labor (labor_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún id es de otro registro (id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7317,7 +7414,7 @@
           "Fincas"
         ],
         "summary": "Registrar un abonado o tratamiento fitosanitario en una o varias fincas",
-        "description": "Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.",
+        "description": "Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.",
         "security": [
           {
             "sesion": []
@@ -7389,6 +7486,16 @@
           },
           "404": {
             "description": "No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún id es de otro registro (id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7588,7 +7695,7 @@
           "Fincas"
         ],
         "summary": "Registrar la entrada de animales a pastar en una finca",
-        "description": "Con fecha de salida, un pastoreo que ya terminó.",
+        "description": "Con fecha de salida, un pastoreo que ya terminó. Con id, el registrado sin conexión: si ya se guardó, se devuelve el mismo.",
         "security": [
           {
             "sesion": []
@@ -7666,7 +7773,7 @@
             }
           },
           "409": {
-            "description": "La finca ya tiene un pastoreo en curso (pastoreo_en_curso)",
+            "description": "La finca ya tiene un pastoreo en curso, o el id es de otro registro (pastoreo_en_curso, id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7947,7 +8054,7 @@
             }
           },
           "409": {
-            "description": "Los animales ya salieron (ya_salieron)",
+            "description": "Los animales ya salieron, en otra fecha (ya_salieron)",
             "content": {
               "application/json": {
                 "schema": {

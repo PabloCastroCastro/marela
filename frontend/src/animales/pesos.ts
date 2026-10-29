@@ -6,6 +6,7 @@ import { CLAVE_ANIMALES } from './datos'
 
 export type Pesada = components['schemas']['Pesada']
 export type DatosPesada = components['schemas']['DatosPesada']
+export type NuevaPesada = components['schemas']['NuevaPesada']
 export type MomentoPesada = Pesada['momento']
 
 export const MOMENTOS: Record<MomentoPesada, string> = {

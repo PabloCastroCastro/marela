@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { crearApp } from '../src/app.js'
@@ -253,6 +253,40 @@ describe('partos', () => {
     expect(await codigo(await anular(parto.id, 'Desde B', b, carla.cookie))).toBe(
       'parto_no_encontrado',
     )
+  })
+})
+
+describe('sin conexión (GH-33)', () => {
+  it('con los ids del dispositivo, reenviar el parto no lo duplica ni a sus terneros', async () => {
+    const vaca = await animal()
+    const id = randomUUID()
+    const ternero = randomUUID()
+    const datos = {
+      id,
+      terneros: [{ id: ternero, sexo: 'hembra', raza: 'Rubia Gallega', peso: 40 }],
+    }
+    const primero = await parir(vaca.id, datos)
+    expect(primero.status).toBe(201)
+    expect(await primero.json()).toMatchObject({ id, terneros: [{ id: ternero }] })
+    // El reenvío devuelve el mismo parto, sin otra ficha de ternero
+    const reenvio = await parir(vaca.id, datos)
+    expect(reenvio.status).toBe(201)
+    expect(((await reenvio.json()) as Parto).terneros.map((t) => t.id)).toEqual([ternero])
+    const partos = (await (
+      await pedir('GET', `/explotaciones/${a}/animales/${vaca.id}/partos`, ana.cookie)
+    ).json()) as Parto[]
+    expect(partos.filter((p) => p.id === id)).toHaveLength(1)
+    expect((await ficha(ternero)).madreId).toBe(vaca.id)
+
+    // El de otra vaca, no
+    const otra = await parir((await animal()).id, datos)
+    expect([otra.status, await codigo(otra)]).toEqual([409, 'id_en_uso'])
+    // Un ternero con el id de un animal que ya existe, tampoco
+    const repetido = await parir((await animal()).id, {
+      id: randomUUID(),
+      terneros: [{ id: ternero, sexo: 'macho', raza: 'Rubia Gallega' }],
+    })
+    expect([repetido.status, await codigo(repetido)]).toEqual([409, 'id_en_uso'])
   })
 })
 

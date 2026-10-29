@@ -10,6 +10,7 @@ import { FormularioLabor } from './FormularioLabor'
 import { FormularioPastoreo } from './FormularioPastoreo'
 import { FormularioSalida } from './FormularioSalida'
 import { TIPOS_LABOR, type TipoLabor } from './labores'
+import { usePastoreoEnCurso } from './pastoreos'
 
 type Opcion = TipoLabor | TipoAplicacion | 'pastoreo' | 'salida'
 
@@ -44,9 +45,11 @@ export function MenuRegistrarFinca({
   const [opcion, setOpcion] = useState<Opcion>()
   const cerrar = () => setOpcion(undefined)
   const unica = fincas.length === 1 ? fincas[0] : undefined
-  // Con animales pastando, la salida en lugar de otra entrada
+  // Con animales pastando, la salida en lugar de otra entrada; también si la entrada se registró
+  // sin conexión y aún no se ha enviado (GH-32)
+  const enCurso = usePastoreoEnCurso(unica)
   const opciones = ORDEN.flatMap((o): Opcion[] =>
-    o !== 'pastoreo' ? [o] : !unica ? [] : unica.pastoreo ? ['salida'] : ['pastoreo'],
+    o !== 'pastoreo' ? [o] : !unica ? [] : enCurso ? ['salida'] : ['pastoreo'],
   )
 
   return (
@@ -89,8 +92,8 @@ export function MenuRegistrarFinca({
         </div>
       </HojaInferior>
       {opcion === 'pastoreo' && unica && <FormularioPastoreo finca={unica} alCerrar={cerrar} />}
-      {opcion === 'salida' && unica?.pastoreo && (
-        <FormularioSalida pastoreo={unica.pastoreo} alCerrar={cerrar} />
+      {opcion === 'salida' && unica && enCurso && (
+        <FormularioSalida pastoreo={enCurso} finca={unica} alCerrar={cerrar} />
       )}
       {opcion &&
         opcion !== 'pastoreo' &&

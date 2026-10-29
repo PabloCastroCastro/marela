@@ -274,6 +274,8 @@ export type EstadoSimulado = {
   pastoreos: PastoreoSimulado[]
   almacenes: AlmacenSimulado[]
   movimientos: MovimientoSimulado[]
+  // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
+  sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -590,6 +592,8 @@ export function simularApi(estado: EstadoSimulado) {
         : new Request(new URL(String(entrada), 'http://localhost'), opciones)
     const ruta = new URL(peticion.url).pathname
     const metodo = peticion.method
+    const sinRed = typeof estado.sinRed === 'function' ? estado.sinRed(ruta, metodo) : estado.sinRed
+    if (sinRed) throw new TypeError('Failed to fetch')
     const cuerpo = ['POST', 'PUT', 'PATCH'].includes(metodo)
       ? await peticion.json().catch(() => ({}))
       : {}
@@ -726,10 +730,18 @@ export function simularApi(estado: EstadoSimulado) {
         )
       }
       if (!laborId && metodo === 'POST') {
+        // Reenviadas con los ids del dispositivo (GH-32): las que ya se guardaron
+        const ids = cuerpo.ids as string[] | undefined
+        const ya = estado.labores.filter((x) => ids?.includes(x.id))
+        if (ids?.length && ya.length === ids.length)
+          return json(
+            ya.map((l) => ({ ...l, ...sello })),
+            201,
+          )
         const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
           const f = estado.fincas.find((x) => x.id === id)
           const nueva: LaborSimulada = {
-            id: `l${estado.labores.length + i + 1}`,
+            id: ids?.[i] ?? `l${estado.labores.length + i + 1}`,
             fincaId: id,
             superficie: cuerpo.superficie ?? f?.parcelas.reduce((t, x) => t + x.superficie, 0) ?? 0,
             ...datosDe(cuerpo),
@@ -772,9 +784,12 @@ export function simularApi(estado: EstadoSimulado) {
         )
       }
       if (!pastoreoId && metodo === 'POST') {
+        // Reenviado con el id del dispositivo (GH-32): el que ya se guardó
+        const ya = estado.pastoreos.find((x) => cuerpo.id && x.id === cuerpo.id)
+        if (ya) return json({ ...ya, ...sello }, 201)
         if (!cuerpo.fechaSalida && enCurso(cuerpo.fincaId)) return ocupada
         const nuevo: PastoreoSimulado = {
-          id: `ps${estado.pastoreos.length + 1}`,
+          id: (cuerpo.id as string | undefined) ?? `ps${estado.pastoreos.length + 1}`,
           fincaId: cuerpo.fincaId,
           fechaEntrada: cuerpo.fechaEntrada,
           fechaSalida: cuerpo.fechaSalida || null,
@@ -786,8 +801,11 @@ export function simularApi(estado: EstadoSimulado) {
       }
       const p = estado.pastoreos.find((x) => x.id === pastoreoId)
       if (!p) return errorApi(404, 'pastoreo_no_encontrado')
-      if (salida) p.fechaSalida = cuerpo.fechaSalida
-      else if (metodo === 'DELETE') estado.pastoreos = estado.pastoreos.filter((x) => x !== p)
+      if (salida) {
+        if (p.fechaSalida && p.fechaSalida !== cuerpo.fechaSalida)
+          return errorApi(409, 'ya_salieron')
+        p.fechaSalida = cuerpo.fechaSalida
+      } else if (metodo === 'DELETE') estado.pastoreos = estado.pastoreos.filter((x) => x !== p)
       else {
         if (!cuerpo.fechaSalida && enCurso(p.fincaId, p.id)) return ocupada
         Object.assign(p, {
@@ -882,10 +900,17 @@ export function simularApi(estado: EstadoSimulado) {
         const m = estado.miembros.find((x) => x.usuarioId === cuerpo.aplicadoPorId)
         const fito = cuerpo.tipo === 'fitosanitario'
         const dias = fito ? (cuerpo.diasSeguridad as number) : 0
+        const ids = cuerpo.ids as string[] | undefined
+        const ya = estado.aplicaciones.filter((x) => ids?.includes(x.id))
+        if (ids?.length && ya.length === ids.length)
+          return json(
+            ya.map((a) => ({ ...a, ...sello })),
+            201,
+          )
         const creadas = (cuerpo.fincaIds as string[]).map((id, i) => {
           const f = estado.fincas.find((x) => x.id === id)
           const nueva: AplicacionSimulada = {
-            id: `ap${estado.aplicaciones.length + i + 1}`,
+            id: ids?.[i] ?? `ap${estado.aplicaciones.length + i + 1}`,
             fincaId: id,
             tipo: cuerpo.tipo,
             fecha: cuerpo.fecha,
@@ -1164,7 +1189,11 @@ export function simularApi(estado: EstadoSimulado) {
             .map(parto),
         )
       }
+      // Reenviado con el id del dispositivo (GH-33): el que ya se guardó
+      const ya = estado.partos.find((x) => cuerpo.id && x.id === cuerpo.id)
+      if (ya) return json(parto(ya), 201)
       const terneros = cuerpo.terneros as {
+        id?: string
         crotal?: string
         sexo: 'hembra' | 'macho'
         estado: string
@@ -1190,7 +1219,7 @@ export function simularApi(estado: EstadoSimulado) {
         .sort((x, y) => x.fecha.localeCompare(y.fecha))
         .at(-1)
       const nuevo: PartoSimulado = {
-        id: `pa${estado.partos.length + 1}`,
+        id: (cuerpo.id as string | undefined) ?? `pa${estado.partos.length + 1}`,
         madreId: madreId ?? '',
         fecha: cuerpo.fecha,
         tipo: cuerpo.tipo ?? 'normal',
@@ -1203,7 +1232,7 @@ export function simularApi(estado: EstadoSimulado) {
       for (const t of terneros) {
         const muerto = t.estado === 'muerto'
         const ternero = animalSimulado({
-          id: `a${estado.animales.length + 1}`,
+          id: t.id ?? `a${estado.animales.length + 1}`,
           crotal: t.crotal || null,
           raza: t.raza,
           sexo: t.sexo,
@@ -1325,10 +1354,14 @@ export function simularApi(estado: EstadoSimulado) {
           { campo: 'producto', mensaje: 'Indica el producto o medicamento' },
         ])
       }
+      // Reenviados con los ids del dispositivo (GH-33): los que ya se guardaron
+      const ids = cuerpo.ids as string[] | undefined
+      const ya = estado.tratamientos.filter((x) => ids?.includes(x.id))
+      if (ids?.length && ya.length === ids.length) return json(ya.map(tratamiento), 201)
       const persona = estado.miembros.find((m) => m.usuarioId === cuerpo.aplicadoPorId)
       const creados = (cuerpo.animalIds as string[]).map((animalId, i) => {
         const t: TratamientoSimulado = {
-          id: `t${estado.tratamientos.length + i + 1}`,
+          id: ids?.[i] ?? `t${estado.tratamientos.length + i + 1}`,
           animalId,
           fecha: cuerpo.fecha,
           producto: cuerpo.producto,
@@ -1373,16 +1406,22 @@ export function simularApi(estado: EstadoSimulado) {
       const repetido =
         cuerpo.momento !== 'otro' &&
         estado.pesadas.some(
-          (p) => p.animalId === animalId && p.momento === cuerpo.momento && p.id !== pesoId,
+          (p) =>
+            p.animalId === animalId &&
+            p.momento === cuerpo.momento &&
+            p.id !== (pesoId ?? cuerpo.id),
         )
       if (metodo !== 'DELETE' && repetido) {
         return errorApi(409, 'momento_repetido', [
           { campo: 'momento', mensaje: 'El animal ya tiene esa pesada' },
         ])
       }
+      // Reenviada con el id del dispositivo (GH-31): la que ya se guardó
+      const ya = estado.pesadas.find((x) => metodo === 'POST' && cuerpo.id && x.id === cuerpo.id)
+      if (ya) return json({ ...ya, ...sello }, 201)
       if (metodo === 'POST') {
         const nueva = {
-          id: `p${estado.pesadas.length + 1}`,
+          id: (cuerpo.id as string | undefined) ?? `p${estado.pesadas.length + 1}`,
           animalId,
           fecha: cuerpo.fecha as string,
           kg: cuerpo.kg as number,

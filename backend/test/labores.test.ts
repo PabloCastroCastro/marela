@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { crearApp } from '../src/app.js'
@@ -199,6 +199,36 @@ describe('labores', () => {
     expect(
       (await pedir('DELETE', `/explotaciones/${b}/labores/${l?.id}`, carla.cookie)).status,
     ).toBe(404)
+  })
+})
+
+describe('sin conexión (GH-32)', () => {
+  it('con los ids del dispositivo, reenviar la labor no la duplica', async () => {
+    const fincas = [await finca(), await finca()]
+    const ids: string[] = [randomUUID(), randomUUID()]
+    const primera = await registrar(fincas, { ids })
+    expect(primera.status).toBe(201)
+    expect(((await primera.json()) as { id: string }[]).map((l) => l.id).sort()).toEqual(
+      [...ids].sort(),
+    )
+    const reenvio = await registrar(fincas, { ids })
+    expect(reenvio.status).toBe(201)
+    expect(((await reenvio.json()) as unknown[]).length).toBe(2)
+    const suyas = (await (await deLaFinca(fincas[0] ?? '')).json()) as { id: string }[]
+    expect(suyas.filter((l) => ids.includes(l.id))).toHaveLength(1)
+
+    // Un id por finca; y si solo algunos existen, no es un reenvío
+    expect(await campos(await registrar(fincas, { ids: [randomUUID()] }))).toContain('ids')
+    const mezcla = await registrar(fincas, { ids: [ids[0], randomUUID()] })
+    expect([mezcla.status, await codigo(mezcla)]).toEqual([409, 'id_en_uso'])
+    // Con el id de otra explotación, tampoco
+    const deB = await registrar(
+      [await finca(2, b, carla.cookie)],
+      { ids: [ids[0]] },
+      b,
+      carla.cookie,
+    )
+    expect([deB.status, await codigo(deB)]).toEqual([409, 'id_en_uso'])
   })
 })
 

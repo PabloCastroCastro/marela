@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useRef, useState } from 'react'
 import { api, datos, erroresPorCampo } from '../api/cliente'
+import type { components } from '../api/esquema'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
@@ -8,6 +9,8 @@ import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha as formatoFecha, hoy } from '../formato'
+import { nuevoId, type Pendiente, reemplazar } from '../sinConexion/cola'
+import { AVISO_GUARDADO, useRegistrar } from '../sinConexion/useRegistrar'
 import estilos from './Animales.module.css'
 import {
   CamposTerneros,
@@ -53,12 +56,36 @@ const REGISTRADO: Record<Exclude<TipoRegistro, 'parto'>, string> = {
 // Valor del selector del padre para escribir un texto (toro de fuera, dosis)
 const OTRO = 'otro'
 
+type CuerpoParto = components['schemas']['DatosParto']
+
+// "Parto · 2 terneros · 01/09/2026 · ES36 0001", para la lista de pendientes (GH-33)
+const descripcionParto = (c: CuerpoParto, madre: AnimalDelEvento) =>
+  [
+    'Parto',
+    c.terneros.length === 1 ? '1 ternero' : `${c.terneros.length} terneros`,
+    formatoFecha(c.fecha),
+    identificacion(madre),
+  ].join(' · ')
+
+// Los terneros de un parto sin enviar, como los pide el formulario, para corregirlo (GH-33)
+const ternerosDe = (c: CuerpoParto): TerneroFormulario[] =>
+  c.terneros.map((t) => ({
+    crotal: t.crotal ?? '',
+    sexo: t.sexo,
+    estado: t.estado ?? 'vivo',
+    raza: t.raza,
+    peso: t.peso != null ? String(t.peso).replace('.', ',') : '',
+  }))
+
 // Registrar un evento reproductivo (GH-22) a uno o varios animales, uno por animal, o el parto de
-// una vaca (GH-23), que crea las fichas de sus terneros
+// una vaca (GH-23), que crea las fichas de sus terneros. Sin conexión, el parto se guarda en el móvil
+// y se envía solo al recuperarla, con los ids de sus terneros; con `pendiente`, se corrige el que no
+// se pudo enviar, por ejemplo por un crotal repetido (GH-33).
 export function FormularioEvento({
   animales,
   tipos,
   tipoInicial,
+  pendiente,
   alCerrar,
   alGuardar,
 }: {
@@ -67,6 +94,8 @@ export function FormularioEvento({
   tipos: TipoRegistro[]
   // Lo elegido al abrir; si no se indica, lo primero de tipos
   tipoInicial?: TipoRegistro
+  // Un parto sin enviar, para corregirlo
+  pendiente?: Pendiente
   alCerrar: () => void
   alGuardar?: () => void
 }) {
@@ -86,19 +115,26 @@ export function FormularioEvento({
     (min, a) => (a.fechaBaja && a.fechaBaja < min ? a.fechaBaja : min),
     hoy(),
   )
+  const registrar = useRegistrar()
+  const previo = pendiente?.cuerpo as CuerpoParto | undefined
+  // El del parto y los de sus terneros, los mismos en cada intento: reenviarlo no los duplica
+  const [idParto] = useState(() => previo?.id ?? nuevoId())
+  const idsTerneros = useRef<string[]>(previo?.terneros.map((t) => t.id ?? nuevoId()) ?? [])
   const [f, setF] = useState({
     tipo: tipoInicial ?? tipos[0] ?? ('cubricion' as TipoRegistro),
-    fecha: ultimoDia,
+    fecha: previo?.fecha ?? ultimoDia,
     // Un toro, OTRO o '' (sin elegir)
-    padre: '',
-    padreTexto: '',
+    padre: previo ? (previo.padreId ?? (previo.padreTexto ? OTRO : '')) : '',
+    padreTexto: previo?.padreTexto ?? '',
     metodo: '' as MetodoDiagnostico | '',
     resultado: '' as ResultadoDiagnostico | '',
     peso: '',
-    tipoParto: 'normal' as TipoParto,
-    observaciones: '',
+    tipoParto: (previo?.tipo ?? 'normal') as TipoParto,
+    observaciones: previo?.observaciones ?? '',
   })
-  const [terneros, setTerneros] = useState<TerneroFormulario[]>([terneroNuevo(unico?.raza ?? '')])
+  const [terneros, setTerneros] = useState<TerneroFormulario[]>(() =>
+    previo ? ternerosDe(previo) : [terneroNuevo(unico?.raza ?? '')],
+  )
   const [erroresLocales, setErroresLocales] = useState<Record<string, string>>({})
   const cambiar = <K extends keyof typeof f>(campo: K, valor: (typeof f)[K]) =>
     setF((v) => ({ ...v, [campo]: valor }))
@@ -114,21 +150,54 @@ export function FormularioEvento({
       const otro = f.padre === OTRO
       const padreId = eligePadre && f.padre && !otro ? f.padre : null
       const padreTexto = eligePadre && otro ? f.padreTexto : null
-      if (parto) {
-        const creado = await datos(
-          api.POST('/api/explotaciones/{explotacionId}/animales/{animalId}/partos', {
-            params: { path: { explotacionId: explotacion.id, animalId: unico?.id ?? '' } },
-            body: {
-              fecha: f.fecha,
-              tipo: f.tipoParto,
-              padreId,
-              padreTexto,
-              observaciones: f.observaciones,
-              terneros: datosTerneros(terneros),
-            },
+      if (parto && unico) {
+        const nuevo: CuerpoParto = {
+          id: idParto,
+          fecha: f.fecha,
+          tipo: f.tipoParto,
+          padreId,
+          padreTexto,
+          observaciones: f.observaciones,
+          terneros: datosTerneros(terneros).map((t, i) => {
+            idsTerneros.current[i] ??= nuevoId()
+            return { ...t, id: idsTerneros.current[i] }
           }),
+        }
+        if (pendiente) {
+          reemplazar(pendiente.id, nuevo, descripcionParto(nuevo, unico))
+          return 'Parto corregido: se volverá a enviar'
+        }
+        const resultado = await registrar(
+          {
+            id: idParto,
+            tipo: 'parto',
+            ruta: `/api/explotaciones/${explotacion.id}/animales/${unico.id}/partos`,
+            cuerpo: nuevo,
+            descripcion: descripcionParto(nuevo, unico),
+            contexto: {
+              madreId: unico.id,
+              madre: JSON.stringify({
+                id: unico.id,
+                crotal: unico.crotal,
+                nombre: unico.nombre ?? null,
+                raza: unico.raza ?? '',
+                fechaNacimiento: unico.fechaNacimiento,
+                fechaBaja: unico.fechaBaja ?? null,
+                gestacion: unico.gestacion ?? null,
+              }),
+            },
+            claves: [[...CLAVE_ANIMALES, explotacion.id]],
+          },
+          () =>
+            datos(
+              api.POST('/api/explotaciones/{explotacionId}/animales/{animalId}/partos', {
+                params: { path: { explotacionId: explotacion.id, animalId: unico.id } },
+                body: nuevo,
+              }),
+            ),
         )
-        const n = creado.terneros.length
+        if (!('enviado' in resultado)) return AVISO_GUARDADO
+        const n = resultado.enviado.terneros.length
         return `Parto registrado: ${n === 1 ? '1 ternero' : `${n} terneros`}`
       }
       const tipo = f.tipo as Exclude<TipoRegistro, 'parto'>
@@ -153,8 +222,12 @@ export function FormularioEvento({
         : `${REGISTRADO[tipo]} a ${creados.length} animales`
     },
     onSuccess: async (mensaje) => {
-      await cliente.invalidateQueries({ queryKey: [...CLAVE_ANIMALES, explotacion.id] })
-      avisar({ tipo: 'exito', mensaje })
+      // En la cola, o corregido en ella: no ha cambiado nada en el servidor, y sin conexión
+      // refrescar se quedaría esperando
+      const enCola = mensaje === AVISO_GUARDADO || Boolean(pendiente)
+      if (!enCola)
+        await cliente.invalidateQueries({ queryKey: [...CLAVE_ANIMALES, explotacion.id] })
+      avisar({ tipo: enCola ? 'info' : 'exito', mensaje })
       alGuardar?.()
       alCerrar()
     },

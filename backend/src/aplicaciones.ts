@@ -17,6 +17,7 @@ import {
 import { ErrorApi } from './errores.js'
 import { hoyEnMadrid } from './fechas.js'
 import { verFinca } from './fincas.js'
+import { comprobarIds, IdsCliente, reenvio, sinChoqueDeId } from './idCliente.js'
 import type { DatosAnulacion } from './tratamientos.js'
 
 // Abonados y tratamientos fitosanitarios de las fincas (GH-27). Como en labores.ts, todas las
@@ -37,6 +38,8 @@ export const DatosAplicacion = z
       .min(1, 'Elige al menos una finca')
       .max(200)
       .transform((ids) => [...new Set(ids)]),
+    // Sin conexión (GH-32): los del dispositivo
+    ids: IdsCliente,
     tipo: z.enum(TIPOS_APLICACION, 'Indica si es abono o fitosanitario'),
     fecha: z.iso.date('Fecha no válida (aaaa-mm-dd)'),
     producto: z
@@ -85,6 +88,7 @@ export const DatosAplicacion = z
       fallo('aplicadoPorTexto', 'Indica una persona del equipo o un nombre, no los dos')
     if (a.superficie != null && a.fincaIds.length > 1)
       fallo('superficie', 'En varias fincas a la vez, cada una con su superficie entera')
+    comprobarIds(a.ids, a.fincaIds, ctx)
   })
   .openapi('DatosAplicacion')
 
@@ -177,6 +181,9 @@ const invalido = (campo: string, mensaje: string) =>
 // Registra el mismo abonado o tratamiento en una o varias fincas activas: uno por finca, todos o
 // ninguno
 export async function crearAplicaciones(tx: Transaccion, datos: DatosAplicacion) {
+  // Reenviadas desde el dispositivo: las que ya se guardaron
+  const ya = await reenvio(datos.ids, (ids) => consulta(tx).where(inArray(aplicaciones.id, ids)))
+  if (ya) return ya.map(aplicacion)
   const suyas = new Map(
     (
       await tx
@@ -218,29 +225,32 @@ export async function crearAplicaciones(tx: Transaccion, datos: DatosAplicacion)
     if (!miembro) throw invalido('aplicadoPorId', 'Esa persona no es del equipo de la explotación')
   }
   const fito = datos.tipo === 'fitosanitario'
-  const creadas = await tx
-    .insert(aplicaciones)
-    .values(
-      datos.fincaIds.map((fincaId) => ({
-        fincaId,
-        tipo: datos.tipo,
-        fecha: datos.fecha,
-        producto: datos.producto,
-        tipoAbono: fito ? null : (datos.tipoAbono ?? null),
-        dosis: datos.dosis,
-        unidadDosis: datos.unidadDosis,
-        superficie: datos.superficie ?? suyas.get(fincaId)?.superficie ?? 0,
-        aplicadoPorId: datos.aplicadoPorId ?? null,
-        aplicadoPorTexto: datos.aplicadoPorTexto ?? null,
-        lote: datos.lote ?? null,
-        plaga: fito ? (datos.plaga ?? null) : null,
-        diasSeguridad: fito ? (datos.diasSeguridad ?? 0) : 0,
-        ropo: fito ? (datos.ropo ?? null) : null,
-        equipo: fito ? (datos.equipo ?? null) : null,
-        observaciones: datos.observaciones ?? null,
-      })),
-    )
-    .returning({ id: aplicaciones.id })
+  const creadas = await sinChoqueDeId('aplicaciones', () =>
+    tx
+      .insert(aplicaciones)
+      .values(
+        datos.fincaIds.map((fincaId, i) => ({
+          ...(datos.ids ? { id: datos.ids[i] } : {}),
+          fincaId,
+          tipo: datos.tipo,
+          fecha: datos.fecha,
+          producto: datos.producto,
+          tipoAbono: fito ? null : (datos.tipoAbono ?? null),
+          dosis: datos.dosis,
+          unidadDosis: datos.unidadDosis,
+          superficie: datos.superficie ?? suyas.get(fincaId)?.superficie ?? 0,
+          aplicadoPorId: datos.aplicadoPorId ?? null,
+          aplicadoPorTexto: datos.aplicadoPorTexto ?? null,
+          lote: datos.lote ?? null,
+          plaga: fito ? (datos.plaga ?? null) : null,
+          diasSeguridad: fito ? (datos.diasSeguridad ?? 0) : 0,
+          ropo: fito ? (datos.ropo ?? null) : null,
+          equipo: fito ? (datos.equipo ?? null) : null,
+          observaciones: datos.observaciones ?? null,
+        })),
+      )
+      .returning({ id: aplicaciones.id }),
+  )
   const filas = await consulta(tx).where(
     inArray(
       aplicaciones.id,

@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CircleAlert, LogIn } from 'lucide-react'
+import { CircleAlert, CloudUpload, LogIn } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { Boton } from '../componentes/Boton'
 import { Campo } from '../componentes/Campo'
 import { Cargando } from '../componentes/Estados'
+import { useCola } from '../sinConexion/cola'
 import estilos from './Autenticacion.module.css'
 import type { DesdeDonde } from './RutaProtegida'
 import { CLAVE_SESION, iniciarSesion, obtenerSesion, useSesion } from './sesion'
@@ -20,6 +21,7 @@ export function PaginaEntrar() {
   const [contrasena, setContrasena] = useState('')
   const [verContrasena, setVerContrasena] = useState(false)
   const [errores, setErrores] = useState<{ identificador?: string; contrasena?: string }>({})
+  const pendientes = useCola().length
 
   const entrar = useMutation({
     mutationFn: async () => {
@@ -58,6 +60,16 @@ export function PaginaEntrar() {
           <h1>Marela</h1>
           <p>Gestión de la ganadería</p>
         </div>
+
+        {/* La sesión caducó con registros sin enviar: se envían al volver a entrar (GH-31) */}
+        {pendientes > 0 && (
+          <p className={estilos.aviso} role="status">
+            <CloudUpload aria-hidden size={20} />
+            {pendientes === 1
+              ? 'En este dispositivo hay 1 registro sin enviar. Se enviará al iniciar sesión.'
+              : `En este dispositivo hay ${pendientes} registros sin enviar. Se enviarán al iniciar sesión.`}
+          </p>
+        )}
 
         {entrar.error && (
           <p className={estilos.error} role="alert">

@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { crearApp } from '../src/app.js'
@@ -266,6 +266,22 @@ describe('tratamientos', () => {
     expect((await delAnimal(x.id, b, carla.cookie)).status).toBe(404)
     const res = await anular(t?.id ?? '', 'Desde B', b, carla.cookie)
     expect(await codigo(res)).toBe('tratamiento_no_encontrado')
+  })
+})
+
+describe('sin conexión (GH-33)', () => {
+  it('con los ids del dispositivo, reenviar el tratamiento no lo duplica', async () => {
+    const animales = [(await animal()).id, (await animal()).id]
+    const ids: string[] = [randomUUID(), randomUUID()]
+    expect((await tratar(animales, { ids })).status).toBe(201)
+    const reenvio = await tratar(animales, { ids })
+    expect(reenvio.status).toBe(201)
+    expect(((await reenvio.json()) as { id: string }[]).map((t) => t.id).sort()).toEqual(
+      [...ids].sort(),
+    )
+    const suyos = (await (await delAnimal(animales[0] ?? '')).json()) as { id: string }[]
+    expect(suyos.filter((t) => ids.includes(t.id))).toHaveLength(1)
+    expect(await campos(await tratar(animales, { ids: [randomUUID()] }))).toContain('ids')
   })
 })
 

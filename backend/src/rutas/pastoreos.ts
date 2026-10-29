@@ -78,7 +78,8 @@ const crear = createRoute({
   path: ruta,
   tags: ['Fincas'],
   summary: 'Registrar la entrada de animales a pastar en una finca',
-  description: 'Con fecha de salida, un pastoreo que ya terminó.',
+  description:
+    'Con fecha de salida, un pastoreo que ya terminó. Con id, el registrado sin conexión: si ya se guardó, se devuelve el mismo.',
   security: [{ sesion: [] }],
   middleware: [permitir('fincas')] as const,
   request: {
@@ -89,7 +90,9 @@ const crear = createRoute({
     201: json(Pastoreo, 'Registrado'),
     400: error('Datos no válidos, finca desactivada o de otra explotación (validacion)'),
     ...comunes,
-    409: enCurso,
+    409: error(
+      'La finca ya tiene un pastoreo en curso, o el id es de otro registro (pastoreo_en_curso, id_en_uso)',
+    ),
   },
 })
 
@@ -127,7 +130,7 @@ const salida = createRoute({
     200: json(Pastoreo, 'Terminado'),
     400: error('Fecha no válida, futura o antes de la entrada (validacion)'),
     ...comunes,
-    409: error('Los animales ya salieron (ya_salieron)'),
+    409: error('Los animales ya salieron, en otra fecha (ya_salieron)'),
   },
 })
 

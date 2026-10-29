@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useId, useState } from 'react'
 import { api, datos, erroresPorCampo } from '../api/cliente'
+import type { components } from '../api/esquema'
 import { useSesion } from '../auth/sesion'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
@@ -9,6 +10,8 @@ import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha as formatoFecha, hectareas, hoy, numero } from '../formato'
+import { nuevoId, type Pendiente, reemplazar } from '../sinConexion/cola'
+import { AVISO_GUARDADO, useRegistrar } from '../sinConexion/useRegistrar'
 import {
   ABONOS_HABITUALES,
   TIPOS_ABONO,
@@ -43,15 +46,51 @@ const UNIDAD_INICIAL: Record<TipoAplicacion, UnidadDosis> = {
   fitosanitario: 'l_ha',
 }
 
+type CuerpoAplicacion = components['schemas']['DatosAplicacion']
+
+// "Abono · Purín de vacuno · 01/03/2026 · Agra de abaixo", para la lista de pendientes (GH-32)
+const descripcion = (c: CuerpoAplicacion, fincas: FincaDeLaAplicacion[]) =>
+  [
+    c.tipo === 'fitosanitario' ? 'Fitosanitario' : 'Abono',
+    c.producto,
+    formatoFecha(c.fecha),
+    fincas.length === 1 ? fincas[0]?.nombre : `${fincas.length} fincas`,
+  ].join(' · ')
+
+const texto = (n: number | null | undefined) => (n == null ? '' : String(n).replace('.', ','))
+
+// El formulario de un abonado o tratamiento sin enviar, para corregirlo (GH-32)
+const desdeCuerpo = (c: CuerpoAplicacion) => ({
+  tipo: c.tipo,
+  fecha: c.fecha,
+  producto: c.producto,
+  tipoAbono: c.tipoAbono ?? undefined,
+  dosis: texto(c.dosis),
+  unidadDosis: c.unidadDosis,
+  superficie: texto(c.superficie),
+  plaga: c.plaga ?? '',
+  diasSeguridad: texto(c.diasSeguridad),
+  aplicadoPor: c.aplicadoPorId ?? (c.aplicadoPorTexto ? OTRA_PERSONA : ''),
+  aplicadoPorTexto: c.aplicadoPorTexto ?? '',
+  ropo: c.ropo ?? '',
+  equipo: c.equipo ?? '',
+  lote: c.lote ?? '',
+  observaciones: c.observaciones ?? '',
+})
+
 // Registrar un abonado o un tratamiento fitosanitario en una o varias fincas (GH-27). No se
-// corrige: uno registrado por error se anula desde la ficha y se registra de nuevo.
+// corrige: uno registrado por error se anula desde la ficha y se registra de nuevo. Sin conexión, se
+// guarda en el móvil y se envía solo al recuperarla; con `pendiente`, se corrige el que no se pudo
+// enviar (GH-32).
 export function FormularioAplicacion({
   fincas,
+  pendiente,
   tipoInicial = 'abono',
   alCerrar,
   alGuardar,
 }: {
   fincas: FincaDeLaAplicacion[]
+  pendiente?: Pendiente
   tipoInicial?: TipoAplicacion
   alCerrar: () => void
   alGuardar?: () => void
@@ -66,23 +105,47 @@ export function FormularioAplicacion({
   const [unica] = fincas
   const varias = fincas.length > 1
 
-  const [f, setF] = useState({
-    tipo: tipoInicial,
-    fecha: hoy(),
-    producto: '',
-    tipoAbono: undefined as TipoAbono | undefined,
-    dosis: '',
-    unidadDosis: UNIDAD_INICIAL[tipoInicial],
-    superficie: unica && !varias ? numero(unica.superficie, 4).replace(/,?0+$/, '') : '',
-    plaga: '',
-    diasSeguridad: '',
-    aplicadoPor: yo?.id ?? '',
-    aplicadoPorTexto: '',
-    ropo: '',
-    equipo: '',
-    lote: '',
-    observaciones: '',
-  })
+  const registrar = useRegistrar()
+  const previa = pendiente?.cuerpo as CuerpoAplicacion | undefined
+  // Uno por finca, los mismos en cada intento: reenviarlo no lo duplica
+  const [ids] = useState(() => previa?.ids ?? fincas.map(() => nuevoId()))
+  const [f, setF] = useState<{
+    tipo: TipoAplicacion
+    fecha: string
+    producto: string
+    tipoAbono: TipoAbono | undefined
+    dosis: string
+    unidadDosis: UnidadDosis
+    superficie: string
+    plaga: string
+    diasSeguridad: string
+    aplicadoPor: string
+    aplicadoPorTexto: string
+    ropo: string
+    equipo: string
+    lote: string
+    observaciones: string
+  }>(() =>
+    previa
+      ? desdeCuerpo(previa)
+      : {
+          tipo: tipoInicial,
+          fecha: hoy(),
+          producto: '',
+          tipoAbono: undefined as TipoAbono | undefined,
+          dosis: '',
+          unidadDosis: UNIDAD_INICIAL[tipoInicial],
+          superficie: unica && !varias ? numero(unica.superficie, 4).replace(/,?0+$/, '') : '',
+          plaga: '',
+          diasSeguridad: '',
+          aplicadoPor: yo?.id ?? '',
+          aplicadoPorTexto: '',
+          ropo: '',
+          equipo: '',
+          lote: '',
+          observaciones: '',
+        },
+  )
   const [erroresLocales, setErroresLocales] = useState<Record<string, string>>({})
   const cambiar = <K extends keyof typeof f>(campo: K, valor: (typeof f)[K]) =>
     setF((v) => ({ ...v, [campo]: valor }))
@@ -91,35 +154,64 @@ export function FormularioAplicacion({
   const guardar = useMutation({
     mutationFn: async () => {
       const otra = f.aplicadoPor === OTRA_PERSONA
-      const creadas = await datos(
-        api.POST('/api/explotaciones/{explotacionId}/aplicaciones', {
-          params: { path: { explotacionId: explotacion.id } },
-          body: {
-            fincaIds: fincas.map((x) => x.id),
-            tipo: f.tipo,
-            fecha: f.fecha,
-            producto: f.producto,
-            tipoAbono: fito ? null : (f.tipoAbono ?? null),
-            dosis: leerNumero(f.dosis) ?? 0,
-            unidadDosis: f.unidadDosis,
-            superficie: varias ? null : leerNumero(f.superficie),
-            plaga: fito ? f.plaga : null,
-            diasSeguridad: fito ? leerNumero(f.diasSeguridad) : null,
-            aplicadoPorId: !otra && f.aplicadoPor ? f.aplicadoPor : null,
-            aplicadoPorTexto: otra ? f.aplicadoPorTexto : null,
-            ropo: fito ? f.ropo : null,
-            equipo: fito ? f.equipo : null,
-            lote: f.lote,
-            observaciones: f.observaciones,
+      const nueva: CuerpoAplicacion = {
+        fincaIds: fincas.map((x) => x.id),
+        ids,
+        tipo: f.tipo,
+        fecha: f.fecha,
+        producto: f.producto,
+        tipoAbono: fito ? null : (f.tipoAbono ?? null),
+        dosis: leerNumero(f.dosis) ?? 0,
+        unidadDosis: f.unidadDosis,
+        superficie: varias ? null : leerNumero(f.superficie),
+        plaga: fito ? f.plaga : null,
+        diasSeguridad: fito ? leerNumero(f.diasSeguridad) : null,
+        aplicadoPorId: !otra && f.aplicadoPor ? f.aplicadoPor : null,
+        aplicadoPorTexto: otra ? f.aplicadoPorTexto : null,
+        ropo: fito ? f.ropo : null,
+        equipo: fito ? f.equipo : null,
+        lote: f.lote,
+        observaciones: f.observaciones,
+      }
+      if (pendiente) {
+        reemplazar(pendiente.id, nueva, descripcion(nueva, fincas))
+        return fito
+          ? 'Tratamiento corregido: se volverá a enviar'
+          : 'Abonado corregido: se volverá a enviar'
+      }
+      const resultado = await registrar(
+        {
+          id: ids[0] ?? nuevoId(),
+          tipo: 'aplicacion',
+          ruta: `/api/explotaciones/${explotacion.id}/aplicaciones`,
+          cuerpo: nueva,
+          descripcion: descripcion(nueva, fincas),
+          contexto: {
+            fincas: JSON.stringify(
+              fincas.map(({ id, nombre, superficie }) => ({ id, nombre, superficie })),
+            ),
           },
-        }),
+          claves: [[...CLAVE_FINCAS, explotacion.id]],
+        },
+        () =>
+          datos(
+            api.POST('/api/explotaciones/{explotacionId}/aplicaciones', {
+              params: { path: { explotacionId: explotacion.id } },
+              body: nueva,
+            }),
+          ),
       )
+      if (!('enviado' in resultado)) return AVISO_GUARDADO
+      const creadas = resultado.enviado
       const que = fito ? 'Tratamiento fitosanitario registrado' : 'Abonado registrado'
       return creadas.length === 1 ? que : `${que} en ${creadas.length} fincas`
     },
     onSuccess: async (mensaje) => {
-      await cliente.invalidateQueries({ queryKey: [...CLAVE_FINCAS, explotacion.id] })
-      avisar({ tipo: 'exito', mensaje })
+      // En la cola, o corregido en ella: no ha cambiado nada en el servidor, y sin conexión
+      // refrescar se quedaría esperando
+      const enCola = mensaje === AVISO_GUARDADO || Boolean(pendiente)
+      if (!enCola) await cliente.invalidateQueries({ queryKey: [...CLAVE_FINCAS, explotacion.id] })
+      avisar({ tipo: enCola ? 'info' : 'exito', mensaje })
       alGuardar?.()
       alCerrar()
     },

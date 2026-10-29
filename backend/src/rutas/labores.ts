@@ -103,7 +103,7 @@ const crear = createRoute({
   tags: ['Fincas'],
   summary: 'Registrar una labor en una o varias fincas',
   description:
-    'Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca.',
+    'Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), las registradas sin conexión: si ya se guardaron, se devuelven las mismas.',
   security: [{ sesion: [] }],
   middleware: [permitir('fincas')] as const,
   request: {
@@ -114,6 +114,7 @@ const crear = createRoute({
     201: json(z.array(Labor), 'Registradas'),
     400: error('Datos no válidos, fincas desactivadas o de otra explotación (validacion)'),
     ...comunes,
+    409: error('Algún id es de otro registro (id_en_uso)'),
   },
 })
 

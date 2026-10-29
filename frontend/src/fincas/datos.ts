@@ -26,28 +26,33 @@ export type FiltrosFincas = {
   pastoreo?: 'en_curso'
 }
 
+// También para descargar el listado al entrar en la explotación, y tenerlo sin conexión (GH-31)
+export const consultaFincas = (explotacionId: string, filtros: FiltrosFincas = {}) => ({
+  queryKey: [...CLAVE_FINCAS, explotacionId, 'lista', filtros],
+  queryFn: () =>
+    datos(
+      api.GET('/api/explotaciones/{explotacionId}/fincas', {
+        params: { path: { explotacionId }, query: filtros },
+      }),
+    ),
+})
+
 export const useFincas = (explotacionId: string, filtros: FiltrosFincas = {}) =>
-  useQuery({
-    queryKey: [...CLAVE_FINCAS, explotacionId, 'lista', filtros],
-    queryFn: () =>
-      datos(
-        api.GET('/api/explotaciones/{explotacionId}/fincas', {
-          params: { path: { explotacionId }, query: filtros },
-        }),
-      ),
-    placeholderData: keepPreviousData,
-  })
+  useQuery({ ...consultaFincas(explotacionId, filtros), placeholderData: keepPreviousData })
+
+// También para descargar las fichas al entrar en la explotación, y abrirlas sin conexión (GH-31)
+export const consultaFinca = (explotacionId: string, fincaId: string) => ({
+  queryKey: [...CLAVE_FINCAS, explotacionId, 'ficha', fincaId],
+  queryFn: () =>
+    datos(
+      api.GET('/api/explotaciones/{explotacionId}/fincas/{fincaId}', {
+        params: { path: { explotacionId, fincaId } },
+      }),
+    ),
+})
 
 export const useFinca = (explotacionId: string, fincaId: string) =>
-  useQuery({
-    queryKey: [...CLAVE_FINCAS, explotacionId, 'ficha', fincaId],
-    queryFn: () =>
-      datos(
-        api.GET('/api/explotaciones/{explotacionId}/fincas/{fincaId}', {
-          params: { path: { explotacionId, fincaId } },
-        }),
-      ),
-  })
+  useQuery(consultaFinca(explotacionId, fincaId))
 
 // "36:24:0:0:12:45:1": provincia, municipio, agregado, zona, polígono, parcela y recinto, como la
 // escribe el SIGPAC; null si la parcela no la tiene

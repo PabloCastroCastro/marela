@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Building2,
   ChevronsUpDown,
@@ -32,6 +33,8 @@ import {
 import { ProveedorExplotacion, useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { ListaExplotaciones } from '../explotaciones/PaginaElegirExplotacion'
 import { ActualizacionPwa } from '../pwa/ActualizacionPwa'
+import { descargarParaSinConexion } from '../sinConexion/descarga'
+import { IndicadorConexion } from '../sinConexion/IndicadorConexion'
 import estilos from './Aplicacion.module.css'
 
 const secciones: { ruta: string; texto: string; icono: typeof Vaca; modulo: Modulo }[] = [
@@ -54,7 +57,8 @@ export function Aplicacion() {
   }, [explotacion.data])
 
   if (explotacion.isPending) return <Cargando />
-  if (explotacion.isError) {
+  // Con la explotación guardada en el dispositivo, un fallo al refrescarla no impide trabajar (GH-31)
+  if (explotacion.isError && !explotacion.data) {
     const error = explotacion.error instanceof ErrorApi ? explotacion.error : null
     const desactivada = error?.codigo === 'explotacion_desactivada'
     const sinAcceso = error?.codigo === 'miembro_desactivado'
@@ -90,11 +94,26 @@ export function Aplicacion() {
     )
   }
 
-  return <Estructura explotacion={explotacion.data} />
+  return explotacion.data ? <Estructura explotacion={explotacion.data} /> : <Cargando />
 }
 
 function Estructura({ explotacion }: { explotacion: DetalleExplotacion }) {
   const base = rutaExplotacion(explotacion.id)
+  const cliente = useQueryClient()
+
+  // Al entrar con cobertura, los listados de animales y fincas y las fichas de los activos se
+  // descargan para trabajar sin conexión (GH-31). Cuando el navegador queda libre: la pantalla que se
+  // abre va primero.
+  useEffect(() => {
+    const descargar = () => void descargarParaSinConexion(cliente, explotacion)
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      const id = globalThis.requestIdleCallback(descargar, { timeout: 5000 })
+      return () => globalThis.cancelIdleCallback(id)
+    }
+    const id = setTimeout(descargar, 2000)
+    return () => clearTimeout(id)
+  }, [cliente, explotacion])
+
   const [cuentaAbierta, setCuentaAbierta] = useState(false)
   const visibles = secciones.filter((s) => explotacion.modulos.includes(s.modulo))
 
@@ -112,6 +131,7 @@ function Estructura({ explotacion }: { explotacion: DetalleExplotacion }) {
           <div className={estilos.selectorMovil}>
             <SelectorExplotacion explotacion={explotacion} />
           </div>
+          <IndicadorConexion />
           <BotonIcono
             etiqueta="Tu cuenta"
             icono={<CircleUserRound aria-hidden size={24} />}

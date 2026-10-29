@@ -121,7 +121,19 @@ El proyecto usa **TypeScript 5.9**: el generador (`openapi-typescript`) necesita
 Con `vite-plugin-pwa`:
 
 - **Manifest**: nombre, color `#9dad6f`, pantalla completa e iconos (normales, *maskable* para Android y `apple-touch-icon` para iOS).
-- **Service worker** generado al compilar: guarda la aplicación para abrirla al instante. **La API no se cachea**. El trabajo sin conexión (Animales y Fincas) se añadirá en su propia issue.
+- **Service worker** generado al compilar: guarda la aplicación para abrirla al instante. **La API no se cachea** en el service worker: el trabajo sin conexión va aparte.
+
+## Sin conexión
+
+En `src/sinConexion/` (decisión en `docs/diseno.md`, "Sin conexión", GH-31):
+
+- `almacen.ts`: clave-valor sobre IndexedDB (en memoria si no la hay, como en los tests).
+- `persistencia.ts`: guarda y recupera las consultas de TanStack Query de las secciones sin conexión (`SE_GUARDAN`).
+- `conexion.ts`: si hay conexión, con el `onlineManager` de TanStack Query y una sonda a `/api/health`.
+- `cola.ts`: cola de registros pendientes, su envío (`procesarCola`) y `enviarOGuardar` para los formularios.
+- `Sincronizacion.tsx`: envía los pendientes al volver la conexión; `IndicadorConexion.tsx`, el indicador de la cabecera y la lista de pendientes; `registros.tsx`, con qué formulario se corrige cada tipo.
+
+En los tests, `estado.sinRed` de la API simulada hace que las peticiones fallen como sin cobertura.
 - **Versiones nuevas**: no se activan solas; aparece el aviso "Hay una versión nueva de Marela" con el botón *Actualizar*.
 - En desarrollo no hay service worker.
 

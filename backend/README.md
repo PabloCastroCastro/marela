@@ -178,7 +178,7 @@ Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 Pesadas de cada animal, en `src/rutas/pesos.ts` (mismo módulo `animales`):
 
 - **`GET /api/explotaciones/{id}/animales/{animalId}/pesos`:** las pesadas, de la más antigua a la más reciente. La ganancia entre pesadas la calcula el frontend.
-- **`POST /api/explotaciones/{id}/animales/{animalId}/pesos`:** `{ fecha, kg, momento }` registra una pesada. `momento` es `nacimiento`, `destete`, `venta` u `otro` (por defecto); los tres primeros, como mucho una vez por animal (409 `momento_repetido`).
+- **`POST /api/explotaciones/{id}/animales/{animalId}/pesos`:** `{ id?, fecha, kg, momento }` registra una pesada. `momento` es `nacimiento`, `destete`, `venta` u `otro` (por defecto); los tres primeros, como mucho una vez por animal (409 `momento_repetido`). `id` es el que genera el dispositivo (sin conexión, GH-31): si ya hay una pesada con él, se devuelve esa en lugar de crear otra; si es de otro registro, 409 `id_en_uso` (`src/idCliente.ts`).
 - **`PUT /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** corrige una pesada.
 - **`DELETE /api/explotaciones/{id}/animales/{animalId}/pesos/{pesoId}`:** borra una pesada registrada por error y la devuelve, para poder deshacerlo. Queda en el historial.
 
@@ -201,7 +201,7 @@ Como los tratamientos, un evento **no se corrige ni se borra** (trigger `protege
 Partos, en `src/rutas/partos.ts` (mismo módulo `animales`):
 
 - **`GET /api/explotaciones/{id}/animales/{animalId}/partos`:** los de una vaca, del más reciente al más antiguo, anulados incluidos, con sus terneros.
-- **`POST /api/explotaciones/{id}/animales/{animalId}/partos`:** `{ fecha, tipo, padreId? | padreTexto?, observaciones?, terneros: [{ crotal?, sexo, estado, raza, peso? }] }` registra el parto y crea en la misma transacción la ficha de cada ternero (de 1 a 4), con `parto_id`. `tipo` es `normal` (por defecto), `con_ayuda` o `cesarea`; `estado`, `vivo` (por defecto) o `muerto`, que deja la ficha muerta con baja por muerte. Los terneros se enlazan a la madre y al padre de la gestación en curso; el padre del cuerpo solo cuenta si no la hay. El peso se guarda como su pesada al nacer. Un crotal repetido da 409 `crotal_en_uso` en `terneros.<n>.crotal`.
+- **`POST /api/explotaciones/{id}/animales/{animalId}/partos`:** `{ fecha, tipo, padreId? | padreTexto?, observaciones?, terneros: [{ crotal?, sexo, estado, raza, peso? }] }` registra el parto y crea en la misma transacción la ficha de cada ternero (de 1 a 4), con `parto_id`. `tipo` es `normal` (por defecto), `con_ayuda` o `cesarea`; `estado`, `vivo` (por defecto) o `muerto`, que deja la ficha muerta con baja por muerte. Los terneros se enlazan a la madre y al padre de la gestación en curso; el padre del cuerpo solo cuenta si no la hay. El peso se guarda como su pesada al nacer. Un crotal repetido da 409 `crotal_en_uso` en `terneros.<n>.crotal`. Sin conexión (GH-33), `id` es el del parto, generado en el dispositivo, y cada ternero lleva el suyo: si el parto ya existe, se devuelve el mismo con sus terneros.
 - **`POST /api/explotaciones/{id}/partos/{partoId}/anulacion`:** `{ motivo }` anula el parto y borra las fichas de sus terneros y sus pesadas al nacer, que quedan en el historial de cambios. 409 `terneros_con_datos` si algún ternero tiene otras pesadas, tratamientos, eventos o hijos.
 
 Un parto no se corrige ni se borra (trigger `proteger_parto`, migración `0015`); `comprobar_parto` exige madre hembra, padre macho y fecha en la vida de la madre. El parto cierra la gestación en curso: la función `gestacion()` lo cuenta como cierre, como el aborto y el diagnóstico negativo, y devuelve también el padre de la cubrición o inseminación.
@@ -211,7 +211,7 @@ Un parto no se corrige ni se borra (trigger `proteger_parto`, migración `0015`)
 Tratamientos sanitarios, en `src/rutas/tratamientos.ts` (mismo módulo `animales`):
 
 - **`GET /api/explotaciones/{id}/animales/{animalId}/tratamientos`:** los del animal, del más reciente al más antiguo, anulados incluidos.
-- **`POST /api/explotaciones/{id}/tratamientos`:** `{ animalIds, fecha, producto, motivo, diasSupresion, dosis?, via?, diagnostico?, aplicadoPorId? | aplicadoPorTexto?, lote?, observaciones? }` registra el mismo tratamiento a uno o varios animales (hasta 500): uno por animal, todos o ninguno. `motivo` es `enfermedad`, `vacuna`, `desparasitacion` u `otro`. Quien lo administra es una persona del equipo (`aplicadoPorId`) o un nombre escrito (`aplicadoPorTexto`, el veterinario).
+- **`POST /api/explotaciones/{id}/tratamientos`:** `{ animalIds, fecha, producto, motivo, diasSupresion, dosis?, via?, diagnostico?, aplicadoPorId? | aplicadoPorTexto?, lote?, observaciones? }` registra el mismo tratamiento a uno o varios animales (hasta 500): uno por animal, todos o ninguno. `motivo` es `enfermedad`, `vacuna`, `desparasitacion` u `otro`. Quien lo administra es una persona del equipo (`aplicadoPorId`) o un nombre escrito (`aplicadoPorTexto`, el veterinario). Sin conexión (GH-33), `ids` lleva un id del dispositivo por animal, como en las labores.
 - **`POST /api/explotaciones/{id}/tratamientos/{tratamientoId}/anulacion`:** `{ motivo }` anula un tratamiento registrado por error (409 `ya_anulado` si ya lo está).
 - **`GET /api/explotaciones/{id}/tratamientos/opciones`:** las personas activas del equipo y los productos ya usados, para el formulario.
 
@@ -248,7 +248,7 @@ Si un servicio no responde, 502 `servicio_no_disponible`: en el frontend se sigu
 Siembras, cosechas y otras labores de las fincas, en `src/rutas/labores.ts` (mismo módulo `fincas`):
 
 - **`GET /api/explotaciones/{id}/fincas/{fincaId}/labores`:** las de una finca, de la más reciente a la más antigua.
-- **`POST /api/explotaciones/{id}/labores`:** `{ fincaIds, tipo, fecha, cultivo?, labor?, superficie?, cantidad?, unidad?, realizadaPorId? | realizadaPorTexto?, observaciones? }` registra la misma labor en una o varias fincas activas, una por finca, todas o ninguna. `tipo` es `siembra` o `cosecha` (con `cultivo`) u `otra` (con `labor`: siega, laboreo…). Sin `superficie`, la de cada finca entera; con ella, solo para una finca y sin pasar de la suya. La cosecha admite `cantidad` con su `unidad`: `kg`, `t`, `pacas`, `rolos` o `remolques`.
+- **`POST /api/explotaciones/{id}/labores`:** `{ fincaIds, tipo, fecha, cultivo?, labor?, superficie?, cantidad?, unidad?, realizadaPorId? | realizadaPorTexto?, observaciones? }` registra la misma labor en una o varias fincas activas, una por finca, todas o ninguna. `tipo` es `siembra` o `cosecha` (con `cultivo`) u `otra` (con `labor`: siega, laboreo…). Sin `superficie`, la de cada finca entera; con ella, solo para una finca y sin pasar de la suya. La cosecha admite `cantidad` con su `unidad`: `kg`, `t`, `pacas`, `rolos` o `remolques`. Sin conexión (GH-32), `ids` lleva un id del dispositivo por finca, en el orden de `fincaIds`: si ya existen todas, se devuelven las mismas; si solo algunas, 409 `id_en_uso`.
 - **`PUT /api/explotaciones/{id}/labores/{laborId}`:** corrige una labor.
 - **`DELETE /api/explotaciones/{id}/labores/{laborId}`:** la borra y la devuelve, para poder deshacerlo.
 - **`GET /api/explotaciones/{id}/labores/opciones`:** las personas activas del equipo y los cultivos y labores ya usados, para el formulario.
@@ -260,7 +260,7 @@ No son datos sanitarios: se corrigen y se borran, y los cambios quedan en el his
 Abonados y tratamientos fitosanitarios de las fincas, en `src/rutas/aplicaciones.ts` (mismo módulo `fincas`):
 
 - **`GET /api/explotaciones/{id}/fincas/{fincaId}/aplicaciones`:** los de una finca, del más reciente al más antiguo, también los anulados.
-- **`POST /api/explotaciones/{id}/aplicaciones`:** `{ fincaIds, tipo, fecha, producto, tipoAbono?, dosis, unidadDosis, superficie?, aplicadoPorId? | aplicadoPorTexto?, lote?, plaga?, diasSeguridad?, ropo?, equipo?, observaciones? }` registra el mismo abonado o tratamiento en una o varias fincas activas, uno por finca, todos o ninguno. `tipo` es `abono` (con `tipoAbono`: `mineral` u `organico`) o `fitosanitario` (con `plaga` y `diasSeguridad`; `ropo` y `equipo`, opcionales). La dosis es por hectárea, en `kg_ha`, `t_ha`, `l_ha` o `m3_ha`. La superficie, como en las labores.
+- **`POST /api/explotaciones/{id}/aplicaciones`:** `{ fincaIds, tipo, fecha, producto, tipoAbono?, dosis, unidadDosis, superficie?, aplicadoPorId? | aplicadoPorTexto?, lote?, plaga?, diasSeguridad?, ropo?, equipo?, observaciones? }` registra el mismo abonado o tratamiento en una o varias fincas activas, uno por finca, todos o ninguno. `tipo` es `abono` (con `tipoAbono`: `mineral` u `organico`) o `fitosanitario` (con `plaga` y `diasSeguridad`; `ropo` y `equipo`, opcionales). La dosis es por hectárea, en `kg_ha`, `t_ha`, `l_ha` o `m3_ha`. La superficie y los `ids` del dispositivo, como en las labores.
 - **`POST /api/explotaciones/{id}/aplicaciones/{aplicacionId}/anulacion`:** `{ motivo }` lo anula (409 `ya_anulado` si ya lo está).
 - **`GET /api/explotaciones/{id}/aplicaciones/opciones`:** las personas activas del equipo y los abonos, fitosanitarios, plagas y equipos ya usados, para el formulario.
 
@@ -273,9 +273,9 @@ Como los tratamientos de los animales, no se corrigen ni se borran: se anulan co
 Pastoreos de las fincas, en `src/rutas/pastoreos.ts` (mismo módulo `fincas`):
 
 - **`GET /api/explotaciones/{id}/fincas/{fincaId}/pastoreos`:** los de una finca, el que está en curso primero y luego del más reciente al más antiguo.
-- **`POST /api/explotaciones/{id}/pastoreos`:** `{ fincaId, fechaEntrada, fechaSalida?, animales, observaciones? }` registra la entrada de los animales en una finca activa; con `fechaSalida`, un pastoreo que ya terminó.
+- **`POST /api/explotaciones/{id}/pastoreos`:** `{ fincaId, fechaEntrada, fechaSalida?, animales, observaciones? }` registra la entrada de los animales en una finca activa; con `fechaSalida`, un pastoreo que ya terminó. Con `id` (del dispositivo, GH-32), si ya existe se devuelve el mismo.
 - **`PUT /api/explotaciones/{id}/pastoreos/{pastoreoId}`:** lo corrige.
-- **`PATCH /api/explotaciones/{id}/pastoreos/{pastoreoId}/salida`:** `{ fechaSalida }` registra la salida (409 `ya_salieron` si ya la tiene).
+- **`PATCH /api/explotaciones/{id}/pastoreos/{pastoreoId}/salida`:** `{ fechaSalida }` registra la salida. Si ya tiene esa misma, la devuelve (un reenvío sin conexión); si tiene otra, 409 `ya_salieron`.
 - **`DELETE /api/explotaciones/{id}/pastoreos/{pastoreoId}`:** lo borra y lo devuelve, para poder deshacerlo.
 
 Solo el número de animales, sin enlazar sus fichas. Una finca no tiene dos pastoreos en curso (sin salida) a la vez: 409 `pastoreo_en_curso`, y el índice único parcial `pastoreos_en_curso_unico` en la base de datos. Como las labores, se corrigen y se borran, y los cambios quedan en el historial (migración `0023`). Las fincas llevan su pastoreo en curso (`pastoreo`: `{ id, desde, animales }`, o `null`) y el listado se filtra con `?pastoreo=en_curso`.

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { pedir } from '../sinConexion/conexion'
 
 // Sesión con Better Auth (backend: /api/auth). Estas rutas no forman parte del contrato OpenAPI, así
 // que se llaman con fetch y sus errores ({ code, message }) se traducen aquí.
@@ -40,7 +41,7 @@ const MENSAJES: Record<string, string> = {
 async function llamar(ruta: string, cuerpo?: object) {
   let respuesta: Response
   try {
-    respuesta = await globalThis.fetch(`/api/auth${ruta}`, {
+    respuesta = await pedir(`/api/auth${ruta}`, {
       method: cuerpo ? 'POST' : 'GET',
       credentials: 'same-origin',
       headers: cuerpo ? { 'content-type': 'application/json' } : undefined,

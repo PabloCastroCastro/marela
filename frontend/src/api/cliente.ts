@@ -1,4 +1,5 @@
 import createClient from 'openapi-fetch'
+import { pedir, SinRespuesta } from '../sinConexion/conexion'
 import type { paths } from './esquema'
 
 // Cliente tipado de la API. Los tipos se generan del contrato del backend (npm run api:generar), así
@@ -7,8 +8,17 @@ import type { paths } from './esquema'
 export const api = createClient<paths>({
   baseUrl: globalThis.location?.origin ?? '',
   credentials: 'same-origin',
-  // fetch se resuelve en cada petición (y no al crear el cliente), para poder simularlo en los tests
-  fetch: (peticion) => globalThis.fetch(peticion),
+  // fetch se resuelve en cada petición (y no al crear el cliente), para poder simularlo en los tests.
+  // Si no llega al servidor, se marca sin conexión (GH-31) y se lanza un ErrorApi con estado 0.
+  // Con un límite de espera: con poca cobertura, antes de que el navegador la dé por perdida.
+  fetch: async (peticion) => {
+    try {
+      return await pedir(peticion)
+    } catch (error) {
+      if (error instanceof SinRespuesta) throw errorSinConexion()
+      throw error
+    }
+  },
 })
 
 // Error de la API con el formato común { error: { codigo, mensaje, detalles? } }
@@ -23,6 +33,12 @@ export class ErrorApi extends Error {
     this.name = 'ErrorApi'
   }
 }
+
+// Sin respuesta del servidor: sin cobertura o sin red
+export const errorSinConexion = () =>
+  new ErrorApi(0, 'sin_conexion', 'No hay conexión con el servidor. Inténtalo de nuevo.')
+
+export const esSinConexion = (error: unknown) => error instanceof ErrorApi && error.estado === 0
 
 type Respuesta<T> = { data?: T; error?: unknown; response: Response }
 

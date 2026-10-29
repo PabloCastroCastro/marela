@@ -1129,7 +1129,10 @@ export interface paths {
             };
         };
         put?: never;
-        /** Registrar una pesada */
+        /**
+         * Registrar una pesada
+         * @description Con id, la registrada sin conexión: si ya se guardó, se devuelve la misma en lugar de duplicarla.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -1142,11 +1145,11 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["DatosPesada"];
+                    "application/json": components["schemas"]["NuevaPesada"];
                 };
             };
             responses: {
-                /** @description Registrada */
+                /** @description Registrada, o la que ya se registró con ese id */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -1191,7 +1194,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Ya hay una pesada al nacer, al destete o a la venta (momento_repetido) */
+                /** @description Ya hay una pesada al nacer, al destete o a la venta, o el id es de otro registro (momento_repetido, id_en_uso) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -1493,7 +1496,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar un tratamiento a uno o varios animales
-         * @description Crea un tratamiento por animal, todos con los mismos datos.
+         * @description Crea un tratamiento por animal, todos con los mismos datos. Con ids (uno por animal), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.
          */
         post: {
             parameters: {
@@ -1548,6 +1551,15 @@ export interface paths {
                 };
                 /** @description No existe la explotación o el animal (animal_no_encontrado) */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún id es de otro registro (id_en_uso) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1956,7 +1968,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar un parto y crear las fichas de sus terneros
-         * @description Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado "muerto". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación.
+         * @description Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado "muerto". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación. Con id (y los de sus terneros), el registrado sin conexión: si ya se guardó, se devuelve el mismo.
          */
         post: {
             parameters: {
@@ -2019,7 +2031,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description El crotal de un ternero ya está en uso (crotal_en_uso) */
+                /** @description El crotal de un ternero ya está en uso, o un id es de otro registro (crotal_en_uso, id_en_uso) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -2702,7 +2714,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar una labor en una o varias fincas
-         * @description Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca.
+         * @description Crea una por finca. Sin superficie, cada una con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), las registradas sin conexión: si ya se guardaron, se devuelven las mismas.
          */
         post: {
             parameters: {
@@ -2757,6 +2769,15 @@ export interface paths {
                 };
                 /** @description No existe la explotación, la finca o la labor (labor_no_encontrada) */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún id es de otro registro (id_en_uso) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3049,7 +3070,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar un abonado o tratamiento fitosanitario en una o varias fincas
-         * @description Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca.
+         * @description Crea uno por finca. Sin superficie, cada uno con la de su finca entera; con superficie, solo para una finca. Con ids (uno por finca), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.
          */
         post: {
             parameters: {
@@ -3104,6 +3125,15 @@ export interface paths {
                 };
                 /** @description No existe la explotación, la finca o el abonado o tratamiento (aplicacion_no_encontrada) */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún id es de otro registro (id_en_uso) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3287,7 +3317,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar la entrada de animales a pastar en una finca
-         * @description Con fecha de salida, un pastoreo que ya terminó.
+         * @description Con fecha de salida, un pastoreo que ya terminó. Con id, el registrado sin conexión: si ya se guardó, se devuelve el mismo.
          */
         post: {
             parameters: {
@@ -3349,7 +3379,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description La finca ya tiene un pastoreo en curso (pastoreo_en_curso) */
+                /** @description La finca ya tiene un pastoreo en curso, o el id es de otro registro (pastoreo_en_curso, id_en_uso) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -3582,7 +3612,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Los animales ya salieron (ya_salieron) */
+                /** @description Los animales ya salieron, en otra fecha (ya_salieron) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5032,6 +5062,22 @@ export interface components {
             /** Format: date-time */
             modificadoEn: string;
         };
+        NuevaPesada: {
+            /** Format: date */
+            fecha: string;
+            /** @example 412.5 */
+            kg: number;
+            /**
+             * @default otro
+             * @enum {string}
+             */
+            momento: "nacimiento" | "destete" | "venta" | "otro";
+            /**
+             * Format: uuid
+             * @description Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica.
+             */
+            id?: string;
+        };
         DatosPesada: {
             /** Format: date */
             fecha: string;
@@ -5094,6 +5140,8 @@ export interface components {
         };
         DatosTratamiento: {
             animalIds: string[];
+            /** @description Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica. */
+            ids?: string[];
             /** Format: date */
             fecha: string;
             /** @example Ivermectina 1 % */
@@ -5227,6 +5275,11 @@ export interface components {
             modificadoEn: string;
         };
         DatosParto: {
+            /**
+             * Format: uuid
+             * @description Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica.
+             */
+            id?: string;
             /** Format: date */
             fecha: string;
             /**
@@ -5243,6 +5296,11 @@ export interface components {
                 crotal?: string | null;
                 /** @enum {string} */
                 sexo: "hembra" | "macho";
+                /**
+                 * Format: uuid
+                 * @description Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica.
+                 */
+                id?: string;
                 /**
                  * @default vivo
                  * @enum {string}
@@ -5407,6 +5465,8 @@ export interface components {
             realizadaPorTexto?: string | null;
             observaciones?: string | null;
             fincaIds: string[];
+            /** @description Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica. */
+            ids?: string[];
         };
         CambioLabor: {
             /** @enum {string} */
@@ -5487,6 +5547,8 @@ export interface components {
         };
         DatosAplicacion: {
             fincaIds: string[];
+            /** @description Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica. */
+            ids?: string[];
             /** @enum {string} */
             tipo: "abono" | "fitosanitario";
             /** Format: date */
@@ -5543,6 +5605,11 @@ export interface components {
             observaciones?: string | null;
             /** Format: uuid */
             fincaId: string;
+            /**
+             * Format: uuid
+             * @description Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica.
+             */
+            id?: string;
         };
         CambioPastoreo: {
             /** Format: date */

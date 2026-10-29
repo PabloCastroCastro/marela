@@ -2,7 +2,14 @@ import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { MOMENTOS_PESADA } from '../db/schema/index.js'
 import { validacionFallida } from '../errores.js'
 import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
-import { borrarPesada, corregirPesada, crearPesada, DatosPesada, listarPesadas } from '../pesos.js'
+import {
+  borrarPesada,
+  corregirPesada,
+  crearPesada,
+  DatosPesada,
+  listarPesadas,
+  NuevaPesada,
+} from '../pesos.js'
 import { comunes, error, json, ParametrosAnimal } from './animales.js'
 
 // Pesadas de un animal (GH-21)
@@ -26,6 +33,7 @@ const ParametrosPesada = ParametrosAnimal.extend({
 const ruta = '/explotaciones/{explotacionId}/animales/{animalId}/pesos'
 
 const cuerpo = { content: { 'application/json': { schema: DatosPesada } }, required: true }
+const nueva = { content: { 'application/json': { schema: NuevaPesada } }, required: true }
 
 const repetido = error('Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)')
 
@@ -45,14 +53,18 @@ const crear = createRoute({
   path: ruta,
   tags: ['Animales'],
   summary: 'Registrar una pesada',
+  description:
+    'Con id, la registrada sin conexión: si ya se guardó, se devuelve la misma en lugar de duplicarla.',
   security: [{ sesion: [] }],
   middleware: [permitir('animales')] as const,
-  request: { params: ParametrosAnimal, body: cuerpo },
+  request: { params: ParametrosAnimal, body: nueva },
   responses: {
-    201: json(Pesada, 'Registrada'),
+    201: json(Pesada, 'Registrada, o la que ya se registró con ese id'),
     400: error('Datos no válidos o fecha fuera de la vida del animal (validacion)'),
     ...comunes,
-    409: repetido,
+    409: error(
+      'Ya hay una pesada al nacer, al destete o a la venta, o el id es de otro registro (momento_repetido, id_en_uso)',
+    ),
   },
 })
 

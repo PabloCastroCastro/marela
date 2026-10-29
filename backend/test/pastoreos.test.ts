@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { crearApp } from '../src/app.js'
@@ -180,6 +180,28 @@ describe('pastoreos', () => {
     expect(
       (await pedir('DELETE', `/explotaciones/${b}/pastoreos/${p.id}`, carla.cookie)).status,
     ).toBe(404)
+  })
+})
+
+describe('sin conexión (GH-32)', () => {
+  it('con el id del dispositivo, reenviar la entrada o la salida no las duplica', async () => {
+    const f = await finca()
+    const id = randomUUID()
+    expect((await entrar(f, { id })).status).toBe(201)
+    // Reenviada: la misma, sin el error de que ya hay animales pastando
+    const reenvio = await entrar(f, { id })
+    expect(reenvio.status).toBe(201)
+    expect(((await reenvio.json()) as Pastoreo).id).toBe(id)
+    expect(await deLaFinca(f)).toHaveLength(1)
+
+    expect((await salir(id, '2026-06-10')).status).toBe(200)
+    // La misma salida, otra vez: ya está; otra fecha, no
+    expect((await salir(id, '2026-06-10')).status).toBe(200)
+    const otra = await salir(id, '2026-06-11')
+    expect([otra.status, await codigo(otra)]).toEqual([409, 'ya_salieron'])
+
+    const enOtra = await entrar(await finca(), { id })
+    expect([enOtra.status, await codigo(enOtra)]).toEqual([409, 'id_en_uso'])
   })
 })
 
