@@ -514,8 +514,8 @@ describe('bajas', () => {
 describe('reposición (GH-110)', () => {
   type ConReposicion = {
     id: string
-    noAptaReposicion: { desde: string; motivo: string } | null
-    madreNoAptaReposicion: { desde: string; motivo: string } | null
+    noAptaReposicion: { desde: string; motivo: string; alcance: string } | null
+    madreNoAptaReposicion: { desde: string; motivo: string; alcance: string } | null
   }
   const marcar = (id: string, datos: object, cookie = brais.cookie) =>
     pedir('PATCH', `/explotaciones/${a}/animales/${id}/reposicion`, cookie, datos)
@@ -542,10 +542,12 @@ describe('reposición (GH-110)', () => {
     expect(((await res.json()) as ConReposicion).noAptaReposicion).toEqual({
       desde: '2026-05-02',
       motivo: 'Paratuberculosis',
+      alcance: 'hijas',
     })
     expect((await ficha(hija.id)).madreNoAptaReposicion).toEqual({
       desde: '2026-05-02',
       motivo: 'Paratuberculosis',
+      alcance: 'hijas',
     })
     // Una hija que nace después, también
     const otra = await alta(
@@ -577,6 +579,24 @@ describe('reposición (GH-110)', () => {
       tx.select().from(historialCambios).where(eq(historialCambios.filaId, madre.id)),
     )
     expect(cambios.map((c) => c.operacion)).toEqual(['alta', 'cambio', 'cambio'])
+  })
+
+  it('si afecta a toda su descendencia, también los hijos lo muestran y se filtran', async () => {
+    const madre = await alta(ana.cookie, a, vaca())
+    const hijo = await alta(
+      ana.cookie,
+      a,
+      vaca({ fechaNacimiento: '2025-03-01', madreId: madre.id, sexo: 'macho', nombre: null }),
+    )
+    await marcar(madre.id, { apta: false, motivo: 'Paratuberculosis', alcance: 'descendencia' })
+    expect((await ficha(hijo.id)).madreNoAptaReposicion).toMatchObject({
+      motivo: 'Paratuberculosis',
+      alcance: 'descendencia',
+    })
+    const lista = (await (
+      await pedir('GET', `/explotaciones/${a}/animales?reposicion=no_apta`, ana.cookie)
+    ).json()) as ConReposicion[]
+    expect(lista.map((x) => x.id)).toContain(hijo.id)
   })
 
   it('pide el motivo, solo en hembras, y una marcada no pasa a macho', async () => {

@@ -650,7 +650,7 @@ export interface paths {
                     crotal?: "sin";
                     /** @description Solo las hembras con una gestación en curso, por fecha prevista de parto */
                     gestacion?: "en_curso";
-                    /** @description Solo las hijas de madres no aptas para reposición */
+                    /** @description Solo la descendencia afectada de madres no aptas para reposición: las hijas, y los hijos si afecta a toda */
                     reposicion?: "no_apta";
                 };
                 header?: never;
@@ -5038,12 +5038,22 @@ export interface components {
                 /** Format: date */
                 desde: string;
                 motivo: string;
+                /**
+                 * @description Solo a sus hijas (no se dejan para reposición) o a toda su descendencia
+                 * @enum {string}
+                 */
+                alcance: "hijas" | "descendencia";
             } | null;
-            /** @description Hembra cuya madre está marcada como no apta para reposición */
+            /** @description Su madre está marcada como no apta para reposición: en las hijas siempre, en los hijos si afecta a toda su descendencia */
             madreNoAptaReposicion: {
                 /** Format: date */
                 desde: string;
                 motivo: string;
+                /**
+                 * @description Solo a sus hijas (no se dejan para reposición) o a toda su descendencia
+                 * @enum {string}
+                 */
+                alcance: "hijas" | "descendencia";
             } | null;
             /**
              * Format: date
@@ -5122,6 +5132,11 @@ export interface components {
             motivo?: string | null;
             /** Format: date */
             fecha?: string | null;
+            /**
+             * @default hijas
+             * @enum {string}
+             */
+            alcance: "hijas" | "descendencia";
         };
         CambioAnimal: {
             /** @example ES041503456789 */

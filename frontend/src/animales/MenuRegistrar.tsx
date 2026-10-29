@@ -62,12 +62,12 @@ export function MenuRegistrar({ animal }: { animal: AnimalDetalle }) {
               {TEXTOS[o]}
             </Boton>
           ))}
-          {/* Reposición (GH-110): las hijas de una vaca enferma no se dejan como madres */}
+          {/* Reposición (GH-110): una vaca con una enfermedad que pasa a su descendencia */}
           {animal.sexo === 'hembra' && (
             <Boton variante="secundario" anchoCompleto onClick={() => elegir('reposicion')}>
               {animal.noAptaReposicion
-                ? 'Quitar «No dejar hijas para reposición»'
-                : 'No dejar hijas para reposición'}
+                ? 'Quitar la marca de reposición'
+                : 'No apta para reposición'}
             </Boton>
           )}
           {animal.estado === 'activo' && (

@@ -547,11 +547,20 @@
               },
               "motivo": {
                 "type": "string"
+              },
+              "alcance": {
+                "type": "string",
+                "enum": [
+                  "hijas",
+                  "descendencia"
+                ],
+                "description": "Solo a sus hijas (no se dejan para reposición) o a toda su descendencia"
               }
             },
             "required": [
               "desde",
-              "motivo"
+              "motivo",
+              "alcance"
             ],
             "description": "Hembra cuyas hijas no se dejan para reposición, desde cuándo y por qué"
           },
@@ -567,13 +576,22 @@
               },
               "motivo": {
                 "type": "string"
+              },
+              "alcance": {
+                "type": "string",
+                "enum": [
+                  "hijas",
+                  "descendencia"
+                ],
+                "description": "Solo a sus hijas (no se dejan para reposición) o a toda su descendencia"
               }
             },
             "required": [
               "desde",
-              "motivo"
+              "motivo",
+              "alcance"
             ],
-            "description": "Hembra cuya madre está marcada como no apta para reposición"
+            "description": "Su madre está marcada como no apta para reposición: en las hijas siempre, en los hijos si afecta a toda su descendencia"
           },
           "finSupresion": {
             "type": [
@@ -864,6 +882,14 @@
               "null"
             ],
             "format": "date"
+          },
+          "alcance": {
+            "type": "string",
+            "enum": [
+              "hijas",
+              "descendencia"
+            ],
+            "default": "hijas"
           }
         },
         "required": [
@@ -4587,10 +4613,10 @@
               "enum": [
                 "no_apta"
               ],
-              "description": "Solo las hijas de madres no aptas para reposición"
+              "description": "Solo la descendencia afectada de madres no aptas para reposición: las hijas, y los hijos si afecta a toda"
             },
             "required": false,
-            "description": "Solo las hijas de madres no aptas para reposición",
+            "description": "Solo la descendencia afectada de madres no aptas para reposición: las hijas, y los hijos si afecta a toda",
             "name": "reposicion",
             "in": "query"
           }

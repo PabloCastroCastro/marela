@@ -35,6 +35,11 @@ export const ESTADO_POR_BAJA = {
 } as const satisfies Record<(typeof TIPOS_BAJA)[number], (typeof ESTADOS_ANIMAL)[number]>
 
 export const sexoAnimal = pgEnum('sexo_animal', SEXOS)
+
+// A quién afecta que una madre no sea apta para reposición (GH-110)
+export const ALCANCES_NO_APTA = ['hijas', 'descendencia'] as const
+
+export const alcanceNoApta = pgEnum('alcance_no_apta', ALCANCES_NO_APTA)
 export const origenAnimal = pgEnum('origen_animal', ORIGENES)
 export const estadoAnimal = pgEnum('estado_animal', ESTADOS_ANIMAL)
 export const tipoBaja = pgEnum('tipo_baja', TIPOS_BAJA)
@@ -75,10 +80,11 @@ export const animales = pgTable(
     // Parto en que nació (GH-23). La clave foránea a partos está en la migración 0015, para no
     // importar aquí reproduccion.ts, que importa animales.
     partoId: uuid('parto_id'),
-    // Una hembra con una enfermedad que se transmite a la descendencia: sus hijas no se dejan para
-    // reposición (GH-110). Desde cuándo y por qué.
+    // Una hembra con una enfermedad que se transmite a la descendencia (GH-110): desde cuándo, por qué
+    // y a quién afecta, solo a sus hijas (no se dejan para reposición) o a toda su descendencia
     noAptaReposicionDesde: date('no_apta_reposicion_desde', { mode: 'string' }),
     motivoNoAptaReposicion: text('motivo_no_apta_reposicion'),
+    alcanceNoAptaReposicion: alcanceNoApta('alcance_no_apta_reposicion'),
     ...auditoria(),
   },
   (t) => [
@@ -109,9 +115,10 @@ export const animales = pgTable(
     // Con fecha y motivo, o sin los dos; y solo en hembras
     check(
       'animales_no_apta_reposicion',
-      sql`(${t.noAptaReposicionDesde} is null and ${t.motivoNoAptaReposicion} is null)
+      sql`(${t.noAptaReposicionDesde} is null and ${t.motivoNoAptaReposicion} is null
+          and ${t.alcanceNoAptaReposicion} is null)
         or (${t.noAptaReposicionDesde} is not null and btrim(coalesce(${t.motivoNoAptaReposicion}, '')) <> ''
-            and ${t.sexo} = 'hembra')`,
+            and ${t.alcanceNoAptaReposicion} is not null and ${t.sexo} = 'hembra')`,
     ),
     check(
       'animales_origen',

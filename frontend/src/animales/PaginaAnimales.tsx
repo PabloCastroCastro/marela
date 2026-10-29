@@ -85,7 +85,7 @@ export function PaginaAnimales() {
             { valor: 'en_supresion', texto: 'En supresión' },
             { valor: 'gestante', texto: 'Gestantes' },
             { valor: 'sin_crotal', texto: 'Sin crotal' },
-            { valor: 'no_apta', texto: 'Hijas de madres no aptas' },
+            { valor: 'no_apta', texto: 'Con madre no apta' },
             { valor: 'vendido', texto: 'Vendidos' },
             { valor: 'muerto', texto: 'Muertos' },
             { valor: 'baja', texto: 'Otras bajas' },

@@ -4,11 +4,14 @@ import { api, datos, erroresPorCampo } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { Campo, CampoFecha } from '../componentes/Campo'
+import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha as formatoFecha, hoy } from '../formato'
 import estilos from './Animales.module.css'
 import { type AnimalDetalle, CLAVE_ANIMALES, identificacion } from './datos'
+
+type Alcance = 'hijas' | 'descendencia'
 
 // Las que más a menudo hacen que no se dejen hijas para reposición
 const MOTIVOS_HABITUALES = [
@@ -19,8 +22,9 @@ const MOTIVOS_HABITUALES = [
   'Rinotraqueítis infecciosa (IBR)',
 ]
 
-// Marcar una vaca para no dejar sus hijas como madres reproductoras, con el motivo, o quitar la marca
-// (GH-110). Sus hijas, las nacidas y las que nazcan, lo muestran.
+// Marcar una vaca con una enfermedad que se transmite a la descendencia, con el motivo y a quién
+// afecta (solo a sus hijas, para no dejarlas como madres, o a toda su descendencia), o quitar la
+// marca (GH-110). Sus crías afectadas, las nacidas y las que nazcan, lo muestran.
 export function FormularioReposicion({
   animal,
   alCerrar,
@@ -35,10 +39,11 @@ export function FormularioReposicion({
   const marcada = animal.noAptaReposicion
   const [motivo, setMotivo] = useState('')
   const [desde, setDesde] = useState(hoy())
+  const [alcance, setAlcance] = useState<Alcance>('hijas')
   const [errorMotivo, setErrorMotivo] = useState<string>()
 
   const guardar = useMutation({
-    mutationFn: (cuerpo: { apta: boolean; motivo?: string; fecha?: string }) =>
+    mutationFn: (cuerpo: { apta: boolean; motivo?: string; fecha?: string; alcance: Alcance }) =>
       datos(
         api.PATCH('/api/explotaciones/{explotacionId}/animales/{animalId}/reposicion', {
           params: { path: { explotacionId: explotacion.id, animalId: animal.id } },
@@ -50,7 +55,9 @@ export function FormularioReposicion({
       avisar({
         tipo: 'exito',
         mensaje: a.noAptaReposicion
-          ? `${identificacion(a)}: no se dejarán sus hijas para reposición`
+          ? a.noAptaReposicion.alcance === 'descendencia'
+            ? `${identificacion(a)}: marcada su descendencia`
+            : `${identificacion(a)}: no se dejarán sus hijas para reposición`
           : `${identificacion(a)}: quitada la marca de reposición`,
       })
       alCerrar()
@@ -64,7 +71,7 @@ export function FormularioReposicion({
   const enviar = (e: FormEvent) => {
     e.preventDefault()
     if (marcada) {
-      guardar.mutate({ apta: true })
+      guardar.mutate({ apta: true, alcance: marcada.alcance })
       return
     }
     if (!motivo.trim()) {
@@ -72,7 +79,7 @@ export function FormularioReposicion({
       return
     }
     setErrorMotivo(undefined)
-    guardar.mutate({ apta: false, motivo, fecha: desde })
+    guardar.mutate({ apta: false, motivo, fecha: desde, alcance })
   }
 
   return (
@@ -104,14 +111,17 @@ export function FormularioReposicion({
         )}
         {marcada ? (
           <p>
-            Desde el {formatoFecha(marcada.desde)} no se dejan sus hijas para reposición:{' '}
-            {marcada.motivo}. Al quitar la marca, sus hijas dejan de mostrar el aviso.
+            Desde el {formatoFecha(marcada.desde)}, {marcada.motivo}:{' '}
+            {marcada.alcance === 'descendencia'
+              ? 'afecta a toda su descendencia'
+              : 'no se dejan sus hijas para reposición'}
+            . Al quitar la marca, su descendencia deja de mostrar el aviso.
           </p>
         ) : (
           <>
             <p className={estilos.suave}>
-              Sus hijas, las que ya tiene y las que nazcan, mostrarán el aviso "Madre no apta para
-              reposición", para no dejarlas como madres reproductoras.
+              Para una enfermedad que se transmite a la descendencia. Lo mostrarán sus crías, las
+              que ya tiene y las que nazcan.
             </p>
             <Campo
               etiqueta="Motivo"
@@ -128,6 +138,19 @@ export function FormularioReposicion({
                 <option key={m} value={m} />
               ))}
             </datalist>
+            <fieldset className={estilos.grupo}>
+              <legend>Afecta a</legend>
+              <Chips
+                etiqueta="Afecta a"
+                envolver
+                opciones={[
+                  { valor: 'hijas', texto: 'Sus hijas: no dejarlas para reposición' },
+                  { valor: 'descendencia', texto: 'Toda su descendencia' },
+                ]}
+                seleccion={alcance}
+                alCambiar={setAlcance}
+              />
+            </fieldset>
             <CampoFecha
               etiqueta="Desde"
               value={desde}

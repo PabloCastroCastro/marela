@@ -13,7 +13,13 @@ import {
   razas,
   verAnimal,
 } from '../animales.js'
-import { ESTADOS_ANIMAL, ORIGENES, SEXOS, TIPOS_BAJA } from '../db/schema/index.js'
+import {
+  ALCANCES_NO_APTA,
+  ESTADOS_ANIMAL,
+  ORIGENES,
+  SEXOS,
+  TIPOS_BAJA,
+} from '../db/schema/index.js'
 import { EsquemaError, validacionFallida } from '../errores.js'
 import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
 
@@ -23,7 +29,15 @@ const Progenitor = z
   .object({ id: z.uuid(), crotal: z.string().nullable(), nombre: z.string().nullable() })
   .nullable()
 
-const Reposicion = z.object({ desde: z.iso.date(), motivo: z.string() }).nullable()
+const Reposicion = z
+  .object({
+    desde: z.iso.date(),
+    motivo: z.string(),
+    alcance: z.enum(ALCANCES_NO_APTA).openapi({
+      description: 'Solo a sus hijas (no se dejan para reposición) o a toda su descendencia',
+    }),
+  })
+  .nullable()
 
 const Animal = z
   .object({
@@ -54,7 +68,8 @@ const Animal = z
       description: 'Hembra cuyas hijas no se dejan para reposición, desde cuándo y por qué',
     }),
     madreNoAptaReposicion: Reposicion.openapi({
-      description: 'Hembra cuya madre está marcada como no apta para reposición',
+      description:
+        'Su madre está marcada como no apta para reposición: en las hijas siempre, en los hijos si afecta a toda su descendencia',
     }),
     finSupresion: z.iso
       .date()
@@ -116,7 +131,8 @@ const Filtros = z.object({
     description: 'Solo las hembras con una gestación en curso, por fecha prevista de parto',
   }),
   reposicion: z.enum(['no_apta']).optional().openapi({
-    description: 'Solo las hijas de madres no aptas para reposición',
+    description:
+      'Solo la descendencia afectada de madres no aptas para reposición: las hijas, y los hijos si afecta a toda',
   }),
 })
 

@@ -1,5 +1,5 @@
 {
-  "id": "92e8ec99-c18f-4471-b411-245383f8dbc0",
+  "id": "56851c5e-52cb-4300-9b73-517d9ae989e6",
   "prevId": "90159ba8-53d8-412a-a1fe-4255fa041951",
   "version": "7",
   "dialect": "postgresql",
@@ -145,6 +145,13 @@
         "motivo_no_apta_reposicion": {
           "name": "motivo_no_apta_reposicion",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alcance_no_apta_reposicion": {
+          "name": "alcance_no_apta_reposicion",
+          "type": "alcance_no_apta",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -356,7 +363,7 @@
         },
         "animales_no_apta_reposicion": {
           "name": "animales_no_apta_reposicion",
-          "value": "(\"animales\".\"no_apta_reposicion_desde\" is null and \"animales\".\"motivo_no_apta_reposicion\" is null)\n        or (\"animales\".\"no_apta_reposicion_desde\" is not null and btrim(coalesce(\"animales\".\"motivo_no_apta_reposicion\", '')) <> ''\n            and \"animales\".\"sexo\" = 'hembra')"
+          "value": "(\"animales\".\"no_apta_reposicion_desde\" is null and \"animales\".\"motivo_no_apta_reposicion\" is null\n          and \"animales\".\"alcance_no_apta_reposicion\" is null)\n        or (\"animales\".\"no_apta_reposicion_desde\" is not null and btrim(coalesce(\"animales\".\"motivo_no_apta_reposicion\", '')) <> ''\n            and \"animales\".\"alcance_no_apta_reposicion\" is not null and \"animales\".\"sexo\" = 'hembra')"
         },
         "animales_origen": {
           "name": "animales_origen",
@@ -4044,6 +4051,14 @@
     }
   },
   "enums": {
+    "public.alcance_no_apta": {
+      "name": "alcance_no_apta",
+      "schema": "public",
+      "values": [
+        "hijas",
+        "descendencia"
+      ]
+    },
     "public.estado_animal": {
       "name": "estado_animal",
       "schema": "public",

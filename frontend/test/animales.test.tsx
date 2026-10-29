@@ -829,7 +829,7 @@ describe('reposición (GH-110)', () => {
     simularApi(estado)
     const usuario = userEvent.setup()
     abrir(`${animales}/a1`)
-    await registrar(usuario, 'No dejar hijas para reposición')
+    await registrar(usuario, 'No apta para reposición')
     const hoja = screen.getByRole('dialog', { name: /Reposición · Marela/ })
     await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
     expect(within(hoja).getByText(/Indica el motivo/)).toBeInTheDocument()
@@ -850,22 +850,47 @@ describe('reposición (GH-110)', () => {
     ).not.toHaveLength(0)
     await usuario.selectOptions(
       screen.getByRole('combobox', { name: /^Estado/ }),
-      'Hijas de madres no aptas',
+      'Con madre no apta',
     )
     await vi.waitFor(async () =>
       expect(within(await tarjetas()).getAllByRole('listitem')).toHaveLength(1),
     )
   })
 
+  it('si afecta a toda su descendencia, el ternero muestra "Madre con…"', async () => {
+    estado.animales.push(
+      animalSimulado({
+        id: 'a9',
+        crotal: 'ES041503459001',
+        sexo: 'macho',
+        fechaNacimiento: '2026-06-01',
+        madreId: 'a1',
+      }),
+    )
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${animales}/a1`)
+    await registrar(usuario, 'No apta para reposición')
+    const hoja = screen.getByRole('dialog', { name: /Reposición · Marela/ })
+    await usuario.type(within(hoja).getByLabelText(/^Motivo/), 'Paratuberculosis')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Toda su descendencia' }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await screen.findByText(/marcada su descendencia/)).toBeInTheDocument()
+    expect(estado.animales[0]?.noAptaReposicion?.alcance).toBe('descendencia')
+    cleanup()
+    abrir(`${animales}/a9`)
+    expect(await screen.findByText('Madre con paratuberculosis')).toBeInTheDocument()
+  })
+
   it('quita la marca desde el mismo menú', async () => {
     estado.animales[0] = {
       ...(estado.animales[0] as (typeof estado.animales)[number]),
-      noAptaReposicion: { desde: '2026-05-02', motivo: 'Leucosis' },
+      noAptaReposicion: { desde: '2026-05-02', motivo: 'Leucosis', alcance: 'hijas' },
     }
     simularApi(estado)
     const usuario = userEvent.setup()
     abrir(`${animales}/a1`)
-    await registrar(usuario, 'Quitar «No dejar hijas para reposición»')
+    await registrar(usuario, 'Quitar la marca de reposición')
     const hoja = screen.getByRole('dialog', { name: /Reposición · Marela/ })
     expect(within(hoja).getByText(/Desde el 02\/05\/2026/)).toBeInTheDocument()
     await usuario.click(within(hoja).getByRole('button', { name: 'Quitar la marca' }))

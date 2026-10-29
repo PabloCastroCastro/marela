@@ -3,6 +3,7 @@ import { and, asc, eq, ilike, isNotNull, isNull, or, type SQL, sql } from 'drizz
 import { alias } from 'drizzle-orm/pg-core'
 import type { Transaccion } from './db/explotacion.js'
 import {
+  ALCANCES_NO_APTA,
   animales,
   ESTADO_POR_BAJA,
   type ESTADOS_ANIMAL,
@@ -131,8 +132,10 @@ const columnas = {
   partoId: animales.partoId,
   noAptaReposicionDesde: animales.noAptaReposicionDesde,
   motivoNoAptaReposicion: animales.motivoNoAptaReposicion,
+  alcanceNoAptaReposicion: animales.alcanceNoAptaReposicion,
   madreNoAptaDesde: madre.noAptaReposicionDesde,
   madreMotivoNoApta: madre.motivoNoAptaReposicion,
+  madreAlcanceNoApta: madre.alcanceNoAptaReposicion,
   creadoEn: animales.creadoEn,
   modificadoEn: animales.modificadoEn,
 }
@@ -168,22 +171,33 @@ function ficha({
   padreNombre,
   noAptaReposicionDesde,
   motivoNoAptaReposicion,
+  alcanceNoAptaReposicion,
   madreNoAptaDesde,
   madreMotivoNoApta,
+  madreAlcanceNoApta,
   ...a
 }: Fila) {
+  // A las hijas siempre; a los hijos, si afecta a toda la descendencia
+  const leAfecta =
+    madreNoAptaDesde && (a.sexo === 'hembra' || madreAlcanceNoApta === 'descendencia')
   return {
     ...a,
     madre: a.madreId ? { id: a.madreId, crotal: madreCrotal, nombre: madreNombre } : null,
     padre: a.padreId ? { id: a.padreId, crotal: padreCrotal, nombre: padreNombre } : null,
     noAptaReposicion: noAptaReposicionDesde
-      ? { desde: noAptaReposicionDesde, motivo: motivoNoAptaReposicion ?? '' }
+      ? {
+          desde: noAptaReposicionDesde,
+          motivo: motivoNoAptaReposicion ?? '',
+          alcance: alcanceNoAptaReposicion ?? 'hijas',
+        }
       : null,
-    // Solo en las hijas: son las que se dejarían como madres reproductoras
-    madreNoAptaReposicion:
-      madreNoAptaDesde && a.sexo === 'hembra'
-        ? { desde: madreNoAptaDesde, motivo: madreMotivoNoApta ?? '' }
-        : null,
+    madreNoAptaReposicion: leAfecta
+      ? {
+          desde: madreNoAptaDesde,
+          motivo: madreMotivoNoApta ?? '',
+          alcance: madreAlcanceNoApta ?? 'hijas',
+        }
+      : null,
     creadoEn: a.creadoEn.toISOString(),
     modificadoEn: a.modificadoEn.toISOString(),
   }
@@ -221,7 +235,10 @@ export async function listarAnimales(tx: Transaccion, filtros: FiltrosAnimales) 
   if (filtros.crotal === 'sin') condiciones.push(isNull(animales.crotal))
   // Las hijas de madres no aptas para reposición (GH-110)
   if (filtros.reposicion === 'no_apta')
-    condiciones.push(isNotNull(madre.noAptaReposicionDesde), eq(animales.sexo, 'hembra'))
+    condiciones.push(
+      isNotNull(madre.noAptaReposicionDesde),
+      or(eq(animales.sexo, 'hembra'), eq(madre.alcanceNoAptaReposicion, 'descendencia')),
+    )
   if (filtros.gestacion === 'en_curso')
     condiciones.push(sql`exists (select from gestacion(${animales.id}))`)
   const filas = await consulta(tx)
@@ -350,8 +367,9 @@ export async function editarAnimal(tx: Transaccion, animalId: string, cambios: o
   return verAnimal(tx, animalId)
 }
 
-// No dejar hijas para reposición (GH-110): una hembra con una enfermedad que se transmite a la
-// descendencia. Sus hijas, las nacidas y las que nazcan, lo muestran. Queda en el historial.
+// No apta para reposición (GH-110): una hembra con una enfermedad que se transmite a la
+// descendencia. Sus hijas, las nacidas y las que nazcan, lo muestran; y sus hijos, si afecta a toda
+// su descendencia. Queda en el historial.
 export const DatosReposicion = z
   .object({
     apta: z.boolean(),
@@ -362,6 +380,8 @@ export const DatosReposicion = z
       .nullish()
       .openapi({ example: 'Paratuberculosis' }),
     fecha: z.iso.date('Fecha no válida (aaaa-mm-dd)').nullish(),
+    // Solo a sus hijas (no dejarlas para reposición) o a toda su descendencia
+    alcance: z.enum(ALCANCES_NO_APTA).default('hijas'),
   })
   .superRefine((d, ctx) => {
     if (!d.apta && !d.motivo)
@@ -385,10 +405,15 @@ export async function cambiarReposicion(
     .update(animales)
     .set(
       datos.apta
-        ? { noAptaReposicionDesde: null, motivoNoAptaReposicion: null }
+        ? {
+            noAptaReposicionDesde: null,
+            motivoNoAptaReposicion: null,
+            alcanceNoAptaReposicion: null,
+          }
         : {
             noAptaReposicionDesde: datos.fecha ?? hoyEnMadrid(),
             motivoNoAptaReposicion: datos.motivo ?? null,
+            alcanceNoAptaReposicion: datos.alcance,
           },
     )
     .where(eq(animales.id, animalId))

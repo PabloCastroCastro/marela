@@ -724,12 +724,16 @@ await enExplotacion(
   },
 )
 
-// Pinta tiene paratuberculosis: sus hijas no se dejan para reposición (GH-110). Solo si aún no se
+// Pinta tiene paratuberculosis, que afecta a toda su descendencia (GH-110). Solo si aún no se
 // ha marcado, para no cambiar lo que ya hay.
 await enExplotacion({ explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) }, (tx) =>
   tx
     .update(animales)
-    .set({ noAptaReposicionDesde: haceDias(60), motivoNoAptaReposicion: 'Paratuberculosis' })
+    .set({
+      noAptaReposicionDesde: haceDias(60),
+      motivoNoAptaReposicion: 'Paratuberculosis',
+      alcanceNoAptaReposicion: 'descendencia',
+    })
     .where(and(eq(animales.id, sid(ANIMAL, 3)), isNull(animales.noAptaReposicionDesde))),
 )
 

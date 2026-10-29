@@ -64,7 +64,7 @@ export type AnimalSimulado = {
   observaciones: string | null
   partoId?: string | null
   // No dejar hijas para reposición (GH-110)
-  noAptaReposicion?: { desde: string; motivo: string } | null
+  noAptaReposicion?: { desde: string; motivo: string; alcance: 'hijas' | 'descendencia' } | null
 }
 
 export const animalSimulado = (
@@ -1451,7 +1451,11 @@ export function simularApi(estado: EstadoSimulado) {
         return errorApi(400, 'validacion', [{ campo: 'motivo', mensaje: 'Indica el motivo' }])
       a.noAptaReposicion = cuerpo.apta
         ? null
-        : { desde: cuerpo.fecha ?? '2026-10-29', motivo: cuerpo.motivo.trim() }
+        : {
+            desde: cuerpo.fecha ?? '2026-10-29',
+            motivo: cuerpo.motivo.trim(),
+            alcance: cuerpo.alcance ?? 'hijas',
+          }
       return json({
         ...a,
         noAptaReposicion: a.noAptaReposicion ?? null,
@@ -1543,13 +1547,15 @@ export function simularApi(estado: EstadoSimulado) {
           .filter((fin) => fin > hoy)
           .sort()
           .at(-1) ?? null
+      // La marca de la madre, si le afecta: a las hijas siempre, a los hijos si es toda la descendencia
+      const afectado = (a: AnimalSimulado) => {
+        const marca = estado.animales.find((m) => m.id === a.madreId)?.noAptaReposicion
+        return marca && (a.sexo === 'hembra' || marca.alcance === 'descendencia') ? marca : null
+      }
       const ficha = (a: AnimalSimulado) => ({
         ...a,
         noAptaReposicion: a.noAptaReposicion ?? null,
-        madreNoAptaReposicion:
-          a.sexo === 'hembra'
-            ? (estado.animales.find((m) => m.id === a.madreId)?.noAptaReposicion ?? null)
-            : null,
+        madreNoAptaReposicion: afectado(a),
         finSupresion: supresion(a),
         gestacion: gestacion(a),
         madre: resumen(a.madreId),
@@ -1594,12 +1600,7 @@ export function simularApi(estado: EstadoSimulado) {
             .filter((a) => !q.get('supresion') || supresion(a) !== null)
             .filter((a) => !q.get('gestacion') || gestacion(a) !== null)
             .filter((a) => !q.get('crotal') || a.crotal === null)
-            .filter(
-              (a) =>
-                !q.get('reposicion') ||
-                (a.sexo === 'hembra' &&
-                  Boolean(estado.animales.find((m) => m.id === a.madreId)?.noAptaReposicion)),
-            )
+            .filter((a) => !q.get('reposicion') || Boolean(afectado(a)))
             .filter(
               (a) =>
                 !texto ||
