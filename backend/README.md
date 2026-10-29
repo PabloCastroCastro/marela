@@ -330,6 +330,17 @@ El nombre no se repite en la explotación (409 `nombre_en_uso`).
 
 Cualquiera del equipo crea, corrige, marca y borra tareas; solo el administrador elige o cambia a quién está asignada (403 `sin_permiso` en `asignadaAId`). La persona asignada y quien la hace son de la explotación (trigger `tareas_comprobar`). Migraciones `0030` (tablas) y `0031` (reglas e historial de cambios).
 
+## Finanzas
+
+Solo el administrador (módulo `finanzas`).
+
+**Régimen fiscal** (GH-34), en `src/rutas/fiscal.ts`:
+
+- **`GET /api/explotaciones/{id}/fiscal`:** `{ regimen, compensacionReagp, tiposIva, configurado, modificadoEn }`. Mientras no se guarda (`configurado: false`), REAGP con el 10,5 % y los tipos de IVA 21, 10 y 4 %.
+- **`PUT /api/explotaciones/{id}/fiscal`:** `{ regimen, compensacionReagp, tiposIva }`. `regimen` es `reagp` o `general`; los porcentajes, de 0 a 100 con dos decimales; los tipos de IVA, de 1 a 8, sin repetir, se guardan de mayor a menor.
+
+Una fila por explotación en `configuracion_fiscal` (migraciones `0032` y `0033`, con historial de cambios).
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.

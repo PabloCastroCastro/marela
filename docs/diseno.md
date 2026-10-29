@@ -271,6 +271,7 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 
 - Configurable por explotación: Régimen Especial de Agricultura, Ganadería y Pesca (REAGP) o régimen general de IVA.
 - Los porcentajes (compensación REAGP, tipos de IVA) se configuran, no se fijan en el código. Por defecto, la compensación REAGP para ganadería es del 10,5 %.
+- Mientras no se configura, cada explotación está en REAGP con el 10,5 % y los tipos de IVA 21 %, 10 % y 4 %. Se configura en Finanzas, en la tarjeta "Régimen fiscal" (GH-34).
 - En REAGP, las ventas generan un recibo de compensación en lugar de una factura con IVA.
 - La retención de IRPF en las ventas no se registra por ahora; la lleva el gestor fuera de la aplicación.
 
