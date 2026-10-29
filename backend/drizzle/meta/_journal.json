@@ -211,6 +211,20 @@
       "when": 1793282003559,
       "tag": "0029_no_apta_reposicion",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793283664749,
+      "tag": "0030_mantenimiento",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793283666118,
+      "tag": "0031_mantenimiento_triggers",
+      "breakpoints": true
     }
   ]
 }

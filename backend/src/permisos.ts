@@ -17,6 +17,7 @@ export const PERMISOS = {
   animales: ['administrador', 'empleado'],
   comida: ['administrador', 'empleado'],
   fincas: ['administrador', 'empleado'],
+  mantenimiento: ['administrador', 'empleado'],
   finanzas: ['administrador'],
   // Gestión del equipo y de los datos de la explotación
   administracion: ['administrador'],

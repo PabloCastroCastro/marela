@@ -260,8 +260,9 @@ Decisiones (GH-28):
 
 Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimientos periódicos.
 
-- **Equipos:** la maquinaria y las infraestructuras de la explotación, con nombre, tipo, una descripción (marca, modelo, matrícula, ubicación…) y si necesitan mantenimiento. No se borran: se desactivan.
-- **Tareas:** lo que hay por hacer ("Cambiar la rueda del tractor"), de un equipo o sueltas, con descripción, fecha límite y prioridad opcionales, y estado pendiente o hecha (con quién y cuándo).
+- **Equipos:** la maquinaria y las infraestructuras de la explotación, con nombre, tipo y una descripción (marca, modelo, matrícula, ubicación…). Necesitan mantenimiento cuando tienen tareas pendientes: el listado muestra cuántas y las pone primero. No se borran: se desactivan.
+- **Tareas:** lo que hay por hacer ("Cambiar la boya del bebedero"), de un equipo o sueltas, con descripción, fecha límite y prioridad opcionales, y estado pendiente o hecha (con quién y cuándo). Se marcan como hechas con un toque, se corrigen o se borran.
+- **Pantalla:** Mantenimiento abre en las tareas ("Mis tareas", "Todas las pendientes", "Hechas"); en la otra pestaña, la maquinaria y las infraestructuras. La ficha de cada equipo muestra sus tareas pendientes y hechas, con "Nueva tarea".
 - **Quién:** cualquiera del equipo da de alta equipos y tareas; el administrador asigna cada tarea a una persona o la deja sin asignar. Cada uno ve en "Mis tareas" las suyas y las sin asignar, y las marca como hechas.
 
 ## Finanzas (solo administrador)

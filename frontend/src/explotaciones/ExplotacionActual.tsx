@@ -19,6 +19,7 @@ const NOMBRES: Record<Modulo, string> = {
   animales: 'Animales',
   comida: 'Comida',
   fincas: 'Fincas',
+  mantenimiento: 'Mantenimiento',
   finanzas: 'Finanzas',
   administracion: 'la administración de la explotación',
 }

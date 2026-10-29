@@ -251,6 +251,25 @@ export const movimientoSimulado = (
   ...datos,
 })
 
+export type EquipoSimulado = {
+  id: string
+  nombre: string
+  tipo: 'maquinaria' | 'infraestructura'
+  descripcion: string | null
+  activo: boolean
+}
+
+export type TareaSimulada = {
+  id: string
+  titulo: string
+  equipoId: string | null
+  descripcion: string | null
+  fechaLimite: string | null
+  prioridad: 'baja' | 'normal' | 'alta'
+  asignadaAId: string | null
+  hecha: { en: string; porId: string } | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -276,13 +295,15 @@ export type EstadoSimulado = {
   pastoreos: PastoreoSimulado[]
   almacenes: AlmacenSimulado[]
   movimientos: MovimientoSimulado[]
+  equipos: EquipoSimulado[]
+  tareas: TareaSimulada[]
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
   sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
 
 const MODULOS: Record<Rol, string[]> = {
-  administrador: ['animales', 'comida', 'fincas', 'finanzas', 'administracion'],
-  empleado: ['animales', 'comida', 'fincas'],
+  administrador: ['animales', 'comida', 'fincas', 'mantenimiento', 'finanzas', 'administracion'],
+  empleado: ['animales', 'comida', 'fincas', 'mantenimiento'],
 }
 
 export const A_VEIGA: ExplotacionSimulada = {
@@ -519,6 +540,55 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
       },
     ],
     movimientos: [],
+    equipos: [
+      {
+        id: 'eq1',
+        nombre: 'Tractor John Deere',
+        tipo: 'maquinaria',
+        descripcion: 'Matrícula E-1234-BCD',
+        activo: true,
+      },
+      {
+        id: 'eq2',
+        nombre: 'Nave de las vacas',
+        tipo: 'infraestructura',
+        descripcion: null,
+        activo: true,
+      },
+    ],
+    // Una del tractor sin asignar, una de otra persona y una hecha
+    tareas: [
+      {
+        id: 'ta1',
+        titulo: 'Cambiar la rueda',
+        equipoId: 'eq1',
+        descripcion: null,
+        fechaLimite: '2026-01-10',
+        prioridad: 'alta',
+        asignadaAId: null,
+        hecha: null,
+      },
+      {
+        id: 'ta2',
+        titulo: 'Pintar la nave',
+        equipoId: 'eq2',
+        descripcion: null,
+        fechaLimite: null,
+        prioridad: 'normal',
+        asignadaAId: 'u2',
+        hecha: null,
+      },
+      {
+        id: 'ta3',
+        titulo: 'Cambiar el aceite',
+        equipoId: 'eq1',
+        descripcion: null,
+        fechaLimite: null,
+        prioridad: 'normal',
+        asignadaAId: 'u1',
+        hecha: { en: '2026-10-01T10:00:00.000Z', porId: 'u1' },
+      },
+    ],
     ...cambios,
   }
 }
@@ -552,6 +622,10 @@ const APLICACIONES =
 // Las labores de una finca, el registro o una labor
 const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labores(?:\/([^/]+))?)$/
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
+// La maquinaria y las infraestructuras, una o su estado
+const EQUIPOS = /^\/api\/explotaciones\/[^/]+\/equipos(?:\/([^/]+))?(\/estado)?$/
+// Las tareas de mantenimiento, una, su estado de hecha o las personas a quien asignarlas
+const TAREAS = /^\/api\/explotaciones\/([^/]+)\/tareas(?:\/([^/]+))?(\/hecha)?$/
 // Los almacenes de comida, uno o su estado
 const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
 // Los movimientos de un almacén, el registro o uno
@@ -954,6 +1028,144 @@ export function simularApi(estado: EstadoSimulado) {
         motivo: cuerpo.motivo,
       }
       return json({ ...a, ...sello })
+    }
+
+    const deTareas = ruta.match(TAREAS)
+    if (deTareas) {
+      const [, explotacionId, tareaId, hecha] = deTareas
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      const persona = (id: string | null) => {
+        const m = estado.miembros.find((x) => x.usuarioId === id)
+        return id ? { id, nombre: m?.nombre ?? id } : null
+      }
+      const completa = (t: TareaSimulada) => {
+        const equipo = estado.equipos.find((x) => x.id === t.equipoId)
+        return {
+          id: t.id,
+          titulo: t.titulo,
+          equipo: equipo ? { id: equipo.id, nombre: equipo.nombre } : null,
+          descripcion: t.descripcion,
+          fechaLimite: t.fechaLimite,
+          prioridad: t.prioridad,
+          asignadaA: persona(t.asignadaAId),
+          hecha: t.hecha ? { en: t.hecha.en, por: persona(t.hecha.porId) } : null,
+          creadoEn: '2026-10-01T10:00:00.000Z',
+          modificadoEn: '2026-10-01T10:00:00.000Z',
+        }
+      }
+      if (tareaId === 'personas')
+        return json(estado.miembros.map((m) => ({ id: m.usuarioId, nombre: m.nombre })))
+      const q = new URL(peticion.url).searchParams
+      if (!tareaId && metodo === 'GET')
+        return json(
+          estado.tareas
+            .filter((t) => q.get('estado') !== 'pendiente' || !t.hecha)
+            .filter((t) => q.get('estado') !== 'hecha' || t.hecha)
+            .filter(
+              (t) =>
+                q.get('para') !== 'mi' ||
+                t.asignadaAId === null ||
+                t.asignadaAId === estado.usuario.id,
+            )
+            .filter((t) => !q.get('equipoId') || t.equipoId === q.get('equipoId'))
+            .map(completa),
+        )
+      // Solo el administrador asigna
+      const asigna = (antes: string | null) =>
+        (cuerpo.asignadaAId ?? null) !== antes && e.rol !== 'administrador'
+      const datosTarea = () => ({
+        titulo: (cuerpo.titulo as string).trim(),
+        equipoId: cuerpo.equipoId ?? null,
+        descripcion: (cuerpo.descripcion as string | undefined)?.trim() || null,
+        fechaLimite: cuerpo.fechaLimite ?? null,
+        prioridad: cuerpo.prioridad ?? 'normal',
+        asignadaAId: cuerpo.asignadaAId ?? null,
+      })
+      if (!tareaId) {
+        if (asigna(null)) return errorApi(403, 'sin_permiso')
+        const nueva: TareaSimulada = {
+          id: `ta${estado.tareas.length + 1}`,
+          hecha: null,
+          ...datosTarea(),
+        }
+        estado.tareas.push(nueva)
+        return json(completa(nueva), 201)
+      }
+      const t = estado.tareas.find((x) => x.id === tareaId)
+      if (!t) return errorApi(404, 'tarea_no_encontrada')
+      if (hecha) {
+        t.hecha = cuerpo.hecha ? { en: '2026-10-29T10:00:00.000Z', porId: estado.usuario.id } : null
+        return json(completa(t))
+      }
+      if (metodo === 'DELETE') {
+        estado.tareas = estado.tareas.filter((x) => x !== t)
+        return json(completa(t))
+      }
+      if (asigna(t.asignadaAId)) return errorApi(403, 'sin_permiso')
+      Object.assign(t, datosTarea())
+      return json(completa(t))
+    }
+
+    const deEquipos = ruta.match(EQUIPOS)
+    if (deEquipos) {
+      const [, equipoId, estadoEquipo] = deEquipos
+      const completo = (e: EquipoSimulado) => ({
+        ...e,
+        tareasPendientes: estado.tareas.filter((t) => t.equipoId === e.id && !t.hecha).length,
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      const q = new URL(peticion.url).searchParams
+      if (!equipoId && metodo === 'GET')
+        return json(
+          estado.equipos
+            .filter((e) => !q.get('tipo') || e.tipo === q.get('tipo'))
+            .filter((e) => !q.get('activo') || String(e.activo) === q.get('activo'))
+            .filter(
+              (e) =>
+                !q.get('q') ||
+                `${e.nombre} ${e.descripcion ?? ''}`
+                  .toLowerCase()
+                  .includes((q.get('q') ?? '').toLowerCase()),
+            )
+            .map(completo)
+            .sort(
+              (x, y) => y.tareasPendientes - x.tareasPendientes || x.nombre.localeCompare(y.nombre),
+            ),
+        )
+      const repetido = (nombre: string, id?: string) =>
+        estado.equipos.some(
+          (e) => e.nombre.toLowerCase() === nombre.trim().toLowerCase() && e.id !== id,
+        )
+      const nombreEnUso = () =>
+        errorApi(409, 'nombre_en_uso', [
+          { campo: 'nombre', mensaje: 'Ya hay un equipo con este nombre' },
+        ])
+      const datosEquipo = () => ({
+        nombre: (cuerpo.nombre as string).trim(),
+        tipo: cuerpo.tipo,
+        descripcion: (cuerpo.descripcion as string | undefined)?.trim() || null,
+      })
+      if (!equipoId) {
+        if (repetido(cuerpo.nombre)) return nombreEnUso()
+        const nuevo: EquipoSimulado = {
+          id: `eq${estado.equipos.length + 1}`,
+          activo: true,
+          ...datosEquipo(),
+        }
+        estado.equipos.push(nuevo)
+        return json(completo(nuevo), 201)
+      }
+      const e = estado.equipos.find((x) => x.id === equipoId)
+      if (!e) return errorApi(404, 'equipo_no_encontrado')
+      if (metodo === 'GET') return json(completo(e))
+      if (estadoEquipo) e.activo = cuerpo.activo
+      else {
+        if (repetido(cuerpo.nombre, e.id)) return nombreEnUso()
+        Object.assign(e, datosEquipo())
+      }
+      return json(completo(e))
     }
 
     const deMovimientos = ruta.match(MOVIMIENTOS)
