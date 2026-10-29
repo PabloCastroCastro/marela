@@ -792,3 +792,23 @@ Movimiento de un animal entre explotaciones del mismo usuario. Depende de #14.
 - [ ] El animal conserva su historial (tratamientos, pesos, reproducción) en la explotación de destino
 - [ ] Queda registrado el traslado: fecha, origen y destino
 - [ ] Tests de que la explotación de origen deja de ver al animal y la de destino lo ve
+
+#### GH-99
+**Título:** Raciones combinadas
+**Etiquetas:** feature, db, backend, frontend
+
+Depende de #30.
+
+Una ración habitual combina varias comidas, por ejemplo 1 paca de hierba seca, 100 kg de silo de maíz y 50 kg de pienso, y se da todos los días. Hoy hay que sacarla almacén a almacén. Con raciones configuradas, se da en un toque.
+
+**Criterios de aceptación**
+- [ ] Raciones configurables por explotación: nombre ("Ración vacas") y sus líneas, cada una con un almacén activo y una cantidad en su unidad
+- [ ] El administrador crea, edita y desactiva raciones
+- [ ] "Dar ración" en la pantalla de Comida: registra con la fecha de hoy una salida en cada almacén de la ración, todas o ninguna
+- [ ] Contador para dar la ración varias veces (× 2, × 3…), por ejemplo para varios lotes
+- [ ] Un solo "Deshacer" quita todas las salidas de esa ración
+- [ ] Si algún almacén queda en negativo, se avisa diciendo cuáles, y se guarda igualmente
+- [ ] En el historial de cada almacén, la salida aparece como "Salida · <nombre de la ración>" y se corrige o se borra como cualquier otra
+
+**Fuera de alcance**
+- Que la ración se reste sola cada día, sin que nadie la dé: si un día no se da o se da otra cosa, el stock queda mal sin que nadie lo note. Se puede plantear después, sobre esto.
