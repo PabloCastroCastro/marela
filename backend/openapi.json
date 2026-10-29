@@ -3594,6 +3594,86 @@
           "activo"
         ]
       },
+      "Fiscal": {
+        "type": "object",
+        "properties": {
+          "regimen": {
+            "type": "string",
+            "enum": [
+              "reagp",
+              "general"
+            ],
+            "description": "REAGP (recibo de compensación en las ventas) o régimen general de IVA"
+          },
+          "compensacionReagp": {
+            "type": "number",
+            "description": "Porcentaje de compensación del REAGP"
+          },
+          "tiposIva": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Tipos de IVA, de mayor a menor"
+          },
+          "configurado": {
+            "type": "boolean",
+            "description": "Si se ha guardado; si no, son los valores por defecto"
+          },
+          "modificadoEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "regimen",
+          "compensacionReagp",
+          "tiposIva",
+          "configurado",
+          "modificadoEn"
+        ]
+      },
+      "DatosFiscales": {
+        "type": "object",
+        "properties": {
+          "regimen": {
+            "type": "string",
+            "enum": [
+              "reagp",
+              "general"
+            ]
+          },
+          "compensacionReagp": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 10.5
+          },
+          "tiposIva": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "minItems": 1,
+            "maxItems": 8,
+            "example": [
+              21,
+              10,
+              4
+            ]
+          }
+        },
+        "required": [
+          "regimen",
+          "compensacionReagp",
+          "tiposIva"
+        ]
+      },
       "Tarea": {
         "type": "object",
         "properties": {
@@ -9828,6 +9908,155 @@
           },
           "404": {
             "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fiscal": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Régimen fiscal de la explotación",
+        "description": "Mientras no se guarda: REAGP con el 10,5 % y los tipos de IVA 21, 10 y 4 %.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El régimen y sus porcentajes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fiscal"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Cambiar el régimen fiscal y sus porcentajes",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFiscales"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Guardado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fiscal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
             "content": {
               "application/json": {
                 "schema": {

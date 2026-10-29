@@ -297,6 +297,8 @@ export type EstadoSimulado = {
   movimientos: MovimientoSimulado[]
   equipos: EquipoSimulado[]
   tareas: TareaSimulada[]
+  // Régimen fiscal guardado (GH-34); sin él, el de por defecto
+  fiscal?: { regimen: 'reagp' | 'general'; compensacionReagp: number; tiposIva: number[] }
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
   sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
@@ -1028,6 +1030,23 @@ export function simularApi(estado: EstadoSimulado) {
         motivo: cuerpo.motivo,
       }
       return json({ ...a, ...sello })
+    }
+
+    if (ruta.startsWith('/api/explotaciones/') && ruta.endsWith('/fiscal')) {
+      const e = estado.explotaciones.find((x) => ruta.includes(x.id))
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      if (metodo === 'PUT')
+        estado.fiscal = {
+          regimen: cuerpo.regimen,
+          compensacionReagp: cuerpo.compensacionReagp,
+          tiposIva: [...new Set(cuerpo.tiposIva as number[])].sort((a, b) => b - a),
+        }
+      return json({
+        ...(estado.fiscal ?? { regimen: 'reagp', compensacionReagp: 10.5, tiposIva: [21, 10, 4] }),
+        configurado: Boolean(estado.fiscal),
+        modificadoEn: estado.fiscal ? '2026-10-29T10:00:00.000Z' : null,
+      })
     }
 
     const deTareas = ruta.match(TAREAS)

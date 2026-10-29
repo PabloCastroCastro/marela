@@ -4693,6 +4693,136 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/fiscal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Régimen fiscal de la explotación
+         * @description Mientras no se guarda: REAGP con el 10,5 % y los tipos de IVA 21, 10 y 4 %.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description El régimen y sus porcentajes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Fiscal"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Cambiar el régimen fiscal y sus porcentajes */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosFiscales"];
+                };
+            };
+            responses: {
+                /** @description Guardado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Fiscal"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/tareas": {
         parameters: {
             query?: never;
@@ -6615,6 +6745,35 @@ export interface components {
         };
         CambioEstadoEquipo: {
             activo: boolean;
+        };
+        Fiscal: {
+            /**
+             * @description REAGP (recibo de compensación en las ventas) o régimen general de IVA
+             * @enum {string}
+             */
+            regimen: "reagp" | "general";
+            /** @description Porcentaje de compensación del REAGP */
+            compensacionReagp: number;
+            /** @description Tipos de IVA, de mayor a menor */
+            tiposIva: number[];
+            /** @description Si se ha guardado; si no, son los valores por defecto */
+            configurado: boolean;
+            /** Format: date-time */
+            modificadoEn: string | null;
+        };
+        DatosFiscales: {
+            /** @enum {string} */
+            regimen: "reagp" | "general";
+            /** @example 10.5 */
+            compensacionReagp: number;
+            /**
+             * @example [
+             *       21,
+             *       10,
+             *       4
+             *     ]
+             */
+            tiposIva: number[];
         };
         Tarea: {
             /** Format: uuid */

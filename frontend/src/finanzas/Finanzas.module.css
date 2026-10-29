@@ -1,0 +1,112 @@
+.pagina {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.suave {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.tarjeta {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.cabeceraTarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.tituloTarjeta {
+  font-size: var(--texto-lg);
+}
+
+.datos {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+}
+
+.dato {
+  display: grid;
+  gap: 2px;
+}
+
+.dato dt {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.dato dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Formulario del régimen fiscal (GH-34) */
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.grupo {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo legend {
+  margin-bottom: var(--espacio-1);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+/* Cada tipo de IVA, como una pastilla con su botón de quitar */
+.tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tipos li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  padding-left: var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-completo);
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+.quitar {
+  color: var(--color-texto-suave);
+}
+
+.nuevoTipo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-2);
+}
+
+.nuevoTipo > :first-child {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.error {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}

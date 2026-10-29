@@ -15,13 +15,13 @@ import {
   RedireccionInicial,
 } from './explotaciones/PaginaElegirExplotacion'
 import { PaginaEquipo } from './explotaciones/PaginaEquipo'
+import { PaginaFinanzas } from './finanzas/PaginaFinanzas'
 import { PaginaFinca } from './fincas/PaginaFinca'
 import { PaginaFincas } from './fincas/PaginaFincas'
 import { PaginaFichaEquipo } from './mantenimiento/PaginaFichaEquipo'
 import { PaginaMantenimiento } from './mantenimiento/PaginaMantenimiento'
 import { PaginaInicio } from './paginas/PaginaInicio'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada'
-import { PaginaSeccion } from './paginas/PaginaSeccion'
 import { PaginaPlataforma } from './plataforma/PaginaPlataforma'
 
 // Rutas: /entrar sin sesión; el resto exige sesión. La explotación activa va en la URL
@@ -129,7 +129,7 @@ export const rutas: RouteObject[] = [
             path: 'finanzas',
             element: (
               <SoloModulo modulo="finanzas">
-                <PaginaSeccion titulo="Finanzas" />
+                <PaginaFinanzas />
               </SoloModulo>
             ),
           },

@@ -225,6 +225,20 @@
       "when": 1793283666118,
       "tag": "0031_mantenimiento_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793286046865,
+      "tag": "0032_configuracion_fiscal",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793286048273,
+      "tag": "0033_configuracion_fiscal_historial",
+      "breakpoints": true
     }
   ]
 }
