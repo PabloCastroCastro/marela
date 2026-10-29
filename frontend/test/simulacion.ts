@@ -215,6 +215,15 @@ export type PastoreoSimulado = {
   observaciones: string | null
 }
 
+export type AlmacenSimulado = {
+  id: string
+  nombre: string
+  tipo: 'hierba_verde' | 'hierba_seca' | 'maiz' | 'pienso' | 'otro'
+  unidad: 'unidades' | 'kg'
+  activo: boolean
+  stock: number
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -238,6 +247,7 @@ export type EstadoSimulado = {
   labores: LaborSimulada[]
   aplicaciones: AplicacionSimulada[]
   pastoreos: PastoreoSimulado[]
+  almacenes: AlmacenSimulado[]
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -452,6 +462,35 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         anulacion: null,
       },
     ],
+    // Los de por defecto y uno desactivado
+    almacenes: [
+      {
+        id: 'al1',
+        nombre: 'Pacas de hierba verde',
+        tipo: 'hierba_verde',
+        unidad: 'unidades',
+        activo: true,
+        stock: 0,
+      },
+      {
+        id: 'al2',
+        nombre: 'Pacas de hierba seca',
+        tipo: 'hierba_seca',
+        unidad: 'unidades',
+        activo: true,
+        stock: 0,
+      },
+      { id: 'al3', nombre: 'Silo de maíz', tipo: 'maiz', unidad: 'kg', activo: true, stock: 0 },
+      { id: 'al4', nombre: 'Silo de pienso', tipo: 'pienso', unidad: 'kg', activo: true, stock: 0 },
+      {
+        id: 'al5',
+        nombre: 'Pacas de paja',
+        tipo: 'otro',
+        unidad: 'unidades',
+        activo: false,
+        stock: 0,
+      },
+    ],
     ...cambios,
   }
 }
@@ -484,6 +523,8 @@ const APLICACIONES =
 // Las labores de una finca, el registro o una labor
 const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labores(?:\/([^/]+))?)$/
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
+// Los almacenes de comida, uno o su estado
+const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
 const EN_PLATAFORMA = /^\/api\/plataforma\/explotaciones\/([^/]+)$/
 
 // Sustituye fetch por la API simulada. Devuelve el mock, para comprobar las llamadas.
@@ -831,6 +872,49 @@ export function simularApi(estado: EstadoSimulado) {
         motivo: cuerpo.motivo,
       }
       return json({ ...a, ...sello })
+    }
+
+    const deAlmacenes = ruta.match(ALMACENES)
+    if (deAlmacenes) {
+      const [, explotacionId, almacenId, estadoAlmacen] = deAlmacenes
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      const completo = (a: AlmacenSimulado) => ({
+        ...a,
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      if (metodo === 'GET') return json(estado.almacenes.map(completo))
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const repetido = (nombre: string, id?: string) =>
+        estado.almacenes.some(
+          (a) => a.nombre.toLowerCase() === nombre.trim().toLowerCase() && a.id !== id,
+        )
+      const nombreEnUso = () =>
+        errorApi(409, 'nombre_en_uso', [
+          { campo: 'nombre', mensaje: 'Ya hay un almacén con este nombre' },
+        ])
+      if (!almacenId) {
+        if (repetido(cuerpo.nombre)) return nombreEnUso()
+        const nuevo: AlmacenSimulado = {
+          id: `al${estado.almacenes.length + 1}`,
+          nombre: cuerpo.nombre.trim(),
+          tipo: cuerpo.tipo,
+          unidad: cuerpo.unidad,
+          activo: true,
+          stock: 0,
+        }
+        estado.almacenes.push(nuevo)
+        return json(completo(nuevo), 201)
+      }
+      const a = estado.almacenes.find((x) => x.id === almacenId)
+      if (!a) return errorApi(404, 'almacen_no_encontrado')
+      if (estadoAlmacen) a.activo = cuerpo.activo
+      else {
+        if (repetido(cuerpo.nombre, a.id)) return nombreEnUso()
+        Object.assign(a, { nombre: cuerpo.nombre.trim(), tipo: cuerpo.tipo, unidad: cuerpo.unidad })
+      }
+      return json(completo(a))
     }
 
     const deFincas = ruta.match(FINCAS)

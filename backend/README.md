@@ -280,6 +280,17 @@ Pastoreos de las fincas, en `src/rutas/pastoreos.ts` (mismo módulo `fincas`):
 
 Solo el número de animales, sin enlazar sus fichas. Una finca no tiene dos pastoreos en curso (sin salida) a la vez: 409 `pastoreo_en_curso`, y el índice único parcial `pastoreos_en_curso_unico` en la base de datos. Como las labores, se corrigen y se borran, y los cambios quedan en el historial (migración `0023`). Las fincas llevan su pastoreo en curso (`pastoreo`: `{ id, desde, animales }`, o `null`) y el listado se filtra con `?pastoreo=en_curso`.
 
+## Comida
+
+Almacenes de comida de la explotación, en `src/rutas/almacenes.ts`. Los ve quien accede al módulo `comida`; los crea, edita y desactiva el administrador (`permitir('administracion')`):
+
+- **`GET /api/explotaciones/{id}/almacenes`:** en el orden en que se crearon, con su `stock` en su unidad. Filtro `activo=true|false`; sin él, todos.
+- **`POST /api/explotaciones/{id}/almacenes`:** `{ nombre, tipo, unidad }` crea un almacén. `tipo` es la comida que guarda: `hierba_verde`, `hierba_seca`, `maiz`, `pienso` u `otro`. `unidad` es `unidades` (pacas) o `kg`.
+- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}`:** cambia el nombre, el tipo o la unidad.
+- **`PATCH /api/explotaciones/{id}/almacenes/{almacenId}/estado`:** `{ activo }` desactiva o reactiva. Un almacén no se borra.
+
+Una explotación nueva recibe en su misma transacción los almacenes por defecto: pacas de hierba verde y de hierba seca (unidades), y silos de maíz y de pienso (kilos). Los registra `src/almacenes.ts` en `alCrearExplotacion`. La migración `0026` se los da a las explotaciones que ya existían, a nombre de su primer administrador, y añade el historial de cambios. El nombre no se repite en la explotación (409 `nombre_en_uso`). El stock es 0 hasta que lleguen las entradas, salidas y ajustes (GH-30).
+
 ## Historial de cambios
 
 Cada alta, cambio o borrado de una tabla de datos queda en `historial_cambios`: tabla, fila, operación (`alta`, `cambio`, `borrado`), usuario, fecha, y el estado anterior y el nuevo en JSON. Lo rellena el trigger `registrar_cambio()` (migración `0006`), que se añade a cada tabla nueva. Está separado por explotación, como los datos.

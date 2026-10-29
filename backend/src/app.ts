@@ -5,6 +5,7 @@ import { config } from './config.js'
 import { comprobarBaseDeDatos } from './db/cliente.js'
 import { manejarError, rutaNoEncontrada, soloMismoOrigen, validacionFallida } from './errores.js'
 import { registrarPeticiones } from './peticiones.js'
+import { rutasAlmacenes } from './rutas/almacenes.js'
 import { rutasAnimales } from './rutas/animales.js'
 import { rutasAplicaciones } from './rutas/aplicaciones.js'
 import { rutasCartografia } from './rutas/cartografia.js'
@@ -74,6 +75,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasLabores())
   app.route('/', rutasAplicaciones())
   app.route('/', rutasPastoreos())
+  app.route('/', rutasAlmacenes())
   app.route('/', rutasCartografia())
   app.route('/', rutasPlataforma())
 

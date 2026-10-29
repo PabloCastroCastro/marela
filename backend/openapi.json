@@ -3044,6 +3044,105 @@
           "fechaSalida"
         ]
       },
+      "Almacen": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "hierba_verde",
+              "hierba_seca",
+              "maiz",
+              "pienso",
+              "otro"
+            ],
+            "description": "Qué comida guarda"
+          },
+          "unidad": {
+            "type": "string",
+            "enum": [
+              "unidades",
+              "kg"
+            ]
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "stock": {
+            "type": "number",
+            "description": "Cantidad actual, en su unidad"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tipo",
+          "unidad",
+          "activo",
+          "stock",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosAlmacen": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "example": "Pacas de hierba seca"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "hierba_verde",
+              "hierba_seca",
+              "maiz",
+              "pienso",
+              "otro"
+            ]
+          },
+          "unidad": {
+            "type": "string",
+            "enum": [
+              "unidades",
+              "kg"
+            ]
+          }
+        },
+        "required": [
+          "nombre",
+          "tipo",
+          "unidad"
+        ]
+      },
+      "CambioEstadoAlmacen": {
+        "type": "object",
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "activo"
+        ]
+      },
       "RecintoSigpac": {
         "type": "object",
         "properties": {
@@ -7659,6 +7758,370 @@
           },
           "409": {
             "description": "Los animales ya salieron (ya_salieron)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/almacenes": {
+      "get": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Almacenes de comida de la explotación, con su stock",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Solo los activos (true) o los desactivados (false); sin él, todos"
+            },
+            "required": false,
+            "description": "Solo los activos (true) o los desactivados (false); sin él, todos",
+            "name": "activo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "En el orden en que se crearon",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Almacen"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su comida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el almacén (almacen_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Crear un almacén (administrador)",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAlmacen"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "El almacén creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Almacen"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el almacén (almacen_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un almacén con ese nombre (nombre_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/almacenes/{almacenId}": {
+      "put": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Cambiar el nombre, el tipo o la unidad de un almacén (administrador)",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAlmacen"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El almacén actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Almacen"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el almacén (almacen_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un almacén con ese nombre (nombre_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/almacenes/{almacenId}/estado": {
+      "patch": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Desactivar o reactivar un almacén (administrador)",
+        "description": "Un almacén no se borra: se desactiva, y sus datos y su historial se conservan.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoAlmacen"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El almacén",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Almacen"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el almacén (almacen_no_encontrado)",
             "content": {
               "application/json": {
                 "schema": {

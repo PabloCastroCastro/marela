@@ -126,9 +126,10 @@ Decisiones (GH-23):
 
 ## Comida
 
-- Los almacenes son configurables por explotación: nombre, tipo y unidad (unidades o kilos).
+- Los almacenes son configurables por explotación: nombre, tipo y unidad (unidades o kilos). El tipo es la comida que guarda: hierba verde, hierba seca, maíz, pienso u otra.
 - Almacenes iniciales por defecto: pacas de hierba verde, hierba seca, silo de maíz y silo de pienso. Las pacas se miden en unidades y los silos en kilos.
-- Cada almacén funciona como un stock con entradas y salidas.
+- Los crea, edita y desactiva el administrador; el empleado ve el stock y registra los movimientos. Un almacén no se borra: se desactiva y deja de salir en el stock.
+- Cada almacén funciona como un stock con entradas y salidas. La pantalla de Comida muestra una tarjeta por almacén activo con su cantidad actual.
 
 ### Entrada
 
