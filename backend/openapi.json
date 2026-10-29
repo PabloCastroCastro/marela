@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API de Marela",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
@@ -131,6 +131,7 @@
                     "animales",
                     "comida",
                     "fincas",
+                    "mantenimiento",
                     "finanzas",
                     "administracion"
                   ]
@@ -535,6 +536,64 @@
             "format": "uuid",
             "description": "Parto en que nació, si se registró"
           },
+          "noAptaReposicion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "motivo": {
+                "type": "string"
+              },
+              "alcance": {
+                "type": "string",
+                "enum": [
+                  "hijas",
+                  "descendencia"
+                ],
+                "description": "Solo a sus hijas (no se dejan para reposición) o a toda su descendencia"
+              }
+            },
+            "required": [
+              "desde",
+              "motivo",
+              "alcance"
+            ],
+            "description": "Hembra cuyas hijas no se dejan para reposición, desde cuándo y por qué"
+          },
+          "madreNoAptaReposicion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "motivo": {
+                "type": "string"
+              },
+              "alcance": {
+                "type": "string",
+                "enum": [
+                  "hijas",
+                  "descendencia"
+                ],
+                "description": "Solo a sus hijas (no se dejan para reposición) o a toda su descendencia"
+              }
+            },
+            "required": [
+              "desde",
+              "motivo",
+              "alcance"
+            ],
+            "description": "Su madre está marcada como no apta para reposición: en las hijas siempre, en los hijos si afecta a toda su descendencia"
+          },
           "finSupresion": {
             "type": [
               "string",
@@ -607,6 +666,8 @@
           "causaBaja",
           "observaciones",
           "partoId",
+          "noAptaReposicion",
+          "madreNoAptaReposicion",
           "finSupresion",
           "gestacion",
           "creadoEn",
@@ -800,6 +861,40 @@
         "required": [
           "tipo",
           "fecha"
+        ]
+      },
+      "DatosReposicion": {
+        "type": "object",
+        "properties": {
+          "apta": {
+            "type": "boolean"
+          },
+          "motivo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "example": "Paratuberculosis"
+          },
+          "fecha": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "alcance": {
+            "type": "string",
+            "enum": [
+              "hijas",
+              "descendencia"
+            ],
+            "default": "hijas"
+          }
+        },
+        "required": [
+          "apta"
         ]
       },
       "CambioAnimal": {
@@ -3409,6 +3504,282 @@
           "cantidad"
         ]
       },
+      "Equipo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "maquinaria",
+              "infraestructura"
+            ]
+          },
+          "descripcion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "tareasPendientes": {
+            "type": "integer",
+            "description": "Cuántas tareas tiene sin hacer: si alguna, necesita mantenimiento"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tipo",
+          "descripcion",
+          "activo",
+          "tareasPendientes",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosEquipo": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "example": "Tractor John Deere 6120M"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "maquinaria",
+              "infraestructura"
+            ]
+          },
+          "descripcion": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Matrícula E-1234-BCD"
+          }
+        },
+        "required": [
+          "nombre",
+          "tipo"
+        ]
+      },
+      "CambioEstadoEquipo": {
+        "type": "object",
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "activo"
+        ]
+      },
+      "Tarea": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "equipo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ]
+          },
+          "descripcion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fechaLimite": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "prioridad": {
+            "type": "string",
+            "enum": [
+              "baja",
+              "normal",
+              "alta"
+            ]
+          },
+          "asignadaA": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ],
+            "description": "Sin nadie, la puede hacer cualquiera"
+          },
+          "hecha": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "nombre": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nombre"
+                ]
+              }
+            },
+            "required": [
+              "en",
+              "por"
+            ],
+            "description": "Cuándo y quién la hizo; null si está pendiente"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "titulo",
+          "equipo",
+          "descripcion",
+          "fechaLimite",
+          "prioridad",
+          "asignadaA",
+          "hecha",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosTarea": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "Cambiar la boya"
+          },
+          "equipoId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "descripcion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fechaLimite": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "prioridad": {
+            "type": "string",
+            "enum": [
+              "baja",
+              "normal",
+              "alta"
+            ],
+            "default": "normal"
+          },
+          "asignadaAId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "titulo"
+        ]
+      },
+      "CambioHecha": {
+        "type": "object",
+        "properties": {
+          "hecha": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "hecha"
+        ]
+      },
       "RecintoSigpac": {
         "type": "object",
         "properties": {
@@ -4512,6 +4883,19 @@
             "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto",
             "name": "gestacion",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no_apta"
+              ],
+              "description": "Solo la descendencia afectada de madres no aptas para reposición: las hijas, y los hijos si afecta a toda"
+            },
+            "required": false,
+            "description": "Solo la descendencia afectada de madres no aptas para reposición: las hijas, y los hijos si afecta a toda",
+            "name": "reposicion",
+            "in": "query"
           }
         ],
         "responses": {
@@ -5008,6 +5392,101 @@
           },
           "409": {
             "description": "No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/reposicion": {
+      "patch": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Marcar una hembra para no dejar sus hijas de reposición, o quitar la marca",
+        "description": "Con apta: false, motivo (obligatorio) y fecha (por defecto, hoy). Sus hijas lo muestran en madreNoAptaReposicion. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosReposicion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o el animal no es una hembra (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8891,6 +9370,993 @@
           },
           "404": {
             "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/equipos": {
+      "get": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Maquinaria e infraestructuras de la explotación",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Busca en el nombre y la descripción"
+            },
+            "required": false,
+            "description": "Busca en el nombre y la descripción",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "maquinaria",
+                "infraestructura"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Solo los activos (true) o los desactivados (false); sin él, todos"
+            },
+            "required": false,
+            "description": "Solo los activos (true) o los desactivados (false); sin él, todos",
+            "name": "activo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Los que tienen más tareas pendientes primero, y después por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Equipo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Dar de alta una máquina o una infraestructura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosEquipo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "El equipo creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un equipo con ese nombre (nombre_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/equipos/{equipoId}": {
+      "get": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Un equipo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "equipoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El equipo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Cambiar los datos de un equipo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "equipoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosEquipo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El equipo actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un equipo con ese nombre (nombre_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/equipos/{equipoId}/estado": {
+      "patch": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Desactivar o reactivar un equipo",
+        "description": "Un equipo no se borra: se desactiva, y sus datos y su historial se conservan.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "equipoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoEquipo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El equipo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tareas": {
+      "get": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Tareas de mantenimiento, con filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pendiente",
+                "hecha"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mi"
+              ],
+              "description": "\"Mis tareas\": las asignadas a quien pregunta y las sin asignar"
+            },
+            "required": false,
+            "description": "\"Mis tareas\": las asignadas a quien pregunta y las sin asignar",
+            "name": "para",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "asignadaA",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "equipoId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Las pendientes por fecha límite y prioridad; las hechas, de la más reciente a la más antigua",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tarea"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la tarea (tarea_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Dar de alta una tarea",
+        "description": "Cualquiera del equipo; solo el administrador la asigna a una persona.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosTarea"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La tarea creada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tarea"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso, o asigna la tarea quien no es administrador (sin_permiso, en el campo asignadaAId)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la tarea (tarea_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tareas/personas": {
+      "get": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Personas del equipo a quienes asignar las tareas",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "nombre": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "nombre"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la tarea (tarea_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tareas/{tareaId}": {
+      "put": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Corregir una tarea",
+        "description": "Cualquiera del equipo; solo el administrador cambia a quién está asignada.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "tareaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosTarea"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La tarea corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tarea"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso, o asigna la tarea quien no es administrador (sin_permiso, en el campo asignadaAId)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la tarea (tarea_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Borrar una tarea",
+        "description": "Devuelve la tarea borrada, para poder deshacerlo. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "tareaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La tarea borrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tarea"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la tarea (tarea_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/tareas/{tareaId}/hecha": {
+      "patch": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Marcar una tarea como hecha, o volver a dejarla pendiente",
+        "description": "Queda quién la hizo y cuándo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "tareaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioHecha"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La tarea",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tarea"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la tarea (tarea_no_encontrada)",
             "content": {
               "application/json": {
                 "schema": {

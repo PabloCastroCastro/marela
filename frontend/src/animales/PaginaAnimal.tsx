@@ -15,6 +15,7 @@ import { FormularioAnimal } from './FormularioAnimal'
 import { useDeshacerBaja } from './FormularioBaja'
 import { InsigniaEstado } from './InsigniaEstado'
 import { InsigniaGestacion } from './InsigniaGestacion'
+import { InsigniaReposicion } from './InsigniaReposicion'
 import { InsigniaSinCrotal } from './InsigniaSinCrotal'
 import { InsigniaSupresion } from './InsigniaSupresion'
 import { MenuRegistrar } from './MenuRegistrar'
@@ -89,6 +90,7 @@ export function PaginaAnimal() {
             )}
             {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} />}
             {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} />}
+            <InsigniaReposicion propia={a.noAptaReposicion} madre={a.madreNoAptaReposicion} />
           </div>
         </div>
         <div className={estilos.acciones}>

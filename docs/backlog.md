@@ -13,6 +13,7 @@ Plan de trabajo de Marela: ciclos, etiquetas, milestones e issues. Las decisione
 | 4b · Fincas en el mapa | Parcelas desde el mapa o por su referencia SIGPAC o catastral, y mapa de las fincas | v0.5.0 |
 | 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock | v0.6.0 |
 | 6 · Sin conexión | Registro y consulta sin cobertura en Animales y Fincas, con sincronización | v0.7.0 |
+| 6b · Reposición y mantenimiento | Animales no aptos para reposición, maquinaria e infraestructuras, y tareas de mantenimiento | v0.8.0 |
 | 7 · Finanzas | Régimen fiscal, facturas, otros ingresos y gastos, ventas, informes y exportación. Primera versión completa y despliegue en producción | v1.0.0 |
 | 8 · Operación | Copias de seguridad automáticas, copia fuera del servidor y restauración | v1.1.0 |
 | 9 · Correo | Envío de correo, invitaciones y recuperación de contraseña por email | v1.2.0 |
@@ -44,6 +45,7 @@ Plan de trabajo de Marela: ciclos, etiquetas, milestones e issues. Las decisione
 | Ciclo 4b · Fincas en el mapa | Parcelas desde el mapa o por su referencia SIGPAC o catastral, y mapa de las fincas (v0.5.0) |
 | Ciclo 5 · Comida | Almacenes, entradas, salidas, ajustes de inventario y stock (v0.6.0) |
 | Ciclo 6 · Sin conexión | Registro y consulta sin cobertura en Animales y Fincas, con sincronización (v0.7.0) |
+| Ciclo 6b · Reposición y mantenimiento | Animales no aptos para reposición, maquinaria e infraestructuras, y tareas de mantenimiento asignadas al equipo (v0.8.0) |
 | Ciclo 7 · Finanzas | Régimen fiscal, facturas, otros ingresos y gastos, ventas, informes y exportación. Primera versión completa y despliegue en producción (v1.0.0) |
 | Ciclo 8 · Operación | Copias de seguridad automáticas, copia fuera del servidor y restauración (v1.1.0) |
 | Ciclo 9 · Correo | Envío de correo, invitaciones y recuperación de contraseña por email (v1.2.0) |
@@ -528,6 +530,56 @@ Depende de #31, #20, #21 y #23.
 - [ ] Registro sin cobertura de partos (con la creación de los terneros), tratamientos y pesadas
 - [ ] Indicador de sin conexión y de registros pendientes de enviar
 - [ ] Sincronización automática al recuperar cobertura, con aviso de los registros que fallen (p. ej. un crotal repetido)
+
+---
+
+### Milestone: Ciclo 6b · Reposición y mantenimiento
+
+#### GH-110
+**Título:** Animales no aptos para reposición
+**Etiquetas:** feature, db, backend, frontend
+
+Depende de #14 y #23.
+
+Una vaca con una enfermedad que se transmite a la descendencia (paratuberculosis, leucosis…) no debe dejar hijas como madres reproductoras. Hoy no hay forma de apuntarlo ni de verlo al decidir la reposición.
+
+**Criterios de aceptación**
+- [ ] En la ficha de una hembra, marcar "No dejar hijas para reposición" con el motivo (texto, p. ej. "Paratuberculosis") y la fecha; quitar la marca también
+- [ ] La madre lo muestra con una insignia en su ficha y en el listado
+- [ ] Sus hijas, las ya nacidas y las que nazcan después, muestran el aviso "Madre no apta para reposición" con el motivo, en su ficha y en el listado
+- [ ] Filtro del listado: "No aptas para reposición" (las hijas de madres marcadas)
+- [ ] La marca y sus cambios quedan en el historial del animal
+- [ ] Funciona sin conexión como el resto de Animales: se ve en las fichas guardadas
+
+#### GH-111
+**Título:** Maquinaria e infraestructuras
+**Etiquetas:** feature, db, backend, frontend
+
+Nueva sección **Mantenimiento**, la quinta de la barra (Animales, Comida, Fincas, Mantenimiento, Finanzas), para la maquinaria y las infraestructuras de la explotación.
+
+**Criterios de aceptación**
+- [ ] Módulo `mantenimiento` con acceso para el administrador y el empleado
+- [ ] Equipos: nombre, tipo (maquinaria o infraestructura), descripción opcional (marca, modelo, matrícula, ubicación…) y si necesita mantenimiento
+- [ ] Cualquiera del equipo los da de alta y los edita; no se borran: se desactivan
+- [ ] Listado con búsqueda y filtro por tipo, y los que necesitan mantenimiento destacados
+- [ ] Ficha del equipo con sus tareas (#112)
+- [ ] La barra inferior admite cinco secciones a 360 px sin desbordar
+
+#### GH-112
+**Título:** Tareas de mantenimiento
+**Etiquetas:** feature, db, backend, frontend
+
+Depende de #111.
+
+Tareas de mantenimiento por hacer, como una lista: "Cambiar la rueda del tractor", "Arreglar el bebedero de la nave". Primera versión, sin mantenimientos periódicos.
+
+**Criterios de aceptación**
+- [ ] Tarea: título, equipo opcional (o una tarea suelta), descripción, fecha límite opcional, prioridad opcional y estado (pendiente, hecha)
+- [ ] Cualquiera crea tareas; el administrador las asigna a una persona del equipo (o las deja sin asignar)
+- [ ] "Mis tareas": cada uno ve las suyas y las sin asignar, y las marca como hechas (quién y cuándo)
+- [ ] Listado de todas las tareas con filtros: pendientes o hechas, asignada a, equipo; las vencidas, destacadas
+- [ ] En la ficha del equipo, sus tareas pendientes y hechas
+- [ ] Se corrigen o se borran, y los cambios quedan en el historial
 
 ---
 

@@ -1,5 +1,5 @@
 import { hashPassword } from 'better-auth/crypto'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { crearAlmacenesPorDefecto } from '../almacenes.js'
 import { config } from '../config.js'
 import { hoyEnMadrid } from '../fechas.js'
@@ -12,6 +12,7 @@ import {
   almacenes,
   animales,
   aplicaciones,
+  equipos,
   eventosReproductivos,
   fincas,
   labores,
@@ -23,6 +24,7 @@ import {
   pastoreos,
   pesos,
   type RolExplotacion,
+  tareas,
   tratamientos,
   user,
 } from './schema/index.js'
@@ -62,6 +64,8 @@ const LABOR = 12
 const APLICACION = 13
 const PASTOREO = 14
 const MOVIMIENTO = 15
+const EQUIPO = 16
+const TAREA = 17
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -724,6 +728,19 @@ await enExplotacion(
   },
 )
 
+// Pinta tiene paratuberculosis, que afecta a toda su descendencia (GH-110). Solo si aún no se
+// ha marcado, para no cambiar lo que ya hay.
+await enExplotacion({ explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) }, (tx) =>
+  tx
+    .update(animales)
+    .set({
+      noAptaReposicionDesde: haceDias(60),
+      motivoNoAptaReposicion: 'Paratuberculosis',
+      alcanceNoAptaReposicion: 'descendencia',
+    })
+    .where(and(eq(animales.id, sid(ANIMAL, 3)), isNull(animales.noAptaReposicionDesde))),
+)
+
 // Movimientos de los almacenes de A Veiga, registrados por Ana: la hierba seca de Agra de abaixo, el
 // pienso comprado y lo que se les da a diario. El silo de pienso queda en negativo, en rojo.
 const movimientosVeiga = [
@@ -791,6 +808,91 @@ await enExplotacion(
         })
         .onConflictDoNothing()
     }
+  },
+)
+
+// Maquinaria e infraestructuras de A Veiga (GH-111) y sus tareas de mantenimiento (GH-112)
+const equiposVeiga = [
+  {
+    nombre: 'Tractor John Deere 6120M',
+    tipo: 'maquinaria' as const,
+    descripcion: 'Matrícula E-1234-BCD',
+  },
+  { nombre: 'Remolque basculante', tipo: 'maquinaria' as const, descripcion: '8 t' },
+  { nombre: 'Encintadora', tipo: 'maquinaria' as const, descripcion: null },
+  {
+    nombre: 'Nave de las vacas',
+    tipo: 'infraestructura' as const,
+    descripcion: 'Cubierta de chapa, 40 cubículos',
+  },
+  {
+    nombre: 'Bebederos del prado',
+    tipo: 'infraestructura' as const,
+    descripcion: 'Prado da fonte',
+  },
+]
+
+// Una de Ana, una de María, una sin asignar y una hecha
+const tareasVeiga = [
+  {
+    titulo: 'Cambiar la boya',
+    equipo: 5,
+    prioridad: 'alta' as const,
+    fechaLimite: haceDias(-3),
+    asignada: 4,
+  },
+  {
+    titulo: 'Cambiar la rueda delantera izquierda',
+    equipo: 1,
+    prioridad: 'normal' as const,
+    fechaLimite: haceDias(-10),
+    asignada: 2,
+  },
+  {
+    titulo: 'Revisar las luces',
+    equipo: 2,
+    prioridad: 'baja' as const,
+    fechaLimite: null,
+    asignada: null,
+  },
+  {
+    titulo: 'Cambiar el aceite',
+    equipo: 1,
+    prioridad: 'normal' as const,
+    fechaLimite: null,
+    asignada: 2,
+    hecha: 20,
+  },
+  {
+    titulo: 'Arreglar la puerta del pajar',
+    equipo: null,
+    prioridad: 'normal' as const,
+    fechaLimite: haceDias(2),
+    asignada: null,
+  },
+]
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    for (const [i, e] of equiposVeiga.entries())
+      await tx
+        .insert(equipos)
+        .values({ id: sid(EQUIPO, i + 1), ...e })
+        .onConflictDoNothing()
+    for (const [i, { equipo, asignada, hecha, ...t }] of tareasVeiga.entries())
+      await tx
+        .insert(tareas)
+        .values({
+          id: sid(TAREA, i + 1),
+          ...t,
+          equipoId: equipo ? sid(EQUIPO, equipo) : null,
+          asignadaAId: asignada ? sid(USUARIO, asignada) : null,
+          ...(hecha
+            ? { hechaEn: new Date(Date.now() - hecha * 864e5), hechaPorId: sid(USUARIO, 2) }
+            : {}),
+        })
+        .onConflictDoNothing()
   },
 )
 

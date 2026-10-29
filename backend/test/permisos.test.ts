@@ -123,13 +123,13 @@ describe('GET /api/explotaciones/{id}', () => {
       municipio: null,
       provincia: null,
       rol: 'administrador',
-      modulos: ['animales', 'comida', 'fincas', 'finanzas', 'administracion'],
+      modulos: ['animales', 'comida', 'fincas', 'mantenimiento', 'finanzas', 'administracion'],
     })
   })
 
-  it('el empleado, a animales, comida y fincas', async () => {
+  it('el empleado, a animales, comida, fincas y mantenimiento', async () => {
     const res = await pedir(app, `/explotaciones/${a.id}`, cookies.brais)
-    expect((await res.json()).modulos).toEqual(['animales', 'comida', 'fincas'])
+    expect((await res.json()).modulos).toEqual(['animales', 'comida', 'fincas', 'mantenimiento'])
   })
 
   it('404 si no se pertenece, si no existe o si el identificador no es válido', async () => {
@@ -167,8 +167,22 @@ describe('GET /api/explotaciones/{id}', () => {
 
 describe('matriz de permisos por módulo', () => {
   const esperado: Record<'administrador' | 'empleado', Record<Modulo, number>> = {
-    administrador: { animales: 200, comida: 200, fincas: 200, finanzas: 200, administracion: 200 },
-    empleado: { animales: 200, comida: 200, fincas: 200, finanzas: 403, administracion: 403 },
+    administrador: {
+      animales: 200,
+      comida: 200,
+      fincas: 200,
+      mantenimiento: 200,
+      finanzas: 200,
+      administracion: 200,
+    },
+    empleado: {
+      animales: 200,
+      comida: 200,
+      fincas: 200,
+      mantenimiento: 200,
+      finanzas: 403,
+      administracion: 403,
+    },
   }
 
   it.each(MODULOS)('%s', async (modulo) => {

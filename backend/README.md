@@ -127,7 +127,7 @@ Módulos y roles (`PERMISOS`):
 
 | Módulo | administrador | empleado |
 |---|---|---|
-| `animales`, `comida`, `fincas` | sí | sí |
+| `animales`, `comida`, `fincas`, `mantenimiento` | sí | sí |
 | `finanzas` | sí | no |
 | `administracion` (equipo y datos de la explotación) | sí | no |
 
@@ -163,6 +163,7 @@ Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.
 - **`PATCH /api/explotaciones/{id}/animales/{animalId}`:** edita los datos de la ficha (solo los campos que cambian, validando la ficha completa). El estado y la baja tienen su propio flujo.
 - **`POST /api/explotaciones/{id}/animales/{animalId}/baja`:** `{ tipo, fecha, causa }` da de baja un animal activo: `muerte` o `sacrificio` (queda `muerto`), `robo_extravio` u `otra` (queda `baja`; `otra` exige la causa). La fecha no puede ser futura ni anterior al nacimiento o la entrada. La venta (`vendido`) la registra Finanzas (GH-38).
 - **`DELETE /api/explotaciones/{id}/animales/{animalId}/baja`:** deshace una baja registrada por error; el animal vuelve a estar activo y la baja queda en el historial. Una venta no se deshace aquí (409 `baja_por_venta`).
+- **`PATCH /api/explotaciones/{id}/animales/{animalId}/reposicion`:** `{ apta: false, motivo, fecha?, alcance }` marca una hembra no apta para reposición (GH-110), por una enfermedad que se transmite a la descendencia; `alcance` es `hijas` (no dejarlas para reposición, por defecto) o `descendencia` (afecta también a los hijos). `{ apta: true }` quita la marca. La ficha lleva `noAptaReposicion` (`{ desde, motivo, alcance }` o `null`) y su descendencia afectada, `madreNoAptaReposicion`: las hijas siempre, los hijos si el alcance es `descendencia`. El listado la filtra con `?reposicion=no_apta`. Migración `0029`; los cambios quedan en el historial.
 - **`GET /api/explotaciones/{id}/animales/razas`:** razas para sugerir: las habituales y las que ya usa la explotación.
 
 Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
@@ -303,6 +304,31 @@ Entradas, salidas y ajustes de inventario, en `src/rutas/movimientos.ts` (módul
 - **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo.
 
 **Stock:** lo calcula PostgreSQL (migración `0028`). `movimientos_con_stock(almacen)` recorre los movimientos por fecha y, el mismo día, por orden de registro: las entradas suman, las salidas y mermas restan, y un recuento fija el stock en lo contado. `stock_almacen(almacen)` es el que deja el último, o 0. Puede ser negativo: se guarda igual, y la pantalla lo avisa y lo marca en rojo. Las cantidades van en la unidad del almacén, con dos decimales. Cada tipo lleva sus datos y no los de los demás (check `movimientos_comida_datos`); el almacén y la finca son de la explotación (claves foráneas compuestas). Los cambios quedan en el historial.
+
+## Mantenimiento
+
+Maquinaria e infraestructuras (GH-111) y tareas de mantenimiento (GH-112), en `src/rutas/equipos.ts` y `src/rutas/tareas.ts` (módulo `mantenimiento`: administrador y empleado).
+
+**Equipos:**
+
+- **`GET /api/explotaciones/{id}/equipos`:** los que tienen más tareas pendientes primero (`tareasPendientes`), y después por nombre. Búsqueda (`q`, en nombre y descripción) y filtros `tipo` (`maquinaria` o `infraestructura`) y `activo=true|false`.
+- **`GET /api/explotaciones/{id}/equipos/{equipoId}`:** un equipo.
+- **`POST /api/explotaciones/{id}/equipos`:** `{ nombre, tipo, descripcion? }` da de alta una máquina o una infraestructura.
+- **`PUT /api/explotaciones/{id}/equipos/{equipoId}`:** cambia sus datos.
+- **`PATCH /api/explotaciones/{id}/equipos/{equipoId}/estado`:** `{ activo }` desactiva o reactiva. Un equipo no se borra.
+
+El nombre no se repite en la explotación (409 `nombre_en_uso`).
+
+**Tareas:**
+
+- **`GET /api/explotaciones/{id}/tareas`:** filtros `estado` (`pendiente` o `hecha`), `para=mi` (las asignadas a quien pregunta y las sin asignar), `asignadaA` y `equipoId`. Las pendientes, por fecha límite (las que no tienen, al final) y prioridad; las hechas, de la más reciente a la más antigua.
+- **`GET /api/explotaciones/{id}/tareas/personas`:** las personas activas del equipo, para asignar.
+- **`POST /api/explotaciones/{id}/tareas`:** `{ titulo, equipoId?, descripcion?, fechaLimite?, prioridad?, asignadaAId? }`. `prioridad` es `baja`, `normal` (por defecto) o `alta`.
+- **`PUT /api/explotaciones/{id}/tareas/{tareaId}`:** la corrige.
+- **`PATCH /api/explotaciones/{id}/tareas/{tareaId}/hecha`:** `{ hecha }` la marca como hecha (con quién y cuándo) o la vuelve a dejar pendiente.
+- **`DELETE /api/explotaciones/{id}/tareas/{tareaId}`:** la borra y la devuelve, para poder deshacerlo.
+
+Cualquiera del equipo crea, corrige, marca y borra tareas; solo el administrador elige o cambia a quién está asignada (403 `sin_permiso` en `asignadaAId`). La persona asignada y quien la hace son de la explotación (trigger `tareas_comprobar`). Migraciones `0030` (tablas) y `0031` (reglas e historial de cambios).
 
 ## Historial de cambios
 

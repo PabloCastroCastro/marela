@@ -18,7 +18,7 @@ const VERSION = typeof __VERSION__ === 'string' ? __VERSION__ : 'desarrollo'
 
 // Qué se guarda: los datos de las secciones que funcionan sin conexión y lo que hace falta para
 // entrar en ellas. Las consultas a servicios externos (mapas, catastro) no.
-const SE_GUARDAN = new Set(['sesion', 'explotaciones', 'animales', 'fincas'])
+const SE_GUARDAN = new Set(['sesion', 'explotaciones', 'animales', 'fincas', 'mantenimiento'])
 
 // Al cerrar sesión: nada de lo descargado se queda en el dispositivo
 export const borrarConsultas = () => borrar(CLAVE)
