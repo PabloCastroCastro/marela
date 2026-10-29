@@ -1,5 +1,21 @@
 import { sql } from 'drizzle-orm'
-import { check, numeric, pgEnum, pgTable, unique } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  check,
+  date,
+  foreignKey,
+  index,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgTable,
+  text,
+  unique,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core'
+import { animales } from './animales.js'
 import { id } from './comun.js'
 import { auditoria, deExplotacion, separacionPorExplotacion } from './explotacion.js'
 
@@ -51,6 +67,123 @@ export const configuracionFiscal = pgTable(
       sql`cardinality(${t.tiposIva}) between 1 and ${sql.raw(String(TIPOS_IVA_MAXIMO))}
         and 0 <= all(${t.tiposIva}) and 100 >= all(${t.tiposIva})`,
     ),
+    separacionPorExplotacion(),
+  ],
+)
+
+// Facturas (GH-35): recibidas (gastos) y emitidas (ingresos). Se corrigen y se borran; los cambios
+// quedan en el historial.
+export const TIPOS_FACTURA = ['recibida', 'emitida'] as const
+
+export const tipoFactura = pgEnum('tipo_factura', TIPOS_FACTURA)
+
+// IVA o, en las ventas de quien está en el REAGP, compensación. Se guarda en cada factura para que
+// un cambio de régimen no cambie las ya registradas.
+export const IMPUESTOS_FACTURA = ['iva', 'compensacion'] as const
+
+export const impuestoFactura = pgEnum('impuesto_factura', IMPUESTOS_FACTURA)
+
+export const LINEAS_FACTURA_MAXIMO = 8
+
+// Una línea por tipo de IVA (o de compensación): base imponible, porcentaje y cuota
+export type LineaFactura = { base: number; porcentaje: number; cuota: number }
+
+// NIF español: DNI, NIE (X, Y, Z), los de K, L y M, y el de las entidades (CIF). La letra o el
+// dígito de control los comprueba la API (src/nif.ts).
+export const FORMATO_NIF =
+  '^([0-9]{8}[A-Z]|[XYZKLM][0-9]{7}[A-Z]|[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J])$'
+
+const importe = (nombre: string) => numeric(nombre, { precision: 12, scale: 2, mode: 'number' })
+
+export const facturas = pgTable(
+  'facturas',
+  {
+    id: id(),
+    ...deExplotacion(),
+    tipo: tipoFactura('tipo').notNull(),
+    numero: text('numero').notNull(),
+    fecha: date('fecha', { mode: 'string' }).notNull(),
+    // El proveedor (recibidas) o el cliente (emitidas)
+    tercero: text('tercero').notNull(),
+    nif: text('nif').notNull(),
+    // Un NIF de otro país no sigue el formato español
+    nifExtranjero: boolean('nif_extranjero').notNull().default(false),
+    concepto: text('concepto').notNull(),
+    impuesto: impuestoFactura('impuesto').notNull().default('iva'),
+    lineas: jsonb('lineas').$type<LineaFactura[]>().notNull(),
+    // Sumas de las líneas
+    baseImponible: importe('base_imponible').notNull(),
+    cuota: importe('cuota').notNull(),
+    total: importe('total').notNull(),
+    // Pendiente mientras no tiene fecha de pago
+    pagadaEn: date('pagada_en', { mode: 'string' }),
+    // Archivo adjunto (PDF o foto): ruta relativa en el directorio de archivos, con nombre generado
+    archivoRuta: text('archivo_ruta'),
+    archivoNombre: text('archivo_nombre'),
+    archivoTipo: text('archivo_tipo'),
+    archivoTamano: integer('archivo_tamano'),
+    ...auditoria(),
+  },
+  (t) => [
+    // Los animales enlazados, de la misma explotación (clave foránea compuesta)
+    unique('facturas_explotacion_id_unique').on(t.explotacionId, t.id),
+    // Las emitidas, sin repetir número en la explotación; las recibidas, sin repetir la misma
+    // factura del mismo proveedor
+    uniqueIndex('facturas_emitidas_numero_unico')
+      .on(t.explotacionId, sql`lower(${t.numero})`)
+      .where(sql`${t.tipo} = 'emitida'`),
+    uniqueIndex('facturas_recibidas_numero_unico')
+      .on(t.explotacionId, t.nif, sql`lower(${t.numero})`)
+      .where(sql`${t.tipo} = 'recibida'`),
+    index('facturas_explotacion_fecha_idx').on(t.explotacionId, t.fecha),
+    check('facturas_numero_no_vacio', sql`btrim(${t.numero}) <> ''`),
+    check('facturas_tercero_no_vacio', sql`btrim(${t.tercero}) <> ''`),
+    check('facturas_concepto_no_vacio', sql`btrim(${t.concepto}) <> ''`),
+    check(
+      'facturas_nif',
+      sql`btrim(${t.nif}) <> '' and (${t.nifExtranjero} or ${t.nif} ~ ${sql.raw(`'${FORMATO_NIF}'`)})`,
+    ),
+    check(
+      'facturas_lineas',
+      sql`jsonb_typeof(${t.lineas}) = 'array'
+        and jsonb_array_length(${t.lineas}) between 1 and ${sql.raw(String(LINEAS_FACTURA_MAXIMO))}`,
+    ),
+    check('facturas_total', sql`${t.total} = ${t.baseImponible} + ${t.cuota}`),
+    check(
+      'facturas_archivo',
+      sql`(${t.archivoRuta} is null) = (${t.archivoNombre} is null)
+        and (${t.archivoRuta} is null) = (${t.archivoTipo} is null)
+        and (${t.archivoRuta} is null) = (${t.archivoTamano} is null)`,
+    ),
+    separacionPorExplotacion(),
+  ],
+)
+
+// Animales comprados con una factura recibida (las compras son excepcionales). Las ventas se
+// enlazan a sus animales desde Ventas (GH-38).
+export const facturasAnimales = pgTable(
+  'facturas_animales',
+  {
+    id: id(),
+    ...deExplotacion(),
+    facturaId: uuid('factura_id').notNull(),
+    animalId: uuid('animal_id').notNull(),
+    ...auditoria(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'facturas_animales_factura_fk',
+      columns: [t.explotacionId, t.facturaId],
+      foreignColumns: [facturas.explotacionId, facturas.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      name: 'facturas_animales_animal_fk',
+      columns: [t.explotacionId, t.animalId],
+      foreignColumns: [animales.explotacionId, animales.id],
+    }).onDelete('restrict'),
+    unique('facturas_animales_unico').on(t.facturaId, t.animalId),
+    index('facturas_animales_explotacion_idx').on(t.explotacionId),
+    index('facturas_animales_animal_idx').on(t.animalId),
     separacionPorExplotacion(),
   ],
 )

@@ -29,6 +29,7 @@ describe('configuración', () => {
       secretoAuth: valida.BETTER_AUTH_SECRET,
       urlPublica: 'https://servidor.ejemplo.ts.net:8444',
       nivelLog: 'info',
+      directorioArchivos: 'uploads',
     })
   })
 

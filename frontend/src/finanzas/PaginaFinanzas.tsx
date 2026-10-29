@@ -7,9 +7,10 @@ import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { porcentaje, REGIMENES, useFiscal } from './datos'
 import estilos from './Finanzas.module.css'
 import { FormularioFiscal } from './FormularioFiscal'
+import { ListaFacturas } from './ListaFacturas'
 
-// Finanzas, solo para el administrador. Empieza por el régimen fiscal de la explotación (GH-34); las
-// facturas, los otros ingresos y gastos y las ventas llegan después, en el ciclo 7.
+// Finanzas, solo para el administrador: el régimen fiscal de la explotación (GH-34) y las facturas
+// (GH-35). Los otros ingresos y gastos y las ventas llegan después, en el ciclo 7.
 export function PaginaFinanzas() {
   const explotacion = useExplotacionActual()
   const fiscal = useFiscal(explotacion.id)
@@ -56,6 +57,8 @@ export function PaginaFinanzas() {
           </>
         )}
       </Tarjeta>
+
+      <ListaFacturas />
 
       {editando && fiscal.data && (
         <FormularioFiscal fiscal={fiscal.data} alCerrar={() => setEditando(false)} />

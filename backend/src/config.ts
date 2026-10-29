@@ -29,6 +29,9 @@ const esquema = z.object({
     error: 'Debe ser una URL http(s), p. ej. https://servidor.tailnet.ts.net:8444',
   }),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  // Carpeta de los archivos adjuntos (facturas, fotos), relativa al directorio del backend. En el
+  // servidor, el volumen uploads de Docker Compose.
+  ARCHIVOS_DIR: z.string().min(1).default('uploads'),
 })
 
 export type Config = {
@@ -39,6 +42,7 @@ export type Config = {
   secretoAuth: string
   urlPublica: string
   nivelLog: z.infer<typeof esquema>['LOG_LEVEL']
+  directorioArchivos: string
 }
 
 export class ErrorConfiguracion extends Error {
@@ -74,6 +78,7 @@ export function leerConfig(env: Record<string, string | undefined>): Config {
     // Sin barra final: es el origen que se compara con la cabecera Origin
     urlPublica: e.URL_PUBLICA.replace(/\/+$/, ''),
     nivelLog: e.LOG_LEVEL,
+    directorioArchivos: e.ARCHIVOS_DIR,
   }
 }
 

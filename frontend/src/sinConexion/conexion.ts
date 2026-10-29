@@ -57,8 +57,8 @@ export const hayConexion = () => onlineManager.isOnline()
 // Con una raya de cobertura el móvil cree que tiene red y la petición se queda esperando hasta que el
 // navegador la da por perdida, que puede ser más de un minuto. Antes de eso se da por fallida: un
 // registro a los 10 s (va a la cola de pendientes, y reenviarlo no lo duplica) y una consulta a los
-// 15 s (sigue a la vista lo guardado).
-export const LIMITES = { consulta: 15_000, registro: 10_000 }
+// 15 s (sigue a la vista lo guardado). Subir un archivo (una factura de hasta 10 MB) lleva más.
+export const LIMITES = { consulta: 15_000, registro: 10_000, subida: 120_000 }
 
 // No ha llegado al servidor: sin red o sin respuesta a tiempo
 export class SinRespuesta extends Error {
@@ -73,7 +73,14 @@ export class SinRespuesta extends Error {
 export async function pedir(entrada: RequestInfo | URL, init: RequestInit = {}) {
   const peticion = entrada instanceof Request ? entrada : undefined
   const metodo = (init.method ?? peticion?.method ?? 'GET').toUpperCase()
-  const limite = AbortSignal.timeout(metodo === 'GET' ? LIMITES.consulta : LIMITES.registro)
+  const tipo = new Headers(init.headers ?? peticion?.headers).get('content-type') ?? ''
+  const limite = AbortSignal.timeout(
+    metodo === 'GET'
+      ? LIMITES.consulta
+      : tipo.startsWith('multipart/form-data')
+        ? LIMITES.subida
+        : LIMITES.registro,
+  )
   const propia = init.signal ?? peticion?.signal ?? undefined
   const signal =
     propia && typeof AbortSignal.any === 'function' ? AbortSignal.any([propia, limite]) : limite

@@ -15,6 +15,7 @@ import {
   RedireccionInicial,
 } from './explotaciones/PaginaElegirExplotacion'
 import { PaginaEquipo } from './explotaciones/PaginaEquipo'
+import { PaginaFactura } from './finanzas/PaginaFactura'
 import { PaginaFinanzas } from './finanzas/PaginaFinanzas'
 import { PaginaFinca } from './fincas/PaginaFinca'
 import { PaginaFincas } from './fincas/PaginaFincas'
@@ -130,6 +131,14 @@ export const rutas: RouteObject[] = [
             element: (
               <SoloModulo modulo="finanzas">
                 <PaginaFinanzas />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'finanzas/facturas/:facturaId',
+            element: (
+              <SoloModulo modulo="finanzas">
+                <PaginaFactura />
               </SoloModulo>
             ),
           },

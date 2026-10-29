@@ -3674,6 +3674,314 @@
           "tiposIva"
         ]
       },
+      "Factura": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "recibida",
+              "emitida"
+            ]
+          },
+          "numero": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "tercero": {
+            "type": "string",
+            "description": "Proveedor (recibidas) o cliente (emitidas)"
+          },
+          "nif": {
+            "type": "string"
+          },
+          "nifExtranjero": {
+            "type": "boolean"
+          },
+          "concepto": {
+            "type": "string"
+          },
+          "impuesto": {
+            "type": "string",
+            "enum": [
+              "iva",
+              "compensacion"
+            ]
+          },
+          "lineas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base": {
+                  "type": "number"
+                },
+                "porcentaje": {
+                  "type": "number"
+                },
+                "cuota": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "base",
+                "porcentaje",
+                "cuota"
+              ]
+            }
+          },
+          "baseImponible": {
+            "type": "number"
+          },
+          "cuota": {
+            "type": "number",
+            "description": "IVA o compensación, la suma de las líneas"
+          },
+          "total": {
+            "type": "number"
+          },
+          "pagadaEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "null si está pendiente"
+          },
+          "archivo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "nombre": {
+                "type": "string"
+              },
+              "tipo": {
+                "type": "string"
+              },
+              "tamano": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "nombre",
+              "tipo",
+              "tamano"
+            ]
+          },
+          "animales": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nombre": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "nombre"
+              ]
+            }
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "numero",
+          "fecha",
+          "tercero",
+          "nif",
+          "nifExtranjero",
+          "concepto",
+          "impuesto",
+          "lineas",
+          "baseImponible",
+          "cuota",
+          "total",
+          "pagadaEn",
+          "archivo",
+          "animales",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "SiguienteNumero": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "numero"
+        ]
+      },
+      "DatosFactura": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "recibida",
+              "emitida"
+            ]
+          },
+          "numero": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "example": "2026-0007"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "tercero": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "nif": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "B15000007"
+          },
+          "nifExtranjero": {
+            "type": "boolean",
+            "default": false,
+            "description": "NIF de otro país: no se comprueba el formato español"
+          },
+          "concepto": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "impuesto": {
+            "type": "string",
+            "enum": [
+              "iva",
+              "compensacion"
+            ],
+            "default": "iva",
+            "description": "IVA o compensación del REAGP (en las ventas de quien está en ese régimen)"
+          },
+          "lineas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base": {
+                  "type": "number",
+                  "minimum": -9999999999.99,
+                  "maximum": 9999999999.99,
+                  "example": 1000
+                },
+                "porcentaje": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "example": 21
+                },
+                "cuota": {
+                  "type": "number",
+                  "minimum": -9999999999.99,
+                  "maximum": 9999999999.99,
+                  "example": 210
+                }
+              },
+              "required": [
+                "base",
+                "porcentaje",
+                "cuota"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 8
+          },
+          "total": {
+            "type": "number",
+            "minimum": -9999999999.99,
+            "maximum": 9999999999.99,
+            "example": 1210
+          },
+          "pagadaEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Fecha de pago; sin ella, la factura está pendiente"
+          },
+          "animalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 500,
+            "default": [],
+            "description": "Animales comprados con la factura; solo en las recibidas"
+          }
+        },
+        "required": [
+          "tipo",
+          "numero",
+          "fecha",
+          "tercero",
+          "nif",
+          "concepto",
+          "lineas",
+          "total"
+        ]
+      },
+      "CambioPago": {
+        "type": "object",
+        "properties": {
+          "pagadaEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Fecha de pago; null para dejarla pendiente"
+          }
+        },
+        "required": [
+          "pagadaEn"
+        ]
+      },
       "Tarea": {
         "type": "object",
         "properties": {
@@ -10057,6 +10365,908 @@
           },
           "404": {
             "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Facturas, con filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recibida",
+                "emitida"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pendiente",
+                "pagada"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Proveedor o cliente, número o NIF"
+            },
+            "required": false,
+            "description": "Proveedor o cliente, número o NIF",
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más reciente a la más antigua",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Factura"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Registrar una factura",
+        "description": "Comprueba el NIF (salvo los extranjeros), que cada cuota sea su porcentaje de la base (con un céntimo de margen) y que el total sea la suma de las líneas. El archivo se sube después.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFactura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La factura registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Número repetido: de otra emitida, o de otra recibida del proveedor (numero_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/siguiente-numero": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Número que se propone para la siguiente factura emitida",
+        "description": "El siguiente del año con el formato aaaa-nnnn (2026-0007 tras la 2026-0006).",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Fecha de la factura; por defecto, hoy"
+            },
+            "required": false,
+            "description": "Fecha de la factura; por defecto, hoy",
+            "name": "fecha",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El número",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiguienteNumero"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Una factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La factura",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Corregir una factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFactura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Número repetido: de otra emitida, o de otra recibida del proveedor (numero_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Borrar una factura",
+        "description": "Con su archivo y sus enlaces a los animales. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Borrada"
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/pago": {
+      "patch": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Marcar una factura como pagada, o volver a dejarla pendiente",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPago"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/archivo": {
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Adjuntar el archivo de la factura, o cambiarlo",
+        "description": "Un PDF o una foto (JPEG, PNG o WebP) de hasta 10 MB; sustituye al anterior.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura con su archivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el archivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "El archivo ocupa más de 10 MB (archivo_demasiado_grande)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "No es un PDF ni una foto (tipo_de_archivo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Archivo de la factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El PDF o la foto",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la factura o su archivo (archivo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Quitar el archivo de la factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La factura sin archivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
             "content": {
               "application/json": {
                 "schema": {

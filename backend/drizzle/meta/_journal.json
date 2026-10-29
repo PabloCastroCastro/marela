@@ -239,6 +239,20 @@
       "when": 1793286048273,
       "tag": "0033_configuracion_fiscal_historial",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793287344153,
+      "tag": "0034_facturas",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793287359388,
+      "tag": "0035_facturas_triggers",
+      "breakpoints": true
     }
   ]
 }
