@@ -41,7 +41,7 @@ type Equipo = {
   nombre: string
   tipo: string
   descripcion: string | null
-  necesitaMantenimiento: boolean
+  tareasPendientes: number
   activo: boolean
 }
 
@@ -88,7 +88,7 @@ describe('maquinaria e infraestructuras', () => {
       nombre: 'Tractor John Deere',
       tipo: 'maquinaria',
       descripcion: 'Matrícula E-1234',
-      necesitaMantenimiento: false,
+      tareasPendientes: 0,
       activo: true,
     })
 
@@ -99,10 +99,10 @@ describe('maquinaria e infraestructuras', () => {
       {
         nombre: 'Tractor John Deere',
         tipo: 'maquinaria',
-        necesitaMantenimiento: true,
+        descripcion: 'Matrícula E-5678',
       },
     )
-    expect(((await editado.json()) as Equipo).necesitaMantenimiento).toBe(true)
+    expect(((await editado.json()) as Equipo).descripcion).toBe('Matrícula E-5678')
 
     const estado = (activo: boolean) =>
       pedir('PATCH', `/explotaciones/${a}/equipos/${creado.id}/estado`, empleado.cookie, { activo })
@@ -116,16 +116,21 @@ describe('maquinaria e infraestructuras', () => {
     expect(cambios.map((c) => c.operacion)).toEqual(['alta', 'cambio', 'cambio', 'cambio'])
   })
 
-  it('lista primero lo que necesita mantenimiento, busca y filtra por tipo', async () => {
+  it('lista primero lo que tiene tareas pendientes, busca y filtra por tipo', async () => {
     const sufijo = randomInt(1e9)
     const nave = (await (
       await alta({ nombre: `A nave ${sufijo}`, tipo: 'infraestructura', descripcion: 'Cubierta' })
     ).json()) as Equipo
-    const remolque = (await (
-      await alta({ nombre: `B remolque ${sufijo}`, necesitaMantenimiento: true })
-    ).json()) as Equipo
-    const suyos = (await lista(`?q=${sufijo}`)).map((x) => x.id)
-    expect(suyos).toEqual([remolque.id, nave.id])
+    const remolque = (await (await alta({ nombre: `B remolque ${sufijo}` })).json()) as Equipo
+    await pedir('POST', `/explotaciones/${a}/tareas`, empleado.cookie, {
+      titulo: 'Cambiar una rueda',
+      equipoId: remolque.id,
+    })
+    const suyos = await lista(`?q=${sufijo}`)
+    expect(suyos.map((x) => [x.id, x.tareasPendientes])).toEqual([
+      [remolque.id, 1],
+      [nave.id, 0],
+    ])
     expect((await lista(`?q=${sufijo}&tipo=infraestructura`)).map((x) => x.id)).toEqual([nave.id])
     // También en la descripción
     expect((await lista('?q=Cubierta')).map((x) => x.id)).toContain(nave.id)

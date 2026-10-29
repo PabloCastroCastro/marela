@@ -256,8 +256,18 @@ export type EquipoSimulado = {
   nombre: string
   tipo: 'maquinaria' | 'infraestructura'
   descripcion: string | null
-  necesitaMantenimiento: boolean
   activo: boolean
+}
+
+export type TareaSimulada = {
+  id: string
+  titulo: string
+  equipoId: string | null
+  descripcion: string | null
+  fechaLimite: string | null
+  prioridad: 'baja' | 'normal' | 'alta'
+  asignadaAId: string | null
+  hecha: { en: string; porId: string } | null
 }
 
 export type EstadoSimulado = {
@@ -286,6 +296,7 @@ export type EstadoSimulado = {
   almacenes: AlmacenSimulado[]
   movimientos: MovimientoSimulado[]
   equipos: EquipoSimulado[]
+  tareas: TareaSimulada[]
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
   sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
@@ -535,7 +546,6 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         nombre: 'Tractor John Deere',
         tipo: 'maquinaria',
         descripcion: 'Matrícula E-1234-BCD',
-        necesitaMantenimiento: true,
         activo: true,
       },
       {
@@ -543,8 +553,40 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         nombre: 'Nave de las vacas',
         tipo: 'infraestructura',
         descripcion: null,
-        necesitaMantenimiento: false,
         activo: true,
+      },
+    ],
+    // Una del tractor sin asignar, una de otra persona y una hecha
+    tareas: [
+      {
+        id: 'ta1',
+        titulo: 'Cambiar la rueda',
+        equipoId: 'eq1',
+        descripcion: null,
+        fechaLimite: '2026-01-10',
+        prioridad: 'alta',
+        asignadaAId: null,
+        hecha: null,
+      },
+      {
+        id: 'ta2',
+        titulo: 'Pintar la nave',
+        equipoId: 'eq2',
+        descripcion: null,
+        fechaLimite: null,
+        prioridad: 'normal',
+        asignadaAId: 'u2',
+        hecha: null,
+      },
+      {
+        id: 'ta3',
+        titulo: 'Cambiar el aceite',
+        equipoId: 'eq1',
+        descripcion: null,
+        fechaLimite: null,
+        prioridad: 'normal',
+        asignadaAId: 'u1',
+        hecha: { en: '2026-10-01T10:00:00.000Z', porId: 'u1' },
       },
     ],
     ...cambios,
@@ -582,6 +624,8 @@ const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labor
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
 // La maquinaria y las infraestructuras, una o su estado
 const EQUIPOS = /^\/api\/explotaciones\/[^/]+\/equipos(?:\/([^/]+))?(\/estado)?$/
+// Las tareas de mantenimiento, una, su estado de hecha o las personas a quien asignarlas
+const TAREAS = /^\/api\/explotaciones\/([^/]+)\/tareas(?:\/([^/]+))?(\/hecha)?$/
 // Los almacenes de comida, uno o su estado
 const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
 // Los movimientos de un almacén, el registro o uno
@@ -986,11 +1030,89 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...a, ...sello })
     }
 
+    const deTareas = ruta.match(TAREAS)
+    if (deTareas) {
+      const [, explotacionId, tareaId, hecha] = deTareas
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      const persona = (id: string | null) => {
+        const m = estado.miembros.find((x) => x.usuarioId === id)
+        return id ? { id, nombre: m?.nombre ?? id } : null
+      }
+      const completa = (t: TareaSimulada) => {
+        const equipo = estado.equipos.find((x) => x.id === t.equipoId)
+        return {
+          id: t.id,
+          titulo: t.titulo,
+          equipo: equipo ? { id: equipo.id, nombre: equipo.nombre } : null,
+          descripcion: t.descripcion,
+          fechaLimite: t.fechaLimite,
+          prioridad: t.prioridad,
+          asignadaA: persona(t.asignadaAId),
+          hecha: t.hecha ? { en: t.hecha.en, por: persona(t.hecha.porId) } : null,
+          creadoEn: '2026-10-01T10:00:00.000Z',
+          modificadoEn: '2026-10-01T10:00:00.000Z',
+        }
+      }
+      if (tareaId === 'personas')
+        return json(estado.miembros.map((m) => ({ id: m.usuarioId, nombre: m.nombre })))
+      const q = new URL(peticion.url).searchParams
+      if (!tareaId && metodo === 'GET')
+        return json(
+          estado.tareas
+            .filter((t) => q.get('estado') !== 'pendiente' || !t.hecha)
+            .filter((t) => q.get('estado') !== 'hecha' || t.hecha)
+            .filter(
+              (t) =>
+                q.get('para') !== 'mi' ||
+                t.asignadaAId === null ||
+                t.asignadaAId === estado.usuario.id,
+            )
+            .filter((t) => !q.get('equipoId') || t.equipoId === q.get('equipoId'))
+            .map(completa),
+        )
+      // Solo el administrador asigna
+      const asigna = (antes: string | null) =>
+        (cuerpo.asignadaAId ?? null) !== antes && e.rol !== 'administrador'
+      const datosTarea = () => ({
+        titulo: (cuerpo.titulo as string).trim(),
+        equipoId: cuerpo.equipoId ?? null,
+        descripcion: (cuerpo.descripcion as string | undefined)?.trim() || null,
+        fechaLimite: cuerpo.fechaLimite ?? null,
+        prioridad: cuerpo.prioridad ?? 'normal',
+        asignadaAId: cuerpo.asignadaAId ?? null,
+      })
+      if (!tareaId) {
+        if (asigna(null)) return errorApi(403, 'sin_permiso')
+        const nueva: TareaSimulada = {
+          id: `ta${estado.tareas.length + 1}`,
+          hecha: null,
+          ...datosTarea(),
+        }
+        estado.tareas.push(nueva)
+        return json(completa(nueva), 201)
+      }
+      const t = estado.tareas.find((x) => x.id === tareaId)
+      if (!t) return errorApi(404, 'tarea_no_encontrada')
+      if (hecha) {
+        t.hecha = cuerpo.hecha ? { en: '2026-10-29T10:00:00.000Z', porId: estado.usuario.id } : null
+        return json(completa(t))
+      }
+      if (metodo === 'DELETE') {
+        estado.tareas = estado.tareas.filter((x) => x !== t)
+        return json(completa(t))
+      }
+      if (asigna(t.asignadaAId)) return errorApi(403, 'sin_permiso')
+      Object.assign(t, datosTarea())
+      return json(completa(t))
+    }
+
     const deEquipos = ruta.match(EQUIPOS)
     if (deEquipos) {
       const [, equipoId, estadoEquipo] = deEquipos
       const completo = (e: EquipoSimulado) => ({
         ...e,
+        tareasPendientes: estado.tareas.filter((t) => t.equipoId === e.id && !t.hecha).length,
         creadoEn: '2026-10-01T10:00:00.000Z',
         modificadoEn: '2026-10-01T10:00:00.000Z',
       })
@@ -1007,12 +1129,10 @@ export function simularApi(estado: EstadoSimulado) {
                   .toLowerCase()
                   .includes((q.get('q') ?? '').toLowerCase()),
             )
+            .map(completo)
             .sort(
-              (x, y) =>
-                Number(y.necesitaMantenimiento) - Number(x.necesitaMantenimiento) ||
-                x.nombre.localeCompare(y.nombre),
-            )
-            .map(completo),
+              (x, y) => y.tareasPendientes - x.tareasPendientes || x.nombre.localeCompare(y.nombre),
+            ),
         )
       const repetido = (nombre: string, id?: string) =>
         estado.equipos.some(
@@ -1026,7 +1146,6 @@ export function simularApi(estado: EstadoSimulado) {
         nombre: (cuerpo.nombre as string).trim(),
         tipo: cuerpo.tipo,
         descripcion: (cuerpo.descripcion as string | undefined)?.trim() || null,
-        necesitaMantenimiento: Boolean(cuerpo.necesitaMantenimiento),
       })
       if (!equipoId) {
         if (repetido(cuerpo.nombre)) return nombreEnUso()

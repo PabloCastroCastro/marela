@@ -20,8 +20,10 @@ const Equipo = z
     nombre: z.string(),
     tipo: z.enum(TIPOS_EQUIPO),
     descripcion: z.string().nullable(),
-    necesitaMantenimiento: z.boolean(),
     activo: z.boolean(),
+    tareasPendientes: z.number().int().openapi({
+      description: 'Cuántas tareas tiene sin hacer: si alguna, necesita mantenimiento',
+    }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -74,7 +76,10 @@ const listar = createRoute({
   middleware: [permitir('mantenimiento')] as const,
   request: { params: Parametros, query: Filtros },
   responses: {
-    200: json(z.array(Equipo), 'Los que necesitan mantenimiento primero, y después por nombre'),
+    200: json(
+      z.array(Equipo),
+      'Los que tienen más tareas pendientes primero, y después por nombre',
+    ),
     ...comunes,
   },
 })

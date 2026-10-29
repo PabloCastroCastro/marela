@@ -1,6 +1,6 @@
-import { Plus, Wrench } from 'lucide-react'
+import { ClipboardCheck, Plus, Wrench } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { Boton } from '../componentes/Boton'
 import { BotonFlotante } from '../componentes/BotonFlotante'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
@@ -9,52 +9,154 @@ import { BarraFiltros, Buscador, FiltroDesplegable } from '../componentes/Filtro
 import { Tabla } from '../componentes/Tabla'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
-import { TIPOS_EQUIPO, type TipoEquipo, useEquipos } from './datos'
+import {
+  type FiltrosTareas,
+  pendientes,
+  TIPOS_EQUIPO,
+  type TipoEquipo,
+  useEquipos,
+  useTareas,
+} from './datos'
 import { FormularioEquipo } from './FormularioEquipo'
+import { FormularioTarea } from './FormularioTarea'
+import { ListaTareas } from './ListaTareas'
 import estilos from './Mantenimiento.module.css'
+
+// Cuántas tareas pendientes tiene una máquina o una infraestructura: si alguna, necesita mantenimiento
+export const InsigniaPendientes = ({ n }: { n: number }) =>
+  n > 0 ? (
+    <Insignia tipo="aviso" icono={<Wrench aria-hidden />}>
+      {pendientes(n)}
+    </Insignia>
+  ) : (
+    <Insignia tipo="exito">Al día</Insignia>
+  )
+
+type VistaTareas = 'mias' | 'todas' | 'hechas'
+
+const FILTROS: Record<VistaTareas, FiltrosTareas> = {
+  mias: { estado: 'pendiente', para: 'mi' },
+  todas: { estado: 'pendiente' },
+  hechas: { estado: 'hecha' },
+}
+
+// Mantenimiento (GH-111 y GH-112): las tareas por hacer, primero, y la maquinaria y las
+// infraestructuras de la explotación. Cualquiera da de alta tareas y equipos; el administrador
+// asigna las tareas. La pestaña, en la dirección para que se conserve al volver de una ficha.
+export function PaginaMantenimiento() {
+  const [busqueda, setBusqueda] = useSearchParams()
+  const vista = busqueda.get('vista') === 'equipos' ? 'equipos' : 'tareas'
+  const [creando, setCreando] = useState(false)
+
+  return (
+    <section className={estilos.pagina}>
+      <div className={estilos.titulo}>
+        <h1>Mantenimiento</h1>
+        <div className={estilos.soloAncho}>
+          <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setCreando(true)}>
+            {vista === 'tareas' ? 'Nueva tarea' : 'Añadir máquina o infraestructura'}
+          </Boton>
+        </div>
+      </div>
+
+      <Chips
+        etiqueta="Vista"
+        opciones={[
+          { valor: 'tareas', texto: 'Tareas' },
+          { valor: 'equipos', texto: 'Maquinaria e infraestructuras' },
+        ]}
+        seleccion={vista}
+        alCambiar={(v) =>
+          setBusqueda(v === 'equipos' ? { vista: 'equipos' } : {}, { replace: true })
+        }
+      />
+
+      {vista === 'tareas' ? <Tareas /> : <Equipos />}
+
+      <BotonFlotante
+        etiqueta={vista === 'tareas' ? 'Nueva tarea' : 'Añadir máquina o infraestructura'}
+        icono={<Plus aria-hidden size={26} />}
+        alPulsar={() => setCreando(true)}
+      />
+      {creando &&
+        (vista === 'tareas' ? (
+          <FormularioTarea alCerrar={() => setCreando(false)} />
+        ) : (
+          <EquipoNuevo alCerrar={() => setCreando(false)} />
+        ))}
+    </section>
+  )
+}
+
+function EquipoNuevo({ alCerrar }: { alCerrar: () => void }) {
+  const explotacion = useExplotacionActual()
+  const navegar = useNavigate()
+  return (
+    <FormularioEquipo
+      alCerrar={alCerrar}
+      alGuardar={(e) => navegar(`${rutaExplotacion(explotacion.id)}/mantenimiento/${e.id}`)}
+    />
+  )
+}
+
+// "Mis tareas" son las asignadas a quien mira y las sin asignar
+function Tareas() {
+  const explotacion = useExplotacionActual()
+  const [vista, setVista] = useState<VistaTareas>('mias')
+  const tareas = useTareas(explotacion.id, FILTROS[vista])
+
+  return (
+    <>
+      <Chips
+        etiqueta="Qué tareas"
+        opciones={[
+          { valor: 'mias', texto: 'Mis tareas' },
+          { valor: 'todas', texto: 'Todas las pendientes' },
+          { valor: 'hechas', texto: 'Hechas' },
+        ]}
+        seleccion={vista}
+        alCambiar={setVista}
+      />
+      {tareas.isPending ? (
+        <Esqueleto bloques={[{ alto: '4rem' }, { alto: '4rem' }, { alto: '4rem' }]} />
+      ) : tareas.isError && !tareas.data ? (
+        <EstadoError alReintentar={() => tareas.refetch()} reintentando={tareas.isFetching} />
+      ) : tareas.data.length === 0 ? (
+        <EstadoVacio
+          icono={<ClipboardCheck size={32} />}
+          titulo={vista === 'hechas' ? 'Aún no hay tareas hechas' : 'No hay tareas pendientes'}
+          descripcion={
+            vista === 'hechas'
+              ? 'Las que se marquen como hechas aparecerán aquí.'
+              : 'Da de alta lo que haya que hacer, por ejemplo "Cambiar la boya del bebedero".'
+          }
+        />
+      ) : (
+        <ListaTareas tareas={tareas.data} etiqueta="Tareas" />
+      )}
+    </>
+  )
+}
 
 type FiltroTipo = TipoEquipo | 'todos'
 
-// Aviso de que una máquina o una infraestructura necesita mantenimiento
-export const InsigniaMantenimiento = ({ corta }: { corta?: boolean }) => (
-  <Insignia tipo="aviso" icono={<Wrench aria-hidden />}>
-    {corta ? 'Mantenimiento' : 'Necesita mantenimiento'}
-  </Insignia>
-)
-
-// Mantenimiento: la maquinaria y las infraestructuras de la explotación (GH-111), las que necesitan
-// mantenimiento primero. Cualquiera del equipo da de alta y edita. En el móvil, tarjetas; en pantalla
-// ancha, tabla.
-export function PaginaMantenimiento() {
+// La maquinaria y las infraestructuras, las que tienen más tareas pendientes primero
+function Equipos() {
   const explotacion = useExplotacionActual()
   const navegar = useNavigate()
   const [texto, setTexto] = useState('')
   const [tipo, setTipo] = useState<FiltroTipo>('todos')
   const [activos, setActivos] = useState<'true' | 'false'>('true')
-  const [anadiendo, setAnadiendo] = useState(false)
   const equipos = useEquipos(explotacion.id, {
     q: texto || undefined,
     tipo: tipo === 'todos' ? undefined : tipo,
     activo: activos,
   })
   const filtrado = texto !== '' || tipo !== 'todos' || activos !== 'true'
-  const ruta = `${rutaExplotacion(explotacion.id)}/mantenimiento`
-  const abrir = (id: string) => navegar(`${ruta}/${id}`)
-  const pendientes = (equipos.data ?? []).filter((e) => e.necesitaMantenimiento).length
-
-  const anadir = (
-    <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
-      Añadir máquina o infraestructura
-    </Boton>
-  )
+  const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/mantenimiento/${id}`)
 
   return (
-    <section className={estilos.pagina}>
-      <div className={estilos.titulo}>
-        <h1>Mantenimiento</h1>
-        <div className={estilos.soloAncho}>{anadir}</div>
-      </div>
-
+    <>
       <BarraFiltros
         buscador={<Buscador etiqueta="Buscar por nombre o descripción" alCambiar={setTexto} />}
       >
@@ -94,70 +196,48 @@ export function PaginaMantenimiento() {
           <EstadoVacio
             icono={<Wrench size={32} />}
             titulo="Aún no hay maquinaria ni infraestructuras"
-            descripcion="Da de alta el tractor, los remolques, la nave… para llevar su mantenimiento."
-            accion={anadir}
+            descripcion="Da de alta el tractor, los remolques, la nave… para llevar sus tareas de mantenimiento."
           />
         )
       ) : (
-        <>
-          <p className={estilos.recuento} role="status">
-            {equipos.data.length === 1 ? '1 equipo' : `${equipos.data.length} equipos`}
-            {pendientes > 0 &&
-              ` · ${pendientes} necesitan mantenimiento`.replace(
-                /^ · 1 necesitan/,
-                ' · 1 necesita',
-              )}
-          </p>
-          <Tabla
-            etiqueta="Equipos"
-            filas={equipos.data}
-            claveFila={(e) => e.id}
-            alSeleccionar={(e) => abrir(e.id)}
-            columnas={[
-              {
-                clave: 'nombre',
-                titulo: 'Nombre',
-                valor: (e) => e.nombre,
-                ordenar: (e) => e.nombre,
-                principal: true,
-              },
-              {
-                clave: 'tipo',
-                titulo: 'Tipo',
-                valor: (e) => TIPOS_EQUIPO[e.tipo],
-                ordenar: (e) => e.tipo,
-              },
-              {
-                clave: 'descripcion',
-                titulo: 'Descripción',
-                valor: (e) => e.descripcion ?? '—',
-              },
-              {
-                clave: 'estado',
-                titulo: 'Estado',
-                valor: (e) =>
-                  !e.activo ? (
-                    <Insignia>Desactivado</Insignia>
-                  ) : e.necesitaMantenimiento ? (
-                    <InsigniaMantenimiento corta />
-                  ) : (
-                    <Insignia tipo="exito">Al día</Insignia>
-                  ),
-                ordenar: (e) => (e.necesitaMantenimiento ? 0 : 1),
-              },
-            ]}
-          />
-        </>
+        <Tabla
+          etiqueta="Equipos"
+          filas={equipos.data}
+          claveFila={(e) => e.id}
+          alSeleccionar={(e) => abrir(e.id)}
+          columnas={[
+            {
+              clave: 'nombre',
+              titulo: 'Nombre',
+              valor: (e) => e.nombre,
+              ordenar: (e) => e.nombre,
+              principal: true,
+            },
+            {
+              clave: 'tipo',
+              titulo: 'Tipo',
+              valor: (e) => TIPOS_EQUIPO[e.tipo],
+              ordenar: (e) => e.tipo,
+            },
+            {
+              clave: 'descripcion',
+              titulo: 'Descripción',
+              valor: (e) => e.descripcion ?? '—',
+            },
+            {
+              clave: 'estado',
+              titulo: 'Mantenimiento',
+              valor: (e) =>
+                e.activo ? (
+                  <InsigniaPendientes n={e.tareasPendientes} />
+                ) : (
+                  <Insignia>Desactivado</Insignia>
+                ),
+              ordenar: (e) => -e.tareasPendientes,
+            },
+          ]}
+        />
       )}
-
-      <BotonFlotante
-        etiqueta="Añadir máquina o infraestructura"
-        icono={<Plus aria-hidden size={26} />}
-        alPulsar={() => setAnadiendo(true)}
-      />
-      {anadiendo && (
-        <FormularioEquipo alCerrar={() => setAnadiendo(false)} alGuardar={(e) => abrir(e.id)} />
-      )}
-    </section>
+    </>
   )
 }

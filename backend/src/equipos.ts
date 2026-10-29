@@ -4,8 +4,9 @@ import type { Transaccion } from './db/explotacion.js'
 import { equipos, TIPOS_EQUIPO } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
 
-// Maquinaria e infraestructuras de la explotación (GH-111). Como en almacenes.ts, todas las funciones
-// reciben la transacción de enLaExplotacion. Los da de alta y los edita cualquiera del equipo.
+// Maquinaria e infraestructuras de la explotación (GH-111), cada una con sus tareas pendientes
+// (GH-112). Como en almacenes.ts, todas las funciones reciben la transacción de enLaExplotacion. Los
+// da de alta y los edita cualquiera del equipo.
 
 const textoOpcional = z
   .string()
@@ -23,7 +24,6 @@ export const DatosEquipo = z
       .openapi({ example: 'Tractor John Deere 6120M' }),
     tipo: z.enum(TIPOS_EQUIPO, 'Indica si es maquinaria o una infraestructura'),
     descripcion: textoOpcional.openapi({ example: 'Matrícula E-1234-BCD' }),
-    necesitaMantenimiento: z.boolean().default(false),
   })
   .openapi('DatosEquipo')
 
@@ -36,8 +36,10 @@ const columnas = {
   nombre: equipos.nombre,
   tipo: equipos.tipo,
   descripcion: equipos.descripcion,
-  necesitaMantenimiento: equipos.necesitaMantenimiento,
   activo: equipos.activo,
+  // Necesita mantenimiento si tiene tareas pendientes (GH-112)
+  tareasPendientes: sql<number>`(select count(*) from tareas t
+    where t.equipo_id = "equipos"."id" and t.hecha_en is null)::int`,
   creadoEn: equipos.creadoEn,
   modificadoEn: equipos.modificadoEn,
 }
@@ -54,7 +56,7 @@ export type FiltrosEquipos = {
   activo?: boolean
 }
 
-// Los que necesitan mantenimiento primero, y después por nombre
+// Los que tienen más tareas pendientes primero, y después por nombre
 export async function listarEquipos(tx: Transaccion, filtros: FiltrosEquipos) {
   const condiciones: (SQL | undefined)[] = []
   const q = filtros.q?.trim()
@@ -68,7 +70,7 @@ export async function listarEquipos(tx: Transaccion, filtros: FiltrosEquipos) {
     .select(columnas)
     .from(equipos)
     .where(and(...condiciones))
-    .orderBy(sql`${equipos.necesitaMantenimiento} desc`, asc(sql`lower(${equipos.nombre})`))
+    .orderBy(sql`${columnas.tareasPendientes} desc`, asc(sql`lower(${equipos.nombre})`))
   return filas.map(equipo)
 }
 
@@ -97,7 +99,6 @@ const valores = (d: DatosEquipo) => ({
   nombre: d.nombre,
   tipo: d.tipo,
   descripcion: d.descripcion ?? null,
-  necesitaMantenimiento: d.necesitaMantenimiento,
 })
 
 export async function crearEquipo(tx: Transaccion, datos: DatosEquipo) {

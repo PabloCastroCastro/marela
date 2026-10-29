@@ -81,6 +81,67 @@
   white-space: pre-line;
 }
 
+/* Tareas (GH-112): el círculo para marcarlas, el título y sus datos, y el lápiz */
+.tareas {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tareas li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-2) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.tareas li > div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  padding-top: var(--espacio-2);
+}
+
+.tituloTarea {
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.marcar {
+  flex-shrink: 0;
+  color: var(--color-primario);
+}
+
+.hecha .tituloTarea {
+  color: var(--color-texto-suave);
+  text-decoration: line-through;
+}
+
+.tarjetaTareas {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.cabeceraTarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.cabeceraTarjeta .tituloTarjeta {
+  margin-bottom: 0;
+}
+
+.subtitulo {
+  font-size: var(--texto-base);
+  font-weight: var(--peso-medio);
+}
+
 .formulario {
   display: grid;
   gap: var(--espacio-4);

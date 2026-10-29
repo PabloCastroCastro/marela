@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, PowerOff, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, PowerOff, RotateCcw } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, datos, ErrorApi } from '../api/cliente'
@@ -8,16 +8,19 @@ import { Boton } from '../componentes/Boton'
 import { useConfirmacion } from '../componentes/Confirmacion'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Insignia, Tarjeta } from '../componentes/Etiquetas'
+import { useRecorte } from '../componentes/Recorte'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
-import { CLAVE_MANTENIMIENTO, TIPOS_EQUIPO, useEquipo } from './datos'
+import { CLAVE_MANTENIMIENTO, TIPOS_EQUIPO, useEquipo, useTareas } from './datos'
 import { FormularioEquipo } from './FormularioEquipo'
+import { FormularioTarea } from './FormularioTarea'
+import { ListaTareas } from './ListaTareas'
 import estilos from './Mantenimiento.module.css'
-import { InsigniaMantenimiento } from './PaginaMantenimiento'
+import { InsigniaPendientes } from './PaginaMantenimiento'
 
-// Ficha de una máquina o una infraestructura (GH-111): sus datos, si necesita mantenimiento, y
-// editarla, desactivarla o reactivarla. Sus tareas llegan con GH-112.
+// Ficha de una máquina o una infraestructura (GH-111): sus datos, sus tareas pendientes y hechas, con
+// "Nueva tarea" (GH-112), y editarla, desactivarla o reactivarla.
 export function PaginaFichaEquipo() {
   const explotacion = useExplotacionActual()
   const { equipoId = '' } = useParams()
@@ -87,7 +90,7 @@ export function PaginaFichaEquipo() {
           <div className={estilos.insignias}>
             <span className={estilos.suave}>{TIPOS_EQUIPO[e.tipo]}</span>
             {!e.activo && <Insignia icono={<PowerOff aria-hidden />}>Desactivado</Insignia>}
-            {e.activo && e.necesitaMantenimiento && <InsigniaMantenimiento />}
+            {e.activo && <InsigniaPendientes n={e.tareasPendientes} />}
           </div>
         </div>
         <div className={estilos.acciones}>
@@ -138,9 +141,10 @@ export function PaginaFichaEquipo() {
           <Dato titulo="Descripción">
             <span className={estilos.descripcion}>{e.descripcion ?? 'Sin indicar'}</span>
           </Dato>
-          <Dato titulo="Mantenimiento">{e.necesitaMantenimiento ? 'Lo necesita' : 'Al día'}</Dato>
         </dl>
       </Tarjeta>
+
+      <TarjetaTareas equipoId={e.id} activo={e.activo} />
 
       <p className={estilos.suave}>
         Alta el {fecha(e.creadoEn)} · Última modificación el {fecha(e.modificadoEn)}
@@ -157,5 +161,49 @@ function Dato({ titulo, children }: { titulo: string; children: ReactNode }) {
       <dt>{titulo}</dt>
       <dd>{children}</dd>
     </div>
+  )
+}
+
+// Las tareas del equipo: las pendientes y, aparte, las hechas, las más recientes a la vista
+function TarjetaTareas({ equipoId, activo }: { equipoId: string; activo: boolean }) {
+  const explotacion = useExplotacionActual()
+  const pendientes = useTareas(explotacion.id, { equipoId, estado: 'pendiente' })
+  const hechas = useTareas(explotacion.id, { equipoId, estado: 'hecha' })
+  const recorte = useRecorte(hechas.data ?? [])
+  const [creando, setCreando] = useState(false)
+
+  return (
+    <Tarjeta aria-labelledby="equipo-tareas" className={estilos.tarjetaTareas}>
+      <div className={estilos.cabeceraTarjeta}>
+        <h2 id="equipo-tareas" className={estilos.tituloTarjeta}>
+          Tareas
+        </h2>
+        {activo && (
+          <Boton
+            variante="secundario"
+            tamano="compacto"
+            icono={<Plus aria-hidden size={18} />}
+            onClick={() => setCreando(true)}
+          >
+            Nueva tarea
+          </Boton>
+        )}
+      </div>
+      {pendientes.isPending ? (
+        <Esqueleto bloques={[{ alto: '3rem' }, { alto: '3rem' }]} />
+      ) : pendientes.data && pendientes.data.length > 0 ? (
+        <ListaTareas tareas={pendientes.data} etiqueta="Tareas pendientes" conEquipo={false} />
+      ) : (
+        <p className={estilos.suave}>Sin tareas pendientes</p>
+      )}
+      {hechas.data && hechas.data.length > 0 && (
+        <>
+          <h3 className={estilos.subtitulo}>Hechas</h3>
+          <ListaTareas tareas={recorte.elementos} etiqueta="Tareas hechas" conEquipo={false} />
+          {recorte.boton}
+        </>
+      )}
+      {creando && <FormularioTarea equipoInicial={equipoId} alCerrar={() => setCreando(false)} />}
+    </Tarjeta>
   )
 }

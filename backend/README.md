@@ -307,15 +307,28 @@ Entradas, salidas y ajustes de inventario, en `src/rutas/movimientos.ts` (módul
 
 ## Mantenimiento
 
-Maquinaria e infraestructuras de la explotación (GH-111), en `src/rutas/equipos.ts` (módulo `mantenimiento`: administrador y empleado):
+Maquinaria e infraestructuras (GH-111) y tareas de mantenimiento (GH-112), en `src/rutas/equipos.ts` y `src/rutas/tareas.ts` (módulo `mantenimiento`: administrador y empleado).
 
-- **`GET /api/explotaciones/{id}/equipos`:** los que necesitan mantenimiento primero, y después por nombre. Búsqueda (`q`, en nombre y descripción) y filtros `tipo` (`maquinaria` o `infraestructura`) y `activo=true|false`.
+**Equipos:**
+
+- **`GET /api/explotaciones/{id}/equipos`:** los que tienen más tareas pendientes primero (`tareasPendientes`), y después por nombre. Búsqueda (`q`, en nombre y descripción) y filtros `tipo` (`maquinaria` o `infraestructura`) y `activo=true|false`.
 - **`GET /api/explotaciones/{id}/equipos/{equipoId}`:** un equipo.
-- **`POST /api/explotaciones/{id}/equipos`:** `{ nombre, tipo, descripcion?, necesitaMantenimiento? }` da de alta una máquina o una infraestructura.
+- **`POST /api/explotaciones/{id}/equipos`:** `{ nombre, tipo, descripcion? }` da de alta una máquina o una infraestructura.
 - **`PUT /api/explotaciones/{id}/equipos/{equipoId}`:** cambia sus datos.
 - **`PATCH /api/explotaciones/{id}/equipos/{equipoId}/estado`:** `{ activo }` desactiva o reactiva. Un equipo no se borra.
 
-El nombre no se repite en la explotación (409 `nombre_en_uso`). Migraciones `0030` (tabla) y `0031` (historial de cambios).
+El nombre no se repite en la explotación (409 `nombre_en_uso`).
+
+**Tareas:**
+
+- **`GET /api/explotaciones/{id}/tareas`:** filtros `estado` (`pendiente` o `hecha`), `para=mi` (las asignadas a quien pregunta y las sin asignar), `asignadaA` y `equipoId`. Las pendientes, por fecha límite (las que no tienen, al final) y prioridad; las hechas, de la más reciente a la más antigua.
+- **`GET /api/explotaciones/{id}/tareas/personas`:** las personas activas del equipo, para asignar.
+- **`POST /api/explotaciones/{id}/tareas`:** `{ titulo, equipoId?, descripcion?, fechaLimite?, prioridad?, asignadaAId? }`. `prioridad` es `baja`, `normal` (por defecto) o `alta`.
+- **`PUT /api/explotaciones/{id}/tareas/{tareaId}`:** la corrige.
+- **`PATCH /api/explotaciones/{id}/tareas/{tareaId}/hecha`:** `{ hecha }` la marca como hecha (con quién y cuándo) o la vuelve a dejar pendiente.
+- **`DELETE /api/explotaciones/{id}/tareas/{tareaId}`:** la borra y la devuelve, para poder deshacerlo.
+
+Cualquiera del equipo crea, corrige, marca y borra tareas; solo el administrador elige o cambia a quién está asignada (403 `sin_permiso` en `asignadaAId`). La persona asignada y quien la hace son de la explotación (trigger `tareas_comprobar`). Migraciones `0030` (tablas) y `0031` (reglas e historial de cambios).
 
 ## Historial de cambios
 

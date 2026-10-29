@@ -4,7 +4,6 @@ import { api, datos, erroresPorCampo } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { AreaTexto, Campo } from '../componentes/Campo'
-import { Casilla } from '../componentes/Casilla'
 import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
@@ -12,6 +11,7 @@ import { CLAVE_MANTENIMIENTO, type Equipo, TIPOS_EQUIPO, type TipoEquipo } from 
 import estilos from './Mantenimiento.module.css'
 
 // Dar de alta una máquina o una infraestructura, o cambiar sus datos (GH-111). Cualquiera del equipo.
+// Si necesita mantenimiento lo dicen sus tareas pendientes (GH-112).
 export function FormularioEquipo({
   equipo,
   alCerrar,
@@ -29,22 +29,15 @@ export function FormularioEquipo({
     nombre: string
     tipo?: TipoEquipo
     descripcion: string
-    necesitaMantenimiento: boolean
   }>({
     nombre: equipo?.nombre ?? '',
     tipo: equipo?.tipo,
     descripcion: equipo?.descripcion ?? '',
-    necesitaMantenimiento: equipo?.necesitaMantenimiento ?? false,
   })
   const [erroresLocales, setErroresLocales] = useState<Record<string, string>>({})
 
   const guardar = useMutation({
-    mutationFn: (cuerpo: {
-      nombre: string
-      tipo: TipoEquipo
-      descripcion: string
-      necesitaMantenimiento: boolean
-    }) =>
+    mutationFn: (cuerpo: { nombre: string; tipo: TipoEquipo; descripcion: string }) =>
       datos(
         equipo
           ? api.PUT('/api/explotaciones/{explotacionId}/equipos/{equipoId}', {
@@ -138,11 +131,6 @@ export function FormularioEquipo({
           value={f.descripcion}
           onChange={(e) => setF((v) => ({ ...v, descripcion: e.target.value }))}
           error={errores.descripcion}
-        />
-        <Casilla
-          etiqueta="Necesita mantenimiento"
-          checked={f.necesitaMantenimiento}
-          onChange={(e) => setF((v) => ({ ...v, necesitaMantenimiento: e.target.checked }))}
         />
       </form>
     </HojaInferior>

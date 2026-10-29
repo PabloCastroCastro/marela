@@ -1,6 +1,6 @@
 {
-  "id": "6be2209d-ea08-4f95-acc7-705ef7ccdb18",
-  "prevId": "c8790a84-a3ef-4e93-8c64-7a033484f213",
+  "id": "55103368-4dbb-4424-8e83-dfc323be51d5",
+  "prevId": "b983e402-5874-4dc4-98e9-b466bda811cc",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2808,13 +2808,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "necesita_mantenimiento": {
-          "name": "necesita_mantenimiento",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "activo": {
           "name": "activo",
           "type": "boolean",
@@ -2957,6 +2950,258 @@
         "equipos_nombre_no_vacio": {
           "name": "equipos_nombre_no_vacio",
           "value": "btrim(\"equipos\".\"nombre\") <> ''"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.tareas": {
+      "name": "tareas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipo_id": {
+          "name": "equipo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_limite": {
+          "name": "fecha_limite",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prioridad": {
+          "name": "prioridad",
+          "type": "prioridad_tarea",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "asignada_a_id": {
+          "name": "asignada_a_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hecha_en": {
+          "name": "hecha_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hecha_por_id": {
+          "name": "hecha_por_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "tareas_explotacion_idx": {
+          "name": "tareas_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "tareas_equipo_idx": {
+          "name": "tareas_equipo_idx",
+          "columns": [
+            {
+              "expression": "equipo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "tareas_asignada_idx": {
+          "name": "tareas_asignada_idx",
+          "columns": [
+            {
+              "expression": "asignada_a_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "tareas_explotacion_id_organization_id_fk": {
+          "name": "tareas_explotacion_id_organization_id_fk",
+          "tableFrom": "tareas",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "tableTo": "organization",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "restrict"
+        },
+        "tareas_asignada_a_id_user_id_fk": {
+          "name": "tareas_asignada_a_id_user_id_fk",
+          "tableFrom": "tareas",
+          "columnsFrom": [
+            "asignada_a_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "tareas_hecha_por_id_user_id_fk": {
+          "name": "tareas_hecha_por_id_user_id_fk",
+          "tableFrom": "tareas",
+          "columnsFrom": [
+            "hecha_por_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "tareas_creado_por_user_id_fk": {
+          "name": "tareas_creado_por_user_id_fk",
+          "tableFrom": "tareas",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "tareas_modificado_por_user_id_fk": {
+          "name": "tareas_modificado_por_user_id_fk",
+          "tableFrom": "tareas",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "tareas_equipo_fk": {
+          "name": "tareas_equipo_fk",
+          "tableFrom": "tareas",
+          "columnsFrom": [
+            "explotacion_id",
+            "equipo_id"
+          ],
+          "tableTo": "equipos",
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "tareas_titulo_no_vacio": {
+          "name": "tareas_titulo_no_vacio",
+          "value": "btrim(\"tareas\".\"titulo\") <> ''"
+        },
+        "tareas_hecha": {
+          "name": "tareas_hecha",
+          "value": "(\"tareas\".\"hecha_en\" is null) = (\"tareas\".\"hecha_por_id\" is null)"
         }
       },
       "isRLSEnabled": false
@@ -4385,6 +4630,15 @@
         "pacas",
         "rolos",
         "remolques"
+      ]
+    },
+    "public.prioridad_tarea": {
+      "name": "prioridad_tarea",
+      "schema": "public",
+      "values": [
+        "baja",
+        "normal",
+        "alta"
       ]
     },
     "public.tipo_equipo": {
