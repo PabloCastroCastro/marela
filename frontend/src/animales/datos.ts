@@ -58,16 +58,19 @@ export const useAnimales = (explotacionId: string, filtros: FiltrosAnimales = {}
     placeholderData: keepPreviousData,
   })
 
+// También para descargar las fichas al entrar en la explotación, y abrirlas sin conexión (GH-31)
+export const consultaAnimal = (explotacionId: string, animalId: string) => ({
+  queryKey: [...CLAVE_ANIMALES, explotacionId, 'ficha', animalId],
+  queryFn: () =>
+    datos(
+      api.GET('/api/explotaciones/{explotacionId}/animales/{animalId}', {
+        params: { path: { explotacionId, animalId } },
+      }),
+    ),
+})
+
 export const useAnimal = (explotacionId: string, animalId: string) =>
-  useQuery({
-    queryKey: [...CLAVE_ANIMALES, explotacionId, 'ficha', animalId],
-    queryFn: () =>
-      datos(
-        api.GET('/api/explotaciones/{explotacionId}/animales/{animalId}', {
-          params: { path: { explotacionId, animalId } },
-        }),
-      ),
-  })
+  useQuery(consultaAnimal(explotacionId, animalId))
 
 export const useRazas = (explotacionId: string) =>
   useQuery({

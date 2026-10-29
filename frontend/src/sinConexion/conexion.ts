@@ -14,7 +14,10 @@ let sonda: ReturnType<typeof setInterval> | undefined
 
 async function probar() {
   try {
-    const respuesta = await globalThis.fetch('/api/health', { cache: 'no-store' })
+    const respuesta = await globalThis.fetch('/api/health', {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    })
     if (respuesta.ok) marcarConConexion()
   } catch {
     // Sigue sin conexión
@@ -50,6 +53,38 @@ if (typeof globalThis.addEventListener === 'function') {
 }
 
 export const hayConexion = () => onlineManager.isOnline()
+
+// Con una raya de cobertura el móvil cree que tiene red y la petición se queda esperando hasta que el
+// navegador la da por perdida, que puede ser más de un minuto. Antes de eso se da por fallida: un
+// registro a los 10 s (va a la cola de pendientes, y reenviarlo no lo duplica) y una consulta a los
+// 15 s (sigue a la vista lo guardado).
+export const LIMITES = { consulta: 15_000, registro: 10_000 }
+
+// No ha llegado al servidor: sin red o sin respuesta a tiempo
+export class SinRespuesta extends Error {
+  constructor() {
+    super('No hay conexión con el servidor')
+    this.name = 'SinRespuesta'
+  }
+}
+
+// fetch con el límite de espera. Si no llega, se marca sin conexión y lanza SinRespuesta; si lo
+// cancela quien lo pidió (una consulta que ya no hace falta), lanza su error como siempre.
+export async function pedir(entrada: RequestInfo | URL, init: RequestInit = {}) {
+  const peticion = entrada instanceof Request ? entrada : undefined
+  const metodo = (init.method ?? peticion?.method ?? 'GET').toUpperCase()
+  const limite = AbortSignal.timeout(metodo === 'GET' ? LIMITES.consulta : LIMITES.registro)
+  const propia = init.signal ?? peticion?.signal ?? undefined
+  const signal =
+    propia && typeof AbortSignal.any === 'function' ? AbortSignal.any([propia, limite]) : limite
+  try {
+    return await globalThis.fetch(entrada, { ...init, signal })
+  } catch (error) {
+    if (propia?.aborted) throw error
+    marcarSinConexion()
+    throw new SinRespuesta()
+  }
+}
 
 export const useConexion = () =>
   useSyncExternalStore(
