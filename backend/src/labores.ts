@@ -75,7 +75,7 @@ export const DatosLabor = Campos.extend({
 })
   .superRefine((l, ctx) => {
     comprobarCampos(l, ctx)
-    comprobarIds(l, ctx)
+    comprobarIds(l.ids, l.fincaIds, ctx)
     if (l.superficie != null && l.fincaIds.length > 1)
       ctx.addIssue({
         code: 'custom',

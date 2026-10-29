@@ -1189,7 +1189,11 @@ export function simularApi(estado: EstadoSimulado) {
             .map(parto),
         )
       }
+      // Reenviado con el id del dispositivo (GH-33): el que ya se guardó
+      const ya = estado.partos.find((x) => cuerpo.id && x.id === cuerpo.id)
+      if (ya) return json(parto(ya), 201)
       const terneros = cuerpo.terneros as {
+        id?: string
         crotal?: string
         sexo: 'hembra' | 'macho'
         estado: string
@@ -1215,7 +1219,7 @@ export function simularApi(estado: EstadoSimulado) {
         .sort((x, y) => x.fecha.localeCompare(y.fecha))
         .at(-1)
       const nuevo: PartoSimulado = {
-        id: `pa${estado.partos.length + 1}`,
+        id: (cuerpo.id as string | undefined) ?? `pa${estado.partos.length + 1}`,
         madreId: madreId ?? '',
         fecha: cuerpo.fecha,
         tipo: cuerpo.tipo ?? 'normal',
@@ -1228,7 +1232,7 @@ export function simularApi(estado: EstadoSimulado) {
       for (const t of terneros) {
         const muerto = t.estado === 'muerto'
         const ternero = animalSimulado({
-          id: `a${estado.animales.length + 1}`,
+          id: t.id ?? `a${estado.animales.length + 1}`,
           crotal: t.crotal || null,
           raza: t.raza,
           sexo: t.sexo,
@@ -1350,10 +1354,14 @@ export function simularApi(estado: EstadoSimulado) {
           { campo: 'producto', mensaje: 'Indica el producto o medicamento' },
         ])
       }
+      // Reenviados con los ids del dispositivo (GH-33): los que ya se guardaron
+      const ids = cuerpo.ids as string[] | undefined
+      const ya = estado.tratamientos.filter((x) => ids?.includes(x.id))
+      if (ids?.length && ya.length === ids.length) return json(ya.map(tratamiento), 201)
       const persona = estado.miembros.find((m) => m.usuarioId === cuerpo.aplicadoPorId)
       const creados = (cuerpo.animalIds as string[]).map((animalId, i) => {
         const t: TratamientoSimulado = {
-          id: `t${estado.tratamientos.length + i + 1}`,
+          id: ids?.[i] ?? `t${estado.tratamientos.length + i + 1}`,
           animalId,
           fecha: cuerpo.fecha,
           producto: cuerpo.producto,

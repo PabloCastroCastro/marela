@@ -8,6 +8,8 @@ import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha as formatoFecha, hoy } from '../formato'
+import { nuevoId, type Pendiente, reemplazar } from '../sinConexion/cola'
+import { AVISO_GUARDADO, useRegistrar } from '../sinConexion/useRegistrar'
 import estilos from './Animales.module.css'
 import { CLAVE_ANIMALES, identificacion } from './datos'
 import {
@@ -31,13 +33,30 @@ type AnimalTratado = {
 // Valor del selector de quién lo administra para escribir un nombre
 const OTRA_PERSONA = 'otra'
 
+const texto = (n: number | null | undefined) => (n == null ? '' : String(n))
+
+// "Tratamiento · Ivermectina 1 % · 10/05/2026 · ES36 0001", para la lista de pendientes (GH-33)
+const descripcion = (c: DatosTratamiento, animales: AnimalTratado[]) =>
+  [
+    'Tratamiento',
+    c.producto,
+    formatoFecha(c.fecha),
+    animales.length === 1 && animales[0]
+      ? identificacion(animales[0])
+      : `${animales.length} animales`,
+  ].join(' · ')
+
 // Registrar un tratamiento a uno o varios animales (GH-20). Se crea uno por animal, todos iguales.
+// Sin conexión, se guarda en el móvil y se envía solo al recuperarla; con `pendiente`, se corrige el
+// que no se pudo enviar (GH-33).
 export function FormularioTratamiento({
   animales,
+  pendiente,
   alCerrar,
   alGuardar,
 }: {
   animales: AnimalTratado[]
+  pendiente?: Pendiente
   alCerrar: () => void
   alGuardar?: () => void
 }) {
@@ -58,31 +77,77 @@ export function FormularioTratamiento({
     hoy(),
   )
   const yo = sesion.data?.usuario
+  const registrar = useRegistrar()
+  const previo = pendiente?.cuerpo as DatosTratamiento | undefined
+  // Uno por animal, los mismos en cada intento: reenviarlo no lo duplica
+  const [ids] = useState(() => previo?.ids ?? animales.map(() => nuevoId()))
   const [f, setF] = useState({
-    fecha: ultimoDia,
-    motivo: '' as MotivoTratamiento | '',
-    producto: '',
-    diagnostico: '',
-    dosis: '',
-    via: '' as ViaAdministracion | '',
-    diasSupresion: '',
-    lote: '',
-    aplicadoPor: yo?.id ?? '',
-    aplicadoPorTexto: '',
-    observaciones: '',
+    fecha: previo?.fecha ?? ultimoDia,
+    motivo: (previo?.motivo ?? '') as MotivoTratamiento | '',
+    producto: previo?.producto ?? '',
+    diagnostico: previo?.diagnostico ?? '',
+    dosis: previo?.dosis ?? '',
+    via: (previo?.via ?? '') as ViaAdministracion | '',
+    diasSupresion: texto(previo?.diasSupresion),
+    lote: previo?.lote ?? '',
+    aplicadoPor: previo
+      ? (previo.aplicadoPorId ?? (previo.aplicadoPorTexto ? OTRA_PERSONA : ''))
+      : (yo?.id ?? ''),
+    aplicadoPorTexto: previo?.aplicadoPorTexto ?? '',
+    observaciones: previo?.observaciones ?? '',
   })
   const [erroresLocales, setErroresLocales] = useState<Record<string, string>>({})
   const cambiar = (campo: keyof typeof f, valor: string) => setF((v) => ({ ...v, [campo]: valor }))
 
   const guardar = useMutation({
-    mutationFn: (cuerpo: DatosTratamiento) =>
-      datos(
-        api.POST('/api/explotaciones/{explotacionId}/tratamientos', {
-          params: { path: { explotacionId: explotacion.id } },
-          body: cuerpo,
-        }),
-      ),
+    mutationFn: async (cuerpo: DatosTratamiento) => {
+      const nuevo: DatosTratamiento = { ...cuerpo, ids }
+      if (pendiente) {
+        reemplazar(pendiente.id, nuevo, descripcion(nuevo, animales))
+        return null
+      }
+      const resultado = await registrar(
+        {
+          id: ids[0] ?? nuevoId(),
+          tipo: 'tratamiento',
+          ruta: `/api/explotaciones/${explotacion.id}/tratamientos`,
+          cuerpo: nuevo,
+          descripcion: descripcion(nuevo, animales),
+          contexto: {
+            animales: JSON.stringify(
+              animales.map(({ id, crotal, nombre, fechaNacimiento, fechaBaja }) => ({
+                id,
+                crotal,
+                nombre,
+                fechaNacimiento,
+                fechaBaja,
+              })),
+            ),
+          },
+          claves: [[...CLAVE_ANIMALES, explotacion.id]],
+        },
+        () =>
+          datos(
+            api.POST('/api/explotaciones/{explotacionId}/tratamientos', {
+              params: { path: { explotacionId: explotacion.id } },
+              body: nuevo,
+            }),
+          ),
+      )
+      return 'enviado' in resultado ? resultado.enviado : null
+    },
     onSuccess: async (creados) => {
+      // En la cola, o corregido en ella: no ha cambiado nada en el servidor, y sin conexión
+      // refrescar se quedaría esperando
+      if (!creados) {
+        avisar({
+          tipo: 'info',
+          mensaje: pendiente ? 'Tratamiento corregido: se volverá a enviar' : AVISO_GUARDADO,
+        })
+        alGuardar?.()
+        alCerrar()
+        return
+      }
       await cliente.invalidateQueries({ queryKey: [...CLAVE_ANIMALES, explotacion.id] })
       avisar({
         tipo: 'exito',

@@ -381,3 +381,86 @@ describe('fincas sin conexión (GH-32)', () => {
     expect(estado.aplicaciones.at(-1)).toMatchObject({ producto: 'Cal viva', dosis: 1.5 })
   })
 })
+
+describe('animales sin conexión (GH-33)', () => {
+  const ficha = (id: string) => `/explotaciones/${A_VEIGA.id}/animales/${id}`
+
+  async function elegir(usuario: ReturnType<typeof userEvent.setup>, opcion: string) {
+    await usuario.click(await screen.findByRole('button', { name: 'Registrar' }))
+    await usuario.click(
+      within(screen.getByRole('dialog', { name: 'Registrar' })).getByRole('button', {
+        name: opcion,
+      }),
+    )
+  }
+
+  it('registra un tratamiento sin conexión, lo muestra en la ficha y lo envía', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(ficha('a1'))
+    const tarjeta = await screen.findByRole('region', { name: /Tratamientos/ })
+    estado.sinRed = true
+    await elegir(usuario, 'Tratamiento')
+    const hoja = screen.getByRole('dialog', { name: /Registrar tratamiento · Marela/ })
+    await usuario.selectOptions(within(hoja).getByLabelText(/^Motivo/), 'Enfermedad')
+    await usuario.type(within(hoja).getByLabelText(/^Producto/), 'Meloxicam')
+    await usuario.type(within(hoja).getByLabelText(/^Días de supresión/), '15')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar tratamiento' }))
+    await screen.findByText(/se ha guardado en el móvil/)
+    const sinEnviar = within(tarjeta).getByRole('list', { name: 'Tratamientos sin enviar' })
+    expect(
+      within(sinEnviar).getByText(/^Tratamiento · Meloxicam · .* · Marela/),
+    ).toBeInTheDocument()
+    const [id] = (verCola()[0]?.cuerpo as { ids: string[] } | undefined)?.ids ?? []
+
+    estado.sinRed = false
+    act(() => marcarConConexion())
+    expect(await screen.findByText('Se ha enviado 1 registro pendiente')).toBeInTheDocument()
+    expect(estado.tratamientos.find((t) => t.id === id)).toMatchObject({
+      animalId: 'a1',
+      producto: 'Meloxicam',
+    })
+  })
+
+  it('un parto con el crotal repetido falla al enviarlo y se corrige desde la lista', async () => {
+    const enUso = estado.animales[1]?.crotal ?? ''
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(ficha('a1'))
+    const tarjeta = await screen.findByRole('region', { name: 'Reproducción' })
+    estado.sinRed = true
+    await elegir(usuario, 'Parto')
+    let hoja = screen.getByRole('dialog', { name: /Registrar · Marela/ })
+    const ternero = within(hoja).getByRole('group', { name: 'Ternero' })
+    await usuario.click(within(ternero).getByRole('button', { name: 'Hembra' }))
+    await usuario.type(within(ternero).getByLabelText(/^Crotal/), enUso)
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar parto' }))
+    await screen.findByText(/se ha guardado en el móvil/)
+    expect(
+      within(within(tarjeta).getByRole('list', { name: 'Partos sin enviar' })).getByText(
+        /^Parto · 1 ternero · .* · Marela/,
+      ),
+    ).toBeInTheDocument()
+    const cuerpo = verCola()[0]?.cuerpo as { id: string; terneros: { id: string }[] }
+
+    estado.sinRed = false
+    act(() => marcarConConexion())
+    await usuario.click(await screen.findByRole('button', { name: 'Ver' }))
+    const lista = await screen.findByRole('dialog', { name: 'Registros sin enviar' })
+    expect(within(lista).getByText(/No se ha podido enviar: crotal_en_uso/)).toBeInTheDocument()
+    await usuario.click(within(lista).getByRole('button', { name: /^Corregir Parto/ }))
+    hoja = await screen.findByRole('dialog', { name: /Registrar · Marela/ })
+    const crotal = within(hoja).getByLabelText(/^Crotal/)
+    expect(crotal).toHaveValue(enUso)
+    await usuario.clear(crotal)
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar parto' }))
+    expect(await screen.findByText('Se ha enviado 1 registro pendiente')).toBeInTheDocument()
+    // Con los ids del dispositivo: el parto y la ficha del ternero
+    expect(estado.partos.find((p) => p.id === cuerpo.id)).toMatchObject({ madreId: 'a1' })
+    expect(estado.animales.find((a) => a.id === cuerpo.terneros[0]?.id)).toMatchObject({
+      madreId: 'a1',
+      sexo: 'hembra',
+      crotal: null,
+    })
+  })
+})
