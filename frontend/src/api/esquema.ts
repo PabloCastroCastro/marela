@@ -650,6 +650,8 @@ export interface paths {
                     crotal?: "sin";
                     /** @description Solo las hembras con una gestación en curso, por fecha prevista de parto */
                     gestacion?: "en_curso";
+                    /** @description Solo las hijas de madres no aptas para reposición */
+                    reposicion?: "no_apta";
                 };
                 header?: never;
                 path: {
@@ -1068,6 +1070,88 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/reposicion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Marcar una hembra para no dejar sus hijas de reposición, o quitar la marca
+         * @description Con apta: false, motivo (obligatorio) y fecha (por defecto, hoy). Sus hijas lo muestran en madreNoAptaReposicion. Queda en el historial.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    animalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosReposicion"];
+                };
+            };
+            responses: {
+                /** @description La ficha */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnimalDetalle"];
+                    };
+                };
+                /** @description Datos no válidos o el animal no es una hembra (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus animales */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el animal (animal_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/explotaciones/{explotacionId}/animales/{animalId}/pesos": {
@@ -4949,6 +5033,18 @@ export interface components {
              * @description Parto en que nació, si se registró
              */
             partoId: string | null;
+            /** @description Hembra cuyas hijas no se dejan para reposición, desde cuándo y por qué */
+            noAptaReposicion: {
+                /** Format: date */
+                desde: string;
+                motivo: string;
+            } | null;
+            /** @description Hembra cuya madre está marcada como no apta para reposición */
+            madreNoAptaReposicion: {
+                /** Format: date */
+                desde: string;
+                motivo: string;
+            } | null;
             /**
              * Format: date
              * @description Día en que termina la supresión en curso, si la hay
@@ -5019,6 +5115,13 @@ export interface components {
             fecha: string;
             /** @description Detalle; obligatorio si el tipo es "otra" */
             causa?: string | null;
+        };
+        DatosReposicion: {
+            apta: boolean;
+            /** @example Paratuberculosis */
+            motivo?: string | null;
+            /** Format: date */
+            fecha?: string | null;
         };
         CambioAnimal: {
             /** @example ES041503456789 */

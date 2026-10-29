@@ -8,10 +8,11 @@ import type { AnimalDetalle } from './datos'
 import { FormularioBaja } from './FormularioBaja'
 import { FormularioEvento } from './FormularioEvento'
 import { FormularioPesada } from './FormularioPesada'
+import { FormularioReposicion } from './FormularioReposicion'
 import { FormularioTratamiento } from './FormularioTratamiento'
 import { type TipoRegistro, tiposPara, useEventos } from './reproduccion'
 
-type Opcion = 'pesada' | 'tratamiento' | 'baja' | TipoRegistro
+type Opcion = 'pesada' | 'tratamiento' | 'baja' | 'reposicion' | TipoRegistro
 
 // Textos del menú. La inseminación va con la cubrición: el formulario deja elegir entre las dos.
 const TEXTOS: Partial<Record<Opcion, string>> = {
@@ -61,6 +62,14 @@ export function MenuRegistrar({ animal }: { animal: AnimalDetalle }) {
               {TEXTOS[o]}
             </Boton>
           ))}
+          {/* Reposición (GH-110): las hijas de una vaca enferma no se dejan como madres */}
+          {animal.sexo === 'hembra' && (
+            <Boton variante="secundario" anchoCompleto onClick={() => elegir('reposicion')}>
+              {animal.noAptaReposicion
+                ? 'Quitar «No dejar hijas para reposición»'
+                : 'No dejar hijas para reposición'}
+            </Boton>
+          )}
           {animal.estado === 'activo' && (
             <Boton
               variante="secundario"
@@ -77,14 +86,19 @@ export function MenuRegistrar({ animal }: { animal: AnimalDetalle }) {
       {opcion === 'pesada' && <FormularioPesada animal={animal} alCerrar={cerrar} />}
       {opcion === 'tratamiento' && <FormularioTratamiento animales={[animal]} alCerrar={cerrar} />}
       {opcion === 'baja' && <FormularioBaja animal={animal} alCerrar={cerrar} />}
-      {opcion && opcion !== 'pesada' && opcion !== 'tratamiento' && opcion !== 'baja' && (
-        <FormularioEvento
-          animales={[animal]}
-          tipos={tipos}
-          tipoInicial={opcion}
-          alCerrar={cerrar}
-        />
-      )}
+      {opcion === 'reposicion' && <FormularioReposicion animal={animal} alCerrar={cerrar} />}
+      {opcion &&
+        opcion !== 'pesada' &&
+        opcion !== 'tratamiento' &&
+        opcion !== 'baja' &&
+        opcion !== 'reposicion' && (
+          <FormularioEvento
+            animales={[animal]}
+            tipos={tipos}
+            tipoInicial={opcion}
+            alCerrar={cerrar}
+          />
+        )}
     </>
   )
 }

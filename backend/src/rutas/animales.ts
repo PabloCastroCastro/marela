@@ -1,9 +1,11 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import {
   CambioAnimal,
+  cambiarReposicion,
   crearAnimal,
   DatosAnimal,
   DatosBaja,
+  DatosReposicion,
   darDeBaja,
   deshacerBaja,
   editarAnimal,
@@ -20,6 +22,8 @@ import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
 const Progenitor = z
   .object({ id: z.uuid(), crotal: z.string().nullable(), nombre: z.string().nullable() })
   .nullable()
+
+const Reposicion = z.object({ desde: z.iso.date(), motivo: z.string() }).nullable()
 
 const Animal = z
   .object({
@@ -46,6 +50,12 @@ const Animal = z
     causaBaja: z.string().nullable(),
     observaciones: z.string().nullable(),
     partoId: z.uuid().nullable().openapi({ description: 'Parto en que nació, si se registró' }),
+    noAptaReposicion: Reposicion.openapi({
+      description: 'Hembra cuyas hijas no se dejan para reposición, desde cuándo y por qué',
+    }),
+    madreNoAptaReposicion: Reposicion.openapi({
+      description: 'Hembra cuya madre está marcada como no apta para reposición',
+    }),
     finSupresion: z.iso
       .date()
       .nullable()
@@ -104,6 +114,9 @@ const Filtros = z.object({
     .openapi({ description: 'Solo los animales que aún no tienen crotal' }),
   gestacion: z.enum(['en_curso']).optional().openapi({
     description: 'Solo las hembras con una gestación en curso, por fecha prevista de parto',
+  }),
+  reposicion: z.enum(['no_apta']).optional().openapi({
+    description: 'Solo las hijas de madres no aptas para reposición',
   }),
 })
 
@@ -217,6 +230,26 @@ const baja = createRoute({
   },
 })
 
+const reposicion = createRoute({
+  method: 'patch',
+  path: '/explotaciones/{explotacionId}/animales/{animalId}/reposicion',
+  tags: ['Animales'],
+  summary: 'Marcar una hembra para no dejar sus hijas de reposición, o quitar la marca',
+  description:
+    'Con apta: false, motivo (obligatorio) y fecha (por defecto, hoy). Sus hijas lo muestran en madreNoAptaReposicion. Queda en el historial.',
+  security: [{ sesion: [] }],
+  middleware: [permitir('animales')] as const,
+  request: {
+    params: ParametrosAnimal,
+    body: { content: { 'application/json': { schema: DatosReposicion } }, required: true },
+  },
+  responses: {
+    200: json(AnimalDetalle, 'La ficha'),
+    400: error('Datos no válidos o el animal no es una hembra (validacion)'),
+    ...comunes,
+  },
+})
+
 const deshacer = createRoute({
   method: 'delete',
   path: '/explotaciones/{explotacionId}/animales/{animalId}/baja',
@@ -253,6 +286,11 @@ export const rutasAnimales = () =>
       const { animalId } = c.req.valid('param')
       const datos = c.req.valid('json')
       return c.json(await enLaExplotacion(c, (tx) => darDeBaja(tx, animalId, datos)), 200)
+    })
+    .openapi(reposicion, async (c) => {
+      const { animalId } = c.req.valid('param')
+      const datos = c.req.valid('json')
+      return c.json(await enLaExplotacion(c, (tx) => cambiarReposicion(tx, animalId, datos)), 200)
     })
     .openapi(deshacer, async (c) => {
       const { animalId } = c.req.valid('param')

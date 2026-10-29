@@ -38,6 +38,7 @@ export type FiltrosAnimales = {
   supresion?: 'en_curso'
   gestacion?: 'en_curso'
   crotal?: 'sin'
+  reposicion?: 'no_apta'
 }
 
 // También para descargar el listado al entrar en la explotación, y tenerlo sin conexión (GH-31)

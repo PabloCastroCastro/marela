@@ -75,6 +75,10 @@ export const animales = pgTable(
     // Parto en que nació (GH-23). La clave foránea a partos está en la migración 0015, para no
     // importar aquí reproduccion.ts, que importa animales.
     partoId: uuid('parto_id'),
+    // Una hembra con una enfermedad que se transmite a la descendencia: sus hijas no se dejan para
+    // reposición (GH-110). Desde cuándo y por qué.
+    noAptaReposicionDesde: date('no_apta_reposicion_desde', { mode: 'string' }),
+    motivoNoAptaReposicion: text('motivo_no_apta_reposicion'),
     ...auditoria(),
   },
   (t) => [
@@ -102,6 +106,13 @@ export const animales = pgTable(
     check('animales_padre_uno', sql`${t.padreId} is null or ${t.padreTexto} is null`),
     check('animales_madre_no_propia', sql`${t.madreId} is distinct from ${t.id}`),
     check('animales_padre_no_propio', sql`${t.padreId} is distinct from ${t.id}`),
+    // Con fecha y motivo, o sin los dos; y solo en hembras
+    check(
+      'animales_no_apta_reposicion',
+      sql`(${t.noAptaReposicionDesde} is null and ${t.motivoNoAptaReposicion} is null)
+        or (${t.noAptaReposicionDesde} is not null and btrim(coalesce(${t.motivoNoAptaReposicion}, '')) <> ''
+            and ${t.sexo} = 'hembra')`,
+    ),
     check(
       'animales_origen',
       sql`(${t.origen} = 'nacido' and ${t.fechaEntrada} is null and ${t.regaOrigen} is null)

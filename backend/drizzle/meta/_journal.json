@@ -204,6 +204,13 @@
       "when": 1793261077359,
       "tag": "0028_movimientos_comida_stock",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793275804830,
+      "tag": "0029_no_apta_reposicion",
+      "breakpoints": true
     }
   ]
 }

@@ -510,3 +510,109 @@ describe('bajas', () => {
     })
   })
 })
+
+describe('reposición (GH-110)', () => {
+  type ConReposicion = {
+    id: string
+    noAptaReposicion: { desde: string; motivo: string } | null
+    madreNoAptaReposicion: { desde: string; motivo: string } | null
+  }
+  const marcar = (id: string, datos: object, cookie = brais.cookie) =>
+    pedir('PATCH', `/explotaciones/${a}/animales/${id}/reposicion`, cookie, datos)
+  const ficha = async (id: string) =>
+    (await (
+      await pedir('GET', `/explotaciones/${a}/animales/${id}`, ana.cookie)
+    ).json()) as ConReposicion
+
+  it('marca una vaca, y sus hijas (nacidas y por nacer) lo muestran; se quita igual', async () => {
+    const madre = await alta(ana.cookie, a, vaca())
+    const hija = await alta(
+      ana.cookie,
+      a,
+      vaca({ fechaNacimiento: '2024-03-01', madreId: madre.id }),
+    )
+
+    // El empleado también la marca
+    const res = await marcar(madre.id, {
+      apta: false,
+      motivo: ' Paratuberculosis ',
+      fecha: '2026-05-02',
+    })
+    expect(res.status).toBe(200)
+    expect(((await res.json()) as ConReposicion).noAptaReposicion).toEqual({
+      desde: '2026-05-02',
+      motivo: 'Paratuberculosis',
+    })
+    expect((await ficha(hija.id)).madreNoAptaReposicion).toEqual({
+      desde: '2026-05-02',
+      motivo: 'Paratuberculosis',
+    })
+    // Una hija que nace después, también
+    const otra = await alta(
+      ana.cookie,
+      a,
+      vaca({ fechaNacimiento: '2026-06-01', madreId: madre.id }),
+    )
+    expect((await ficha(otra.id)).madreNoAptaReposicion?.motivo).toBe('Paratuberculosis')
+    // Un hijo, no: no se deja como madre
+    const hijo = await alta(
+      ana.cookie,
+      a,
+      vaca({ fechaNacimiento: '2025-03-01', madreId: madre.id, sexo: 'macho', nombre: null }),
+    )
+    expect((await ficha(hijo.id)).madreNoAptaReposicion).toBeNull()
+
+    // En el listado, filtradas
+    const lista = (await (
+      await pedir('GET', `/explotaciones/${a}/animales?reposicion=no_apta`, ana.cookie)
+    ).json()) as ConReposicion[]
+    expect(lista.map((x) => x.id)).toEqual(expect.arrayContaining([hija.id, otra.id]))
+    expect(lista.map((x) => x.id)).not.toContain(madre.id)
+    expect(lista.map((x) => x.id)).not.toContain(hijo.id)
+
+    expect((await marcar(madre.id, { apta: true })).status).toBe(200)
+    expect((await ficha(hija.id)).madreNoAptaReposicion).toBeNull()
+
+    const cambios = await enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+      tx.select().from(historialCambios).where(eq(historialCambios.filaId, madre.id)),
+    )
+    expect(cambios.map((c) => c.operacion)).toEqual(['alta', 'cambio', 'cambio'])
+  })
+
+  it('pide el motivo, solo en hembras, y una marcada no pasa a macho', async () => {
+    const madre = await alta(ana.cookie, a, vaca())
+    expect(await campos(await marcar(madre.id, { apta: false }))).toContain('motivo')
+    expect(
+      await campos(await marcar(madre.id, { apta: false, motivo: 'X', fecha: '2999-01-01' })),
+    ).toContain('fecha')
+    const toro = await alta(ana.cookie, a, vaca({ sexo: 'macho' }))
+    expect(await campos(await marcar(toro.id, { apta: false, motivo: 'Leucosis' }))).toContain(
+      'apta',
+    )
+    await marcar(madre.id, { apta: false, motivo: 'Leucosis' })
+    const cambio = await pedir('PATCH', `/explotaciones/${a}/animales/${madre.id}`, ana.cookie, {
+      sexo: 'macho',
+    })
+    expect(await campos(cambio)).toContain('sexo')
+    // La base de datos lo impide también
+    await expect(
+      enExplotacion({ explotacionId: a, usuarioId: ana.id }, (tx) =>
+        tx.update(animales).set({ sexo: 'macho' }).where(eq(animales.id, madre.id)),
+      ),
+    ).rejects.toMatchObject({ cause: { constraint: 'animales_no_apta_reposicion' } })
+  })
+
+  it('otra explotación no la marca', async () => {
+    const madre = await alta(ana.cookie, a, vaca())
+    const res = await pedir(
+      'PATCH',
+      `/explotaciones/${b}/animales/${madre.id}/reposicion`,
+      carla.cookie,
+      {
+        apta: false,
+        motivo: 'Leucosis',
+      },
+    )
+    expect(res.status).toBe(404)
+  })
+})

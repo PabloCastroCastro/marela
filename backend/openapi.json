@@ -535,6 +535,46 @@
             "format": "uuid",
             "description": "Parto en que nació, si se registró"
           },
+          "noAptaReposicion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "desde",
+              "motivo"
+            ],
+            "description": "Hembra cuyas hijas no se dejan para reposición, desde cuándo y por qué"
+          },
+          "madreNoAptaReposicion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "desde": {
+                "type": "string",
+                "format": "date"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "desde",
+              "motivo"
+            ],
+            "description": "Hembra cuya madre está marcada como no apta para reposición"
+          },
           "finSupresion": {
             "type": [
               "string",
@@ -607,6 +647,8 @@
           "causaBaja",
           "observaciones",
           "partoId",
+          "noAptaReposicion",
+          "madreNoAptaReposicion",
           "finSupresion",
           "gestacion",
           "creadoEn",
@@ -800,6 +842,32 @@
         "required": [
           "tipo",
           "fecha"
+        ]
+      },
+      "DatosReposicion": {
+        "type": "object",
+        "properties": {
+          "apta": {
+            "type": "boolean"
+          },
+          "motivo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "example": "Paratuberculosis"
+          },
+          "fecha": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        },
+        "required": [
+          "apta"
         ]
       },
       "CambioAnimal": {
@@ -4512,6 +4580,19 @@
             "description": "Solo las hembras con una gestación en curso, por fecha prevista de parto",
             "name": "gestacion",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no_apta"
+              ],
+              "description": "Solo las hijas de madres no aptas para reposición"
+            },
+            "required": false,
+            "description": "Solo las hijas de madres no aptas para reposición",
+            "name": "reposicion",
+            "in": "query"
           }
         ],
         "responses": {
@@ -5008,6 +5089,101 @@
           },
           "409": {
             "description": "No está de baja, o es una venta, que se deshace desde Finanzas (no_de_baja, baja_por_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/animales/{animalId}/reposicion": {
+      "patch": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Marcar una hembra para no dejar sus hijas de reposición, o quitar la marca",
+        "description": "Con apta: false, motivo (obligatorio) y fecha (por defecto, hoy). Sus hijas lo muestran en madreNoAptaReposicion. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "animalId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosReposicion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La ficha",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimalDetalle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos o el animal no es una hembra (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a sus animales",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el animal (animal_no_encontrado)",
             "content": {
               "application/json": {
                 "schema": {

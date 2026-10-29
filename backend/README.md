@@ -163,6 +163,7 @@ Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.
 - **`PATCH /api/explotaciones/{id}/animales/{animalId}`:** edita los datos de la ficha (solo los campos que cambian, validando la ficha completa). El estado y la baja tienen su propio flujo.
 - **`POST /api/explotaciones/{id}/animales/{animalId}/baja`:** `{ tipo, fecha, causa }` da de baja un animal activo: `muerte` o `sacrificio` (queda `muerto`), `robo_extravio` u `otra` (queda `baja`; `otra` exige la causa). La fecha no puede ser futura ni anterior al nacimiento o la entrada. La venta (`vendido`) la registra Finanzas (GH-38).
 - **`DELETE /api/explotaciones/{id}/animales/{animalId}/baja`:** deshace una baja registrada por error; el animal vuelve a estar activo y la baja queda en el historial. Una venta no se deshace aquí (409 `baja_por_venta`).
+- **`PATCH /api/explotaciones/{id}/animales/{animalId}/reposicion`:** `{ apta: false, motivo, fecha? }` marca una hembra para no dejar sus hijas de reposición (GH-110), por una enfermedad que se transmite a la descendencia; `{ apta: true }` quita la marca. La ficha lleva `noAptaReposicion` (`{ desde, motivo }` o `null`) y sus hijas, `madreNoAptaReposicion`; el listado las filtra con `?reposicion=no_apta`. Migración `0029`; los cambios quedan en el historial.
 - **`GET /api/explotaciones/{id}/animales/razas`:** razas para sugerir: las habituales y las que ya usa la explotación.
 
 Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
