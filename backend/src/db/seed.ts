@@ -1,5 +1,5 @@
 import { hashPassword } from 'better-auth/crypto'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { crearAlmacenesPorDefecto } from '../almacenes.js'
 import { config } from '../config.js'
 import { hoyEnMadrid } from '../fechas.js'
@@ -722,6 +722,19 @@ await enExplotacion(
         .onConflictDoNothing()
     }
   },
+)
+
+// Pinta tiene paratuberculosis, que afecta a toda su descendencia (GH-110). Solo si aún no se
+// ha marcado, para no cambiar lo que ya hay.
+await enExplotacion({ explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) }, (tx) =>
+  tx
+    .update(animales)
+    .set({
+      noAptaReposicionDesde: haceDias(60),
+      motivoNoAptaReposicion: 'Paratuberculosis',
+      alcanceNoAptaReposicion: 'descendencia',
+    })
+    .where(and(eq(animales.id, sid(ANIMAL, 3)), isNull(animales.noAptaReposicionDesde))),
 )
 
 // Movimientos de los almacenes de A Veiga, registrados por Ana: la hierba seca de Agra de abaixo, el

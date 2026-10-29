@@ -448,7 +448,12 @@ El detalle está en `CONTRIBUTING.md`.
 
 ## Reposición
 
-GH-110. Una vaca con una enfermedad que se transmite a la descendencia (paratuberculosis, leucosis…) se marca como "No dejar hijas para reposición", con el motivo y la fecha. Sus hijas, las ya nacidas y las que nazcan después, muestran el aviso "Madre no apta para reposición" en su ficha y en el listado, que las filtra. La marca se quita igual, y todo queda en el historial.
+GH-110. Una vaca con una enfermedad que se transmite a la descendencia (paratuberculosis, leucosis…) se marca como no apta para reposición, con el motivo, la fecha y a quién afecta:
+
+- **Sus hijas:** no se dejan como madres reproductoras. Las ya nacidas y las que nazcan muestran "Madre no apta para reposición".
+- **Toda su descendencia:** hijos e hijas muestran "Madre con paratuberculosis" (el motivo).
+
+El listado los filtra ("Con madre no apta"). La marca se quita igual, y todo queda en el historial.
 
 ## Para más adelante (Animales)
 

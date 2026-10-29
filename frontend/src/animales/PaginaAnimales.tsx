@@ -17,13 +17,14 @@ import { FormularioEvento } from './FormularioEvento'
 import { FormularioTratamiento } from './FormularioTratamiento'
 import { InsigniaEstado } from './InsigniaEstado'
 import { InsigniaGestacion } from './InsigniaGestacion'
+import { InsigniaReposicion } from './InsigniaReposicion'
 import { InsigniaSinCrotal } from './InsigniaSinCrotal'
 import { InsigniaSupresion } from './InsigniaSupresion'
 
 // "En supresión", "Gestantes" y "Sin crotal" se filtran como un estado más, aunque no lo son: se
 // calculan de los tratamientos (GH-20), de los eventos reproductivos (GH-22) y del crotal (GH-23), y
 // el animal sigue activo
-type FiltroEstado = EstadoAnimal | 'en_supresion' | 'gestante' | 'sin_crotal' | 'todos'
+type FiltroEstado = EstadoAnimal | 'en_supresion' | 'gestante' | 'sin_crotal' | 'no_apta' | 'todos'
 type FiltroSexo = Sexo | 'todos'
 
 // Animales de la explotación: buscar, filtrar, abrir su ficha y dar de alta (GH-15). Con
@@ -46,13 +47,17 @@ export function PaginaAnimales() {
     estado:
       estado === 'todos'
         ? undefined
-        : estado === 'en_supresion' || estado === 'gestante' || estado === 'sin_crotal'
+        : estado === 'en_supresion' ||
+            estado === 'gestante' ||
+            estado === 'sin_crotal' ||
+            estado === 'no_apta'
           ? 'activo'
           : estado,
     sexo: sexo === 'todos' ? undefined : sexo,
     supresion: estado === 'en_supresion' ? 'en_curso' : undefined,
     gestacion: estado === 'gestante' ? 'en_curso' : undefined,
     crotal: estado === 'sin_crotal' ? 'sin' : undefined,
+    reposicion: estado === 'no_apta' ? 'no_apta' : undefined,
   })
   const abrir = (id: string) => navegar(`${rutaExplotacion(explotacion.id)}/animales/${id}`)
   // Solo cuentan los marcados que siguen en la lista con los filtros de ahora
@@ -80,6 +85,7 @@ export function PaginaAnimales() {
             { valor: 'en_supresion', texto: 'En supresión' },
             { valor: 'gestante', texto: 'Gestantes' },
             { valor: 'sin_crotal', texto: 'Sin crotal' },
+            { valor: 'no_apta', texto: 'Con madre no apta' },
             { valor: 'vendido', texto: 'Vendidos' },
             { valor: 'muerto', texto: 'Muertos' },
             { valor: 'baja', texto: 'Otras bajas' },
@@ -178,6 +184,11 @@ export function PaginaAnimales() {
                     )}
                     {a.finSupresion && <InsigniaSupresion fin={a.finSupresion} corta />}
                     {a.gestacion && <InsigniaGestacion gestacion={a.gestacion} corta />}
+                    <InsigniaReposicion
+                      propia={a.noAptaReposicion}
+                      madre={a.madreNoAptaReposicion}
+                      corta
+                    />
                   </span>
                 ),
                 ordenar: (a) => a.estado,

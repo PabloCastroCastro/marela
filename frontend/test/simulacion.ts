@@ -63,6 +63,8 @@ export type AnimalSimulado = {
   causaBaja: string | null
   observaciones: string | null
   partoId?: string | null
+  // No dejar hijas para reposición (GH-110)
+  noAptaReposicion?: { desde: string; motivo: string; alcance: 'hijas' | 'descendencia' } | null
 }
 
 export const animalSimulado = (
@@ -529,6 +531,7 @@ const DETALLE = /^\/api\/explotaciones\/([^/]+)$/
 const EQUIPO = /^\/api\/explotaciones\/([^/]+)\/miembros(?:\/([^/]+))?(?:\/([^/]+))?$/
 const ANIMALES = /^\/api\/explotaciones\/([^/]+)\/animales(?:\/([^/]+))?$/
 const BAJA = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/baja$/
+const REPOSICION = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/reposicion$/
 const PESOS = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/pesos(?:\/([^/]+))?$/
 const TRATAMIENTOS_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/tratamientos$/
 const REPRODUCCION_ANIMAL = /^\/api\/explotaciones\/[^/]+\/animales\/([^/]+)\/reproduccion$/
@@ -1440,6 +1443,31 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...p, ...sello })
     }
 
+    const deReposicion = ruta.match(REPOSICION)
+    if (deReposicion) {
+      const a = estado.animales.find((x) => x.id === deReposicion[1])
+      if (!a) return errorApi(404, 'animal_no_encontrado')
+      if (!cuerpo.apta && !cuerpo.motivo?.trim())
+        return errorApi(400, 'validacion', [{ campo: 'motivo', mensaje: 'Indica el motivo' }])
+      a.noAptaReposicion = cuerpo.apta
+        ? null
+        : {
+            desde: cuerpo.fecha ?? '2026-10-29',
+            motivo: cuerpo.motivo.trim(),
+            alcance: cuerpo.alcance ?? 'hijas',
+          }
+      return json({
+        ...a,
+        noAptaReposicion: a.noAptaReposicion ?? null,
+        madreNoAptaReposicion: null,
+        madre: null,
+        padre: null,
+        hijos: [],
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-02T10:00:00.000Z',
+      })
+    }
+
     const deBaja = ruta.match(BAJA)
     if (deBaja) {
       const a = estado.animales.find((x) => x.id === deBaja[1])
@@ -1519,8 +1547,15 @@ export function simularApi(estado: EstadoSimulado) {
           .filter((fin) => fin > hoy)
           .sort()
           .at(-1) ?? null
+      // La marca de la madre, si le afecta: a las hijas siempre, a los hijos si es toda la descendencia
+      const afectado = (a: AnimalSimulado) => {
+        const marca = estado.animales.find((m) => m.id === a.madreId)?.noAptaReposicion
+        return marca && (a.sexo === 'hembra' || marca.alcance === 'descendencia') ? marca : null
+      }
       const ficha = (a: AnimalSimulado) => ({
         ...a,
+        noAptaReposicion: a.noAptaReposicion ?? null,
+        madreNoAptaReposicion: afectado(a),
         finSupresion: supresion(a),
         gestacion: gestacion(a),
         madre: resumen(a.madreId),
@@ -1565,6 +1600,7 @@ export function simularApi(estado: EstadoSimulado) {
             .filter((a) => !q.get('supresion') || supresion(a) !== null)
             .filter((a) => !q.get('gestacion') || gestacion(a) !== null)
             .filter((a) => !q.get('crotal') || a.crotal === null)
+            .filter((a) => !q.get('reposicion') || Boolean(afectado(a)))
             .filter(
               (a) =>
                 !texto ||
