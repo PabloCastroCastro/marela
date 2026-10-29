@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
+import { FormularioEvento } from '../animales/FormularioEvento'
 import { FormularioPesada } from '../animales/FormularioPesada'
+import { FormularioTratamiento } from '../animales/FormularioTratamiento'
 import { FormularioAplicacion } from '../fincas/FormularioAplicacion'
 import { FormularioLabor } from '../fincas/FormularioLabor'
 import { FormularioPastoreo } from '../fincas/FormularioPastoreo'
@@ -38,6 +40,33 @@ function CorregirPesada({ pendiente, alCerrar }: Props) {
   )
 }
 
+type AnimalBreve = {
+  id: string
+  crotal: string | null
+  nombre?: string | null
+  raza?: string
+  fechaNacimiento: string
+  fechaBaja?: string | null
+}
+
+function CorregirTratamiento({ pendiente, alCerrar }: Props) {
+  const animales = leer<AnimalBreve[]>(pendiente.contexto.animales, [])
+  return <FormularioTratamiento animales={animales} pendiente={pendiente} alCerrar={alCerrar} />
+}
+
+function CorregirParto({ pendiente, alCerrar }: Props) {
+  const madre = leer<AnimalBreve | null>(pendiente.contexto.madre, null)
+  if (!madre) return null
+  return (
+    <FormularioEvento
+      animales={[madre]}
+      tipos={['parto']}
+      pendiente={pendiente}
+      alCerrar={alCerrar}
+    />
+  )
+}
+
 type FincaBreve = { id: string; nombre: string; superficie: number }
 
 function CorregirLabor({ pendiente, alCerrar }: Props) {
@@ -65,6 +94,8 @@ function CorregirSalida({ pendiente, alCerrar }: Props) {
 
 export const CORRECTORES: Record<string, Corrector> = {
   pesada: CorregirPesada,
+  tratamiento: CorregirTratamiento,
+  parto: CorregirParto,
   labor: CorregirLabor,
   aplicacion: CorregirAplicacion,
   pastoreo: CorregirPastoreo,

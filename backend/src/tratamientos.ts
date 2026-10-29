@@ -14,6 +14,7 @@ import {
 } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
 import { hoyEnMadrid } from './fechas.js'
+import { comprobarIds, IdsCliente, reenvio, sinChoqueDeId } from './idCliente.js'
 
 // Tratamientos sanitarios (GH-20). Como en animales.ts, todas las funciones reciben la transacción
 // de enLaExplotacion. Un tratamiento no se corrige ni se borra: se anula con un motivo.
@@ -34,6 +35,8 @@ export const DatosTratamiento = z
       .min(1, 'Elige al menos un animal')
       .max(ANIMALES_POR_TRATAMIENTO, `Como mucho ${ANIMALES_POR_TRATAMIENTO} animales a la vez`)
       .transform((ids) => [...new Set(ids)]),
+    // Sin conexión (GH-33): los del dispositivo, uno por animal
+    ids: IdsCliente,
     fecha: z.iso.date('Fecha no válida (aaaa-mm-dd)'),
     producto: z
       .string('Indica el producto o medicamento')
@@ -55,6 +58,7 @@ export const DatosTratamiento = z
     observaciones: textoOpcional,
   })
   .superRefine((t, ctx) => {
+    comprobarIds(t.ids, t.animalIds, ctx)
     if (t.fecha > hoyEnMadrid())
       ctx.addIssue({ code: 'custom', path: ['fecha'], message: 'La fecha no puede ser futura' })
     if (t.aplicadoPorId && t.aplicadoPorTexto)
@@ -208,27 +212,35 @@ async function comprobar(tx: Transaccion, datos: DatosTratamiento) {
 
 // Registra el mismo tratamiento a uno o varios animales: un tratamiento por animal
 export async function crearTratamientos(tx: Transaccion, datos: DatosTratamiento) {
+  // Reenviados desde el dispositivo: los que ya se guardaron
+  const ya = await reenvio(datos.ids, (ids) =>
+    consulta(tx).where(inArray(tratamientos.id, ids)).orderBy(asc(tratamientos.creadoEn)),
+  )
+  if (ya) return ya.map(tratamiento)
   await comprobar(tx, datos)
-  const { animalIds, ...comunes } = datos
-  const creados = await tx
-    .insert(tratamientos)
-    .values(
-      animalIds.map((animalId) => ({
-        animalId,
-        fecha: comunes.fecha,
-        producto: comunes.producto,
-        dosis: comunes.dosis ?? null,
-        via: comunes.via ?? null,
-        motivo: comunes.motivo,
-        diagnostico: comunes.diagnostico ?? null,
-        aplicadoPorId: comunes.aplicadoPorId ?? null,
-        aplicadoPorTexto: comunes.aplicadoPorTexto ?? null,
-        lote: comunes.lote ?? null,
-        diasSupresion: comunes.diasSupresion,
-        observaciones: comunes.observaciones ?? null,
-      })),
-    )
-    .returning({ id: tratamientos.id })
+  const { animalIds, ids, ...comunes } = datos
+  const creados = await sinChoqueDeId('tratamientos', () =>
+    tx
+      .insert(tratamientos)
+      .values(
+        animalIds.map((animalId, i) => ({
+          ...(ids ? { id: ids[i] } : {}),
+          animalId,
+          fecha: comunes.fecha,
+          producto: comunes.producto,
+          dosis: comunes.dosis ?? null,
+          via: comunes.via ?? null,
+          motivo: comunes.motivo,
+          diagnostico: comunes.diagnostico ?? null,
+          aplicadoPorId: comunes.aplicadoPorId ?? null,
+          aplicadoPorTexto: comunes.aplicadoPorTexto ?? null,
+          lote: comunes.lote ?? null,
+          diasSupresion: comunes.diasSupresion,
+          observaciones: comunes.observaciones ?? null,
+        })),
+      )
+      .returning({ id: tratamientos.id }),
+  )
   const filas = await consulta(tx)
     .where(
       inArray(

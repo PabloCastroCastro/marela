@@ -7,6 +7,7 @@ import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
+import { RegistrosSinEnviar } from '../sinConexion/RegistrosSinEnviar'
 import estilos from './Animales.module.css'
 import type { AnimalDetalle } from './datos'
 import { FormularioAnulacion } from './FormularioAnulacion'
@@ -96,6 +97,13 @@ export function TarjetaTratamientos({ animal }: { animal: AnimalDetalle }) {
           <InsigniaSupresion fin={animal.finSupresion} />
         </div>
       )}
+      <RegistrosSinEnviar
+        etiqueta="Tratamientos sin enviar"
+        de={(p) =>
+          p.tipo === 'tratamiento' &&
+          ((p.cuerpo as { animalIds?: string[] }).animalIds?.includes(animal.id) ?? false)
+        }
+      />
       {contenido}
       {recorte.boton}
       {anulando && (

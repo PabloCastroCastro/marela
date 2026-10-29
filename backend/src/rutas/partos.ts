@@ -72,7 +72,7 @@ const crear = createRoute({
   tags: ['Animales'],
   summary: 'Registrar un parto y crear las fichas de sus terneros',
   description:
-    'Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado "muerto". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación.',
+    'Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado "muerto". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación. Con id (y los de sus terneros), el registrado sin conexión: si ya se guardó, se devuelve el mismo.',
   security: [{ sesion: [] }],
   middleware: [permitir('animales')] as const,
   request: {
@@ -83,7 +83,9 @@ const crear = createRoute({
     201: json(Parto, 'Registrado, con sus terneros'),
     400: error('Datos no válidos, madre que no es hembra o fecha fuera de su vida (validacion)'),
     ...comunes,
-    409: error('El crotal de un ternero ya está en uso (crotal_en_uso)'),
+    409: error(
+      'El crotal de un ternero ya está en uso, o un id es de otro registro (crotal_en_uso, id_en_uso)',
+    ),
   },
 })
 

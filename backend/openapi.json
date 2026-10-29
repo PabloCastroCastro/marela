@@ -1195,6 +1195,15 @@
             "minItems": 1,
             "maxItems": 500
           },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 200,
+            "description": "Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
+          },
           "fecha": {
             "type": "string",
             "format": "date"
@@ -1742,6 +1751,11 @@
       "DatosParto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
+          },
           "fecha": {
             "type": "string",
             "format": "date"
@@ -1792,6 +1806,11 @@
                     "hembra",
                     "macho"
                   ]
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
                 },
                 "estado": {
                   "type": "string",
@@ -2511,7 +2530,7 @@
               "format": "uuid"
             },
             "maxItems": 200,
-            "description": "Uno por finca, en el orden de fincaIds, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
+            "description": "Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
           }
         },
         "required": [
@@ -2846,7 +2865,7 @@
               "format": "uuid"
             },
             "maxItems": 200,
-            "description": "Uno por finca, en el orden de fincaIds, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
+            "description": "Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica."
           },
           "tipo": {
             "type": "string",
@@ -5523,7 +5542,7 @@
           "Animales"
         ],
         "summary": "Registrar un tratamiento a uno o varios animales",
-        "description": "Crea un tratamiento por animal, todos con los mismos datos.",
+        "description": "Crea un tratamiento por animal, todos con los mismos datos. Con ids (uno por animal), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.",
         "security": [
           {
             "sesion": []
@@ -5595,6 +5614,16 @@
           },
           "404": {
             "description": "No existe la explotación o el animal (animal_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún id es de otro registro (id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6064,7 +6093,7 @@
           "Animales"
         ],
         "summary": "Registrar un parto y crear las fichas de sus terneros",
-        "description": "Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado \"muerto\". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación.",
+        "description": "Todo en una transacción. Los terneros se enlazan a la madre y al padre de la gestación en curso (o al indicado si no la hay); los nacidos muertos, con estado \"muerto\". El peso al nacer se guarda como su pesada al nacer. El parto cierra la gestación. Con id (y los de sus terneros), el registrado sin conexión: si ya se guardó, se devuelve el mismo.",
         "security": [
           {
             "sesion": []
@@ -6151,7 +6180,7 @@
             }
           },
           "409": {
-            "description": "El crotal de un ternero ya está en uso (crotal_en_uso)",
+            "description": "El crotal de un ternero ya está en uso, o un id es de otro registro (crotal_en_uso, id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {

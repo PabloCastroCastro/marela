@@ -9,6 +9,7 @@ import { useRecorte } from '../componentes/Recorte'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
+import { RegistrosSinEnviar } from '../sinConexion/RegistrosSinEnviar'
 import estilos from './Animales.module.css'
 import { type AnimalDetalle, identificacion } from './datos'
 import { deEvento, deParto, type EntradaReproductiva, unir } from './entradasReproduccion'
@@ -116,6 +117,10 @@ export function TarjetaReproduccion({ animal }: { animal: AnimalDetalle }) {
           <InsigniaGestacion gestacion={animal.gestacion} />
         </div>
       )}
+      <RegistrosSinEnviar
+        etiqueta="Partos sin enviar"
+        de={(p) => p.tipo === 'parto' && p.contexto.madreId === animal.id}
+      />
       {contenido}
       {recorte.boton}
       {anulando?.tipo === 'evento' && (

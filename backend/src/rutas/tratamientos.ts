@@ -89,7 +89,8 @@ const crear = createRoute({
   path: ruta,
   tags: ['Animales'],
   summary: 'Registrar un tratamiento a uno o varios animales',
-  description: 'Crea un tratamiento por animal, todos con los mismos datos.',
+  description:
+    'Crea un tratamiento por animal, todos con los mismos datos. Con ids (uno por animal), los registrados sin conexión: si ya se guardaron, se devuelven los mismos.',
   security: [{ sesion: [] }],
   middleware: [permitir('animales')] as const,
   request: {
@@ -102,6 +103,7 @@ const crear = createRoute({
       'Datos no válidos, animales de otra explotación o fecha fuera de su vida (validacion)',
     ),
     ...comunes,
+    409: error('Algún id es de otro registro (id_en_uso)'),
   },
 })
 

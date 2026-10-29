@@ -16,20 +16,20 @@ export const idEnUso = () =>
     { campo: 'id', mensaje: 'El identificador ya lo usa otro registro' },
   ])
 
-// Altas de varias filas a la vez (la misma labor en varias fincas): un id por finca, en el orden de
-// fincaIds
+// Altas de varias filas a la vez (la misma labor en varias fincas, el mismo tratamiento a varios
+// animales): un id por fila, en el orden de fincaIds o animalIds
 export const IdsCliente = z.array(z.uuid('Identificador no válido')).max(200).optional().openapi({
   description:
-    'Uno por finca, en el orden de fincaIds, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica.',
+    'Uno por finca o animal, en el mismo orden, generados en el dispositivo. Si ya existen, se devuelven esos en lugar de crear otros: reenviar no duplica.',
 })
 
-// Sin fincas repetidas ni ids repetidos: si no, no se sabe qué id es de cuál
-export function comprobarIds(d: { ids?: string[]; fincaIds: string[] }, ctx: z.RefinementCtx) {
-  if (d.ids && (d.ids.length !== d.fincaIds.length || new Set(d.ids).size !== d.ids.length))
+// Uno por cada finca o animal, sin repetir: si no, no se sabe qué id es de cuál
+export function comprobarIds(ids: string[] | undefined, de: string[], ctx: z.RefinementCtx) {
+  if (ids && (ids.length !== de.length || new Set(ids).size !== ids.length))
     ctx.addIssue({
       code: 'custom',
       path: ['ids'],
-      message: 'Un id por finca, sin repetir fincas ni ids',
+      message: 'Un id por cada uno, sin repetir',
     })
 }
 

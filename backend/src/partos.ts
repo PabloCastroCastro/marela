@@ -18,6 +18,7 @@ import {
 } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
 import { hoyEnMadrid } from './fechas.js'
+import { IdCliente, idEnUso, sinChoqueDeId } from './idCliente.js'
 
 // Partos (GH-23). Un parto crea en la misma transacción la ficha de cada ternero, enlazada a la madre
 // y al padre de la gestación en curso, y su pesada al nacer. No se corrige ni se borra: se anula, y
@@ -47,6 +48,8 @@ const Ternero = z.object({
     .nullish()
     .openapi({ description: 'Opcional: se le puede poner en los 20 días siguientes' }),
   sexo: z.enum(SEXOS, 'Indica el sexo'),
+  // Sin conexión (GH-33): el de su ficha, generado en el dispositivo
+  id: IdCliente,
   estado: z.enum(ESTADOS_AL_NACER).default('vivo'),
   raza: z.string('Indica la raza').trim().min(1, 'Indica la raza'),
   peso: z
@@ -60,6 +63,8 @@ const Ternero = z.object({
 
 export const DatosParto = z
   .object({
+    // Sin conexión (GH-33): el del dispositivo; con él, los terneros llevan también el suyo
+    id: IdCliente,
     fecha: z.iso.date('Fecha no válida (aaaa-mm-dd)'),
     tipo: z.enum(TIPOS_PARTO).default('normal'),
     // Solo si la madre no tiene una gestación en curso: si la tiene, el padre es el de su cubrición
@@ -193,6 +198,15 @@ const invalido = (campo: string, mensaje: string) =>
 
 // Registra el parto y crea las fichas de sus terneros, todo o nada
 export async function crearParto(tx: Transaccion, madreId: string, datos: DatosParto) {
+  // Reenviado desde el dispositivo: el que ya se guardó, con sus terneros
+  if (datos.id) {
+    const [ya] = await tx
+      .select({ madreId: partos.madreId })
+      .from(partos)
+      .where(eq(partos.id, datos.id))
+    if (ya && ya.madreId !== madreId) throw idEnUso()
+    if (ya) return verParto(tx, datos.id)
+  }
   const madre = await verAnimal(tx, madreId)
   if (madre.sexo !== 'hembra') throw invalido('madreId', 'Solo las hembras tienen partos')
   if (datos.fecha < madre.fechaNacimiento)
@@ -218,17 +232,20 @@ export async function crearParto(tx: Transaccion, madreId: string, datos: DatosP
       throw invalido('padreId', 'El padre tiene que ser un macho de la explotación')
   }
 
-  const [parto] = await tx
-    .insert(partos)
-    .values({
-      madreId,
-      fecha: datos.fecha,
-      tipo: datos.tipo,
-      padreId,
-      padreTexto,
-      observaciones: datos.observaciones ?? null,
-    })
-    .returning({ id: partos.id })
+  const [parto] = await sinChoqueDeId('partos', () =>
+    tx
+      .insert(partos)
+      .values({
+        ...(datos.id ? { id: datos.id } : {}),
+        madreId,
+        fecha: datos.fecha,
+        tipo: datos.tipo,
+        padreId,
+        padreTexto,
+        observaciones: datos.observaciones ?? null,
+      })
+      .returning({ id: partos.id }),
+  )
   if (!parto) throw new Error('No se pudo registrar el parto')
 
   for (const [i, t] of datos.terneros.entries()) {
@@ -238,6 +255,7 @@ export async function crearParto(tx: Transaccion, madreId: string, datos: DatosP
       ;[ternero] = await tx
         .insert(animales)
         .values({
+          ...(t.id ? { id: t.id } : {}),
           crotal: t.crotal ?? null,
           raza: t.raza,
           sexo: t.sexo,
@@ -260,6 +278,7 @@ export async function crearParto(tx: Transaccion, madreId: string, datos: DatosP
         .returning({ id: animales.id })
     } catch (error) {
       const causa = (error as { cause?: { code?: string; constraint?: string } }).cause
+      if (causa?.code === '23505' && causa.constraint === 'animales_pkey') throw idEnUso()
       if (causa?.code === '23505' && causa.constraint === 'animales_crotal_unique') {
         const mensaje = 'Ya hay un animal con este crotal'
         throw new ErrorApi(409, 'crotal_en_uso', mensaje, [

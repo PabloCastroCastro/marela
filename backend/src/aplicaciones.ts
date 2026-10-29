@@ -88,7 +88,7 @@ export const DatosAplicacion = z
       fallo('aplicadoPorTexto', 'Indica una persona del equipo o un nombre, no los dos')
     if (a.superficie != null && a.fincaIds.length > 1)
       fallo('superficie', 'En varias fincas a la vez, cada una con su superficie entera')
-    comprobarIds(a, ctx)
+    comprobarIds(a.ids, a.fincaIds, ctx)
   })
   .openapi('DatosAplicacion')
 
