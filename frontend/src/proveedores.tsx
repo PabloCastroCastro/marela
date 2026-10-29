@@ -1,7 +1,7 @@
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { ErrorApi } from './api/cliente'
-import { CLAVE_SESION } from './auth/sesion'
+import { ErrorApi, esSinConexion } from './api/cliente'
+import { CLAVE_SESION, ErrorAutenticacion } from './auth/sesion'
 import { ProveedorAvisos } from './componentes/Avisos'
 import { ProveedorConfirmacion } from './componentes/Confirmacion'
 import { RETENCION } from './sinConexion/persistencia'
@@ -21,9 +21,13 @@ export function crearClienteConsultas() {
     }),
     defaultOptions: {
       queries: {
-        // En el campo la cobertura falla: un reintento (salvo errores 4xx), y los datos valen 30 s
+        // En el campo la cobertura falla: un reintento (salvo errores 4xx), y los datos valen 30 s.
+        // Sin conexión no es un error: la consulta espera a que vuelva y se repite (GH-31), las
+        // veces que haga falta, con lo que ya tenía a la vista
         retry: (fallos, error) =>
-          !(error instanceof ErrorApi && error.estado >= 400 && error.estado < 500) && fallos < 1,
+          esSinConexion(error) ||
+          (error instanceof ErrorAutenticacion && error.codigo === 'sin_conexion') ||
+          (!(error instanceof ErrorApi && error.estado >= 400 && error.estado < 500) && fallos < 1),
         staleTime: 30_000,
         // Lo descargado se guarda en el dispositivo para consultarlo sin conexión (GH-31): no se
         // olvida a los 5 minutos de dejar de usarlo. Como mucho 24 días: es un setTimeout
