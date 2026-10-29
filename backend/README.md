@@ -364,6 +364,20 @@ Tabla `facturas_movimientos_comida` (migraciones `0036` y `0037`): solo facturas
 
 Tablas `facturas` y `facturas_animales` (migraciones `0034` y `0035`, con reglas e historial de cambios). La base de datos comprueba el formato del NIF, que el total sea la suma y que solo las recibidas tengan animales.
 
+**Ventas de animales** (GH-38), en `src/rutas/ventas.ts`:
+
+- **`GET /api/explotaciones/{id}/ventas`:** de la más reciente a la más antigua. Filtros `desde`, `hasta`, `factura` (`con` o `sin`) y `q` (comprador).
+- **`POST /api/explotaciones/{id}/ventas`:** `{ fecha, comprador, animales: [{ animalId, kg? }], modoPrecio, precio, facturaId?, observaciones? }`. En la misma transacción:
+  - Cada animal pasa a `vendido` (baja `venta`, con la fecha y «Venta a …» de causa) y su peso queda como pesada de venta.
+  - `modoPrecio` es `total` (se reparte a partes iguales; los céntimos que sobran, a los primeros), `por_animal` o `por_kg` (el peso de todos, obligatorio). El precio, sin IVA ni compensación.
+  - Se bloquea, sin excepciones, si algún animal tiene un tratamiento sin anular cuya supresión termina después de la fecha de la venta: 409 `supresion_en_curso`, con `{ campo, mensaje, animalId, hasta }` de cada uno en `detalles`.
+  - Los animales, activos y ya en la explotación en la fecha. Si alguno ya tiene una pesada de venta y se indica su peso, 400 en `animales.n.kg`.
+- **`GET`, `PUT /api/explotaciones/{id}/ventas/{ventaId}`:** la corrige deshaciéndola y registrándola de nuevo, también con otros animales.
+- **`PATCH /api/explotaciones/{id}/ventas/{ventaId}/factura`:** `{ facturaId }` (o `null`): una factura emitida, de una sola venta (409 `factura_con_venta`). La factura muestra su venta en `ventaId`.
+- **`DELETE /api/explotaciones/{id}/ventas/{ventaId}`:** la deshace: los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura se queda.
+
+Tablas `ventas` y `ventas_animales` (migraciones `0040` y `0041`, con historial de cambios). La base de datos comprueba que la factura sea emitida (y que no deje de serlo), que un animal se venda una sola vez y que esté de baja por venta. Al borrar la factura, la venta se queda sin ella.
+
 **Otros ingresos y gastos** (GH-37), en `src/rutas/apuntes.ts`:
 
 - **`GET /api/explotaciones/{id}/apuntes`:** del más reciente al más antiguo, con los anulados. Filtros `tipo` (`ingreso` o `gasto`), `categoria`, `estado` (`vigente` o `anulado`), `desde`, `hasta` y `q` (concepto u observaciones).

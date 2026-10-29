@@ -26,6 +26,7 @@ import { rutasReproduccion } from './rutas/reproduccion.js'
 import { rutasSalud } from './rutas/salud.js'
 import { rutasTareas } from './rutas/tareas.js'
 import { rutasTratamientos } from './rutas/tratamientos.js'
+import { rutasVentas } from './rutas/ventas.js'
 
 export const infoOpenApi = {
   openapi: '3.1.0',
@@ -87,6 +88,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasFiscal())
   app.route('/', rutasFacturas())
   app.route('/', rutasApuntes())
+  app.route('/', rutasVentas())
   app.route('/', rutasTareas())
   app.route('/', rutasCartografia())
   app.route('/', rutasPlataforma())

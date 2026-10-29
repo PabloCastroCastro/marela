@@ -405,3 +405,37 @@
   color: var(--color-texto-suave);
   text-decoration: line-through;
 }
+
+/* Los animales de una venta (GH-38): el animal, su peso, su importe y quitar */
+.vendidos {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vendidos li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: end;
+  gap: var(--espacio-2);
+  padding-bottom: var(--espacio-2);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.nombreVendido {
+  grid-column: 1 / -1;
+  font-weight: var(--peso-medio);
+}
+
+.pesoVendido {
+  min-width: 0;
+}
+
+.errorVendido {
+  grid-column: 1 / -1;
+  color: var(--color-peligro);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}

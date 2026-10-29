@@ -21,6 +21,7 @@ import { user } from './auth.js'
 import { movimientosComida } from './comida.js'
 import { id } from './comun.js'
 import { auditoria, deExplotacion, separacionPorExplotacion } from './explotacion.js'
+import { KG_MAXIMO, pesos } from './pesos.js'
 
 // Finanzas de una explotación (docs/diseno.md, "Finanzas"), solo para el administrador.
 
@@ -287,6 +288,82 @@ export const apuntes = pgTable(
         or (${t.anuladoEn} is not null and ${t.anuladoPor} is not null
           and btrim(coalesce(${t.motivoAnulacion}, '')) <> '')`,
     ),
+    separacionPorExplotacion(),
+  ],
+)
+
+// Ventas de animales (GH-38): la fecha, el comprador, los animales vendidos (con su peso, si se
+// pesan), el precio y la factura emitida, si la hay. Al registrarla, los animales pasan a vendidos; al
+// deshacerla, vuelven a estar activos. La clave foránea de la factura (que se suelta al borrarla) y la
+// regla de que sea emitida van en la migración 0041.
+
+// El precio se introduce como total, por animal o por kg; el resto se calcula
+export const MODOS_PRECIO = ['total', 'por_animal', 'por_kg'] as const
+
+export const modoPrecio = pgEnum('modo_precio_venta', MODOS_PRECIO)
+
+export const ventas = pgTable(
+  'ventas',
+  {
+    id: id(),
+    ...deExplotacion(),
+    fecha: date('fecha', { mode: 'string' }).notNull(),
+    comprador: text('comprador').notNull(),
+    modoPrecio: modoPrecio('modo_precio').notNull(),
+    // El precio introducido, sin IVA ni compensación: el total, el de cada animal o el del kg (con
+    // tres decimales, como 4,125 €/kg)
+    precio: numeric('precio', { precision: 12, scale: 3, mode: 'number' }).notNull(),
+    // La suma de los importes de los animales
+    total: importe('total').notNull(),
+    facturaId: uuid('factura_id'),
+    observaciones: text('observaciones'),
+    ...auditoria(),
+  },
+  (t) => [
+    unique('ventas_explotacion_id_unique').on(t.explotacionId, t.id),
+    // Una factura, de una sola venta
+    unique('ventas_factura_unica').on(t.facturaId),
+    index('ventas_explotacion_fecha_idx').on(t.explotacionId, t.fecha),
+    check('ventas_comprador_no_vacio', sql`btrim(${t.comprador}) <> ''`),
+    check('ventas_precio', sql`${t.precio} > 0 and ${t.total} > 0`),
+    separacionPorExplotacion(),
+  ],
+)
+
+// Cada animal vendido, con su peso (si se pesó) y lo que le corresponde del total. La pesada de
+// venta queda en su ficha (pesos), enlazada para quitarla si se deshace la venta.
+export const ventasAnimales = pgTable(
+  'ventas_animales',
+  {
+    id: id(),
+    ...deExplotacion(),
+    ventaId: uuid('venta_id').notNull(),
+    animalId: uuid('animal_id').notNull(),
+    kg: numeric('kg', { precision: 5, scale: 1, mode: 'number' }),
+    importe: importe('importe').notNull(),
+    pesoId: uuid('peso_id').references(() => pesos.id, { onDelete: 'set null' }),
+    ...auditoria(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'ventas_animales_venta_fk',
+      columns: [t.explotacionId, t.ventaId],
+      foreignColumns: [ventas.explotacionId, ventas.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      name: 'ventas_animales_animal_fk',
+      columns: [t.explotacionId, t.animalId],
+      foreignColumns: [animales.explotacionId, animales.id],
+    }).onDelete('restrict'),
+    // Un animal se vende una sola vez
+    unique('ventas_animales_animal_unico').on(t.animalId),
+    index('ventas_animales_explotacion_idx').on(t.explotacionId),
+    index('ventas_animales_venta_idx').on(t.ventaId),
+    check(
+      'ventas_animales_kg',
+      sql`${t.kg} is null or (${t.kg} > 0 and ${t.kg} <= ${sql.raw(String(KG_MAXIMO))})`,
+    ),
+    check('ventas_animales_importe', sql`${t.importe} >= 0`),
     separacionPorExplotacion(),
   ],
 )

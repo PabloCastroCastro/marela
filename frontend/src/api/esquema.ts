@@ -6287,6 +6287,431 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/ventas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ventas de animales, con filtros */
+        get: {
+            parameters: {
+                query?: {
+                    desde?: string;
+                    hasta?: string;
+                    factura?: "con" | "sin";
+                    /** @description Comprador */
+                    q?: string;
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description De la más reciente a la más antigua */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Venta"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la venta (venta_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Registrar una venta de animales
+         * @description En la misma transacción, los animales pasan a vendidos (baja por venta, con la fecha y el comprador) y su peso queda como pesada de venta en su ficha. Se bloquea, sin excepciones, si alguno tiene un periodo de supresión en curso en la fecha de la venta.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosVenta"];
+                };
+            };
+            responses: {
+                /** @description La venta registrada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Venta"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la venta (venta_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún animal tiene un periodo de supresión en curso (supresion_en_curso: en detalles, cuál y hasta cuándo), o la factura ya es de otra venta (factura_con_venta) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/ventas/{ventaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Una venta */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    ventaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La venta */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Venta"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la venta (venta_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /**
+         * Corregir una venta
+         * @description Se deshace y se registra de nuevo con los datos nuevos, también los animales.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    ventaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosVenta"];
+                };
+            };
+            responses: {
+                /** @description La venta corregida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Venta"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la venta (venta_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Algún animal tiene un periodo de supresión en curso (supresion_en_curso: en detalles, cuál y hasta cuándo), o la factura ya es de otra venta (factura_con_venta) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Deshacer una venta
+         * @description Los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura, si la tenía, se queda. Queda en el historial.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    ventaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deshecha */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la venta (venta_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/ventas/{ventaId}/factura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Asociar a la venta su factura emitida, o quitarla */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    ventaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CambioFacturaVenta"];
+                };
+            };
+            responses: {
+                /** @description La venta */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Venta"];
+                    };
+                };
+                /** @description La factura no es emitida o no es de la explotación (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la venta (venta_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description La factura ya es de otra venta (factura_con_venta) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/tareas": {
         parameters: {
             query?: never;
@@ -8286,6 +8711,11 @@ export interface components {
                 crotal: string | null;
                 nombre: string | null;
             }[];
+            /**
+             * Format: uuid
+             * @description La venta de una emitida (GH-38)
+             */
+            ventaId: string | null;
             /** @description Entradas de comida compradas con la factura (GH-36) */
             entradasComida: {
                 /** Format: uuid */
@@ -8436,6 +8866,75 @@ export interface components {
         };
         DatosAnulacionApunte: {
             motivo: string;
+        };
+        Venta: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            fecha: string;
+            comprador: string;
+            /** @enum {string} */
+            modoPrecio: "total" | "por_animal" | "por_kg";
+            /** @description El introducido: el total, por animal o por kg */
+            precio: number;
+            /** @description Sin IVA ni compensación */
+            total: number;
+            /** @description Los kilos vendidos, si se pesaron todos */
+            kg: number | null;
+            animales: {
+                /** Format: uuid */
+                id: string;
+                crotal: string | null;
+                nombre: string | null;
+                kg: number | null;
+                /** @description Lo que le corresponde del total */
+                importe: number;
+            }[];
+            factura: {
+                /** Format: uuid */
+                id: string;
+                numero: string;
+                total: number;
+            } | null;
+            observaciones: string | null;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosVenta: {
+            /** Format: date */
+            fecha: string;
+            comprador: string;
+            animales: {
+                /** Format: uuid */
+                animalId: string;
+                /** @description Peso a la venta; queda como pesada de venta en su ficha */
+                kg?: number | null;
+            }[];
+            /**
+             * @description Si el precio es el total, el de cada animal o el del kg
+             * @enum {string}
+             */
+            modoPrecio: "total" | "por_animal" | "por_kg";
+            /**
+             * @description Sin IVA ni compensación
+             * @example 4.35
+             */
+            precio: number;
+            /**
+             * Format: uuid
+             * @description Una factura emitida, si ya la hay
+             */
+            facturaId?: string | null;
+            observaciones?: string | null;
+        };
+        CambioFacturaVenta: {
+            /**
+             * Format: uuid
+             * @description null para quitarla
+             */
+            facturaId: string | null;
         };
         Tarea: {
             /** Format: uuid */

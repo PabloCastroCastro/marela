@@ -3830,6 +3830,14 @@
               ]
             }
           },
+          "ventaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "La venta de una emitida (GH-38)"
+          },
           "entradasComida": {
             "type": "array",
             "items": {
@@ -3926,6 +3934,7 @@
           "pagadaEn",
           "archivo",
           "animales",
+          "ventaId",
           "entradasComida",
           "creadoEn",
           "modificadoEn"
@@ -4367,6 +4376,231 @@
         },
         "required": [
           "motivo"
+        ]
+      },
+      "Venta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "comprador": {
+            "type": "string"
+          },
+          "modoPrecio": {
+            "type": "string",
+            "enum": [
+              "total",
+              "por_animal",
+              "por_kg"
+            ]
+          },
+          "precio": {
+            "type": "number",
+            "description": "El introducido: el total, por animal o por kg"
+          },
+          "total": {
+            "type": "number",
+            "description": "Sin IVA ni compensación"
+          },
+          "kg": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Los kilos vendidos, si se pesaron todos"
+          },
+          "animales": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nombre": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "kg": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "importe": {
+                  "type": "number",
+                  "description": "Lo que le corresponde del total"
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "nombre",
+                "kg",
+                "importe"
+              ]
+            }
+          },
+          "factura": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "numero",
+              "total"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fecha",
+          "comprador",
+          "modoPrecio",
+          "precio",
+          "total",
+          "kg",
+          "animales",
+          "factura",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosVenta": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "comprador": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "animales": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "animalId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "kg": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "exclusiveMinimum": 0,
+                  "maximum": 2000,
+                  "description": "Peso a la venta; queda como pesada de venta en su ficha"
+                }
+              },
+              "required": [
+                "animalId"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "modoPrecio": {
+            "type": "string",
+            "enum": [
+              "total",
+              "por_animal",
+              "por_kg"
+            ],
+            "description": "Si el precio es el total, el de cada animal o el del kg"
+          },
+          "precio": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 9999999999,
+            "description": "Sin IVA ni compensación",
+            "example": 4.35
+          },
+          "facturaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Una factura emitida, si ya la hay"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "fecha",
+          "comprador",
+          "animales",
+          "modoPrecio",
+          "precio"
+        ]
+      },
+      "CambioFacturaVenta": {
+        "type": "object",
+        "properties": {
+          "facturaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "null para quitarla"
+          }
+        },
+        "required": [
+          "facturaId"
         ]
       },
       "Tarea": {
@@ -12725,6 +12959,555 @@
           },
           "409": {
             "description": "Está anulado: ya no se cambia (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/ventas": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Ventas de animales, con filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ]
+            },
+            "required": false,
+            "name": "factura",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comprador"
+            },
+            "required": false,
+            "description": "Comprador",
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más reciente a la más antigua",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Venta"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Registrar una venta de animales",
+        "description": "En la misma transacción, los animales pasan a vendidos (baja por venta, con la fecha y el comprador) y su peso queda como pesada de venta en su ficha. Se bloquea, sin excepciones, si alguno tiene un periodo de supresión en curso en la fecha de la venta.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosVenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La venta registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún animal tiene un periodo de supresión en curso (supresion_en_curso: en detalles, cuál y hasta cuándo), o la factura ya es de otra venta (factura_con_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/ventas/{ventaId}": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Una venta",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La venta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Corregir una venta",
+        "description": "Se deshace y se registra de nuevo con los datos nuevos, también los animales.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosVenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La venta corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún animal tiene un periodo de supresión en curso (supresion_en_curso: en detalles, cuál y hasta cuándo), o la factura ya es de otra venta (factura_con_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Deshacer una venta",
+        "description": "Los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura, si la tenía, se queda. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deshecha"
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/ventas/{ventaId}/factura": {
+      "patch": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Asociar a la venta su factura emitida, o quitarla",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioFacturaVenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La venta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "La factura no es emitida o no es de la explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La factura ya es de otra venta (factura_con_venta)",
             "content": {
               "application/json": {
                 "schema": {
