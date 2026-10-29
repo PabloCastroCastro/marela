@@ -7,6 +7,7 @@ import { Tabla } from '../componentes/Tabla'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, hoy } from '../formato'
 import { nombrePeriodo, PERIODOS, type PeriodoResumen, type Resumen, useResumen } from './datos'
+import { BotonExportar } from './Exportar'
 import estilos from './Finanzas.module.css'
 
 // Los años que se ofrecen: el actual y los cinco anteriores
@@ -36,9 +37,18 @@ export function Informes() {
 
   return (
     <Tarjeta aria-labelledby="finanzas-informes" className={estilos.tarjeta}>
-      <h2 id="finanzas-informes" className={estilos.tituloTarjeta}>
-        Ingresos y gastos
-      </h2>
+      <div className={estilos.cabeceraTarjeta}>
+        <h2 id="finanzas-informes" className={estilos.tituloTarjeta}>
+          Ingresos y gastos
+        </h2>
+        <BotonExportar
+          listado="periodo"
+          filtros={{ periodo, ...rango }}
+          formatos={['xlsx', 'zip']}
+          texto="Exportar para el gestor"
+          descripcion={`Todo el periodo (${rango.desde.split('-').reverse().join('/')} a ${rango.hasta.split('-').reverse().join('/')}): el resumen y las facturas, las ventas y los otros ingresos y gastos, cada uno en su hoja.`}
+        />
+      </div>
       <div className={estilos.controles}>
         <Chips
           etiqueta="Periodo"

@@ -19,6 +19,7 @@ import {
   type TipoApunte,
   useApuntes,
 } from './datos'
+import { BotonExportar } from './Exportar'
 import { type Fechas, FiltroFechas, rangoFechas } from './FiltroFechas'
 import estilos from './Finanzas.module.css'
 import { FormularioApunte } from './FormularioApunte'
@@ -52,13 +53,14 @@ export function ListaApuntes() {
   const [estado, setEstado] = useState<FiltroEstado>('vigente')
   const [creando, setCreando] = useState(false)
   const [fechas, setFechas] = useState<Fechas>({ desde: '', hasta: '' })
-  const apuntes = useApuntes(explotacion.id, {
+  const filtros = {
     q: texto || undefined,
     tipo: tipo === 'todos' ? undefined : tipo,
     categoria: categoria === 'todas' ? undefined : categoria,
     estado: estado === 'todos' ? undefined : estado,
     ...rangoFechas(fechas),
-  })
+  }
+  const apuntes = useApuntes(explotacion.id, filtros)
   const filtrado =
     texto !== '' ||
     tipo !== 'todos' ||
@@ -77,14 +79,22 @@ export function ListaApuntes() {
         <h2 id="finanzas-apuntes" className={estilos.tituloTarjeta}>
           Otros ingresos y gastos
         </h2>
-        <Boton
-          variante="secundario"
-          tamano="compacto"
-          icono={<Plus aria-hidden size={18} />}
-          onClick={() => setCreando(true)}
-        >
-          Nuevo
-        </Boton>
+        <div className={estilos.acciones}>
+          <BotonExportar
+            listado="apuntes"
+            filtros={filtros}
+            formatos={['xlsx', 'csv', 'zip']}
+            descripcion="Los otros ingresos y gastos que se ven, con los filtros y las fechas que tengas puestos."
+          />
+          <Boton
+            variante="secundario"
+            tamano="compacto"
+            icono={<Plus aria-hidden size={18} />}
+            onClick={() => setCreando(true)}
+          >
+            Nuevo
+          </Boton>
+        </div>
       </div>
 
       <BarraFiltros buscador={<Buscador etiqueta="Buscar por concepto" alCambiar={setTexto} />}>

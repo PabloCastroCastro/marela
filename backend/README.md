@@ -386,6 +386,15 @@ Tablas `ventas` y `ventas_animales` (migraciones `0040` y `0041`, con historial 
 
 Los listados de facturas, ventas y otros ingresos y gastos se filtran también por `desde` y `hasta`.
 
+**Exportación para el gestor** (GH-40), en `src/rutas/exportaciones.ts` y `src/exportacion.ts` (con `exceljs` y `archiver`):
+
+- **`GET /api/explotaciones/{id}/exportaciones/{facturas|ventas|apuntes}?formato=xlsx|csv|zip&…`:** el listado con los mismos filtros que su `GET`, para descargar (`Content-Disposition: attachment`, `facturas_2026-07-01_2026-09-30.xlsx`). Las ventas, sin `zip` (no tienen adjuntos).
+- **`GET /api/explotaciones/{id}/exportaciones/periodo?desde=&hasta=&periodo=&formato=xlsx|zip`:** todo el periodo en un Excel con las hojas Resumen, Facturas, Ventas y Otros ingresos y gastos.
+- **Formatos:**
+  - Excel: cabecera fija, fechas e importes de verdad (`dd/mm/yyyy`, `#,##0.00 €`).
+  - CSV: como lo abre Excel en España, con punto y coma, coma decimal, fechas `dd/mm/aaaa` y BOM UTF-8.
+  - `.zip`: el Excel y los adjuntos de las facturas (`facturas/`) y de los otros ingresos y gastos (`otros-ingresos-y-gastos/`), con nombres legibles (`2026-10-15 P-381 Piensos do Norte.pdf`); el Excel dice qué archivo es de cada fila. Se genera en streaming; un adjunto que falte en el disco se salta y se registra.
+
 **Otros ingresos y gastos** (GH-37), en `src/rutas/apuntes.ts`:
 
 - **`GET /api/explotaciones/{id}/apuntes`:** del más reciente al más antiguo, con los anulados. Filtros `tipo` (`ingreso` o `gasto`), `categoria`, `estado` (`vigente` o `anulado`), `desde`, `hasta` y `q` (concepto u observaciones).

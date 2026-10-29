@@ -319,7 +319,10 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 
 - Listados de facturas, otros ingresos y gastos, y ventas con filtros (fechas, proveedor...).
 - Resumen de ingresos y gastos por periodo (GH-39): por meses o trimestres de un año, o por años. Con impuestos (lo que de verdad entra y sale: en el REAGP el IVA de las compras no se recupera y la compensación se cobra) y por la fecha de cada factura o movimiento. Ingresos: facturas emitidas, ventas sin factura (las que la tienen cuentan por ella) y otros ingresos; gastos: facturas recibidas y otros gastos; los anulados no cuentan. Lo pendiente de cobro y de pago, aparte. En la pestaña Informes de Finanzas.
-- Exportación a Excel/CSV para el gestor.
+- Exportación a Excel/CSV para el gestor (GH-40):
+  - Cada listado (facturas, ventas, otros ingresos y gastos), con sus filtros, en Excel, CSV o un .zip con el Excel y los adjuntos.
+  - En Informes, «Exportar para el gestor»: todo el periodo en un Excel con el resumen y una hoja por listado, o en un .zip con los adjuntos.
+  - Fechas e importes en español: en el Excel, fechas e importes de verdad con su formato; el CSV, separado por punto y coma, con coma decimal y BOM, como lo abre Excel en España.
 
 ## Aspectos generales de los datos
 
