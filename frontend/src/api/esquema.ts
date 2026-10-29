@@ -4340,6 +4340,359 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/equipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Maquinaria e infraestructuras de la explotación */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Busca en el nombre y la descripción */
+                    q?: string;
+                    tipo?: "maquinaria" | "infraestructura";
+                    /** @description Solo los activos (true) o los desactivados (false); sin él, todos */
+                    activo?: "true" | "false";
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Los que necesitan mantenimiento primero, y después por nombre */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Equipo"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su mantenimiento */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el equipo (equipo_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Dar de alta una máquina o una infraestructura */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosEquipo"];
+                };
+            };
+            responses: {
+                /** @description El equipo creado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Equipo"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su mantenimiento */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el equipo (equipo_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya hay un equipo con ese nombre (nombre_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/equipos/{equipoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Un equipo */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    equipoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description El equipo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Equipo"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su mantenimiento */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el equipo (equipo_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Cambiar los datos de un equipo */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    equipoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosEquipo"];
+                };
+            };
+            responses: {
+                /** @description El equipo actualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Equipo"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su mantenimiento */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el equipo (equipo_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Ya hay un equipo con ese nombre (nombre_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/equipos/{equipoId}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Desactivar o reactivar un equipo
+         * @description Un equipo no se borra: se desactiva, y sus datos y su historial se conservan.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    equipoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CambioEstadoEquipo"];
+                };
+            };
+            responses: {
+                /** @description El equipo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Equipo"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su mantenimiento */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el equipo (equipo_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/cartografia/recinto": {
         parameters: {
             query?: never;
@@ -4942,7 +5295,7 @@ export interface components {
              *       "fincas"
              *     ]
              */
-            modulos: ("animales" | "comida" | "fincas" | "finanzas" | "administracion")[];
+            modulos: ("animales" | "comida" | "fincas" | "mantenimiento" | "finanzas" | "administracion")[];
         };
         /** @enum {string} */
         Provincia: "A Coruña" | "Álava" | "Albacete" | "Alicante" | "Almería" | "Asturias" | "Ávila" | "Badajoz" | "Barcelona" | "Bizkaia" | "Burgos" | "Cáceres" | "Cádiz" | "Cantabria" | "Castellón" | "Ceuta" | "Ciudad Real" | "Córdoba" | "Cuenca" | "Gipuzkoa" | "Girona" | "Granada" | "Guadalajara" | "Huelva" | "Huesca" | "Illes Balears" | "Jaén" | "La Rioja" | "Las Palmas" | "León" | "Lleida" | "Lugo" | "Madrid" | "Málaga" | "Melilla" | "Murcia" | "Navarra" | "Ourense" | "Palencia" | "Pontevedra" | "Salamanca" | "Santa Cruz de Tenerife" | "Segovia" | "Sevilla" | "Soria" | "Tarragona" | "Teruel" | "Toledo" | "Valencia" | "Valladolid" | "Zamora" | "Zaragoza";
@@ -5823,6 +6176,33 @@ export interface components {
             /** @example Recuento de fin de mes */
             motivo?: string | null;
             observaciones?: string | null;
+        };
+        Equipo: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+            /** @enum {string} */
+            tipo: "maquinaria" | "infraestructura";
+            descripcion: string | null;
+            necesitaMantenimiento: boolean;
+            activo: boolean;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosEquipo: {
+            /** @example Tractor John Deere 6120M */
+            nombre: string;
+            /** @enum {string} */
+            tipo: "maquinaria" | "infraestructura";
+            /** @example Matrícula E-1234-BCD */
+            descripcion?: string | null;
+            /** @default false */
+            necesitaMantenimiento: boolean;
+        };
+        CambioEstadoEquipo: {
+            activo: boolean;
         };
         RecintoSigpac: {
             provincia: string;

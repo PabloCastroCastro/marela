@@ -12,6 +12,7 @@ import {
   almacenes,
   animales,
   aplicaciones,
+  equipos,
   eventosReproductivos,
   fincas,
   labores,
@@ -62,6 +63,7 @@ const LABOR = 12
 const APLICACION = 13
 const PASTOREO = 14
 const MOVIMIENTO = 15
+const EQUIPO = 16
 
 const usuarios = [
   { n: 1, usuario: 'propietario', nombre: 'Pablo Propietario', propietario: true },
@@ -804,6 +806,40 @@ await enExplotacion(
         })
         .onConflictDoNothing()
     }
+  },
+)
+
+// Maquinaria e infraestructuras de A Veiga (GH-111)
+const equiposVeiga = [
+  {
+    nombre: 'Tractor John Deere 6120M',
+    tipo: 'maquinaria' as const,
+    descripcion: 'Matrícula E-1234-BCD',
+    necesitaMantenimiento: true,
+  },
+  { nombre: 'Remolque basculante', tipo: 'maquinaria' as const, descripcion: '8 t' },
+  { nombre: 'Encintadora', tipo: 'maquinaria' as const, descripcion: null },
+  {
+    nombre: 'Nave de las vacas',
+    tipo: 'infraestructura' as const,
+    descripcion: 'Cubierta de chapa, 40 cubículos',
+  },
+  {
+    nombre: 'Bebederos del prado',
+    tipo: 'infraestructura' as const,
+    descripcion: 'Prado da fonte',
+    necesitaMantenimiento: true,
+  },
+]
+
+await enExplotacion(
+  { explotacionId: sid(EXPLOTACION, 1), usuarioId: sid(USUARIO, 2) },
+  async (tx) => {
+    for (const [i, e] of equiposVeiga.entries())
+      await tx
+        .insert(equipos)
+        .values({ id: sid(EQUIPO, i + 1), necesitaMantenimiento: false, ...e })
+        .onConflictDoNothing()
   },
 )
 

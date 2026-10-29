@@ -131,6 +131,7 @@
                     "animales",
                     "comida",
                     "fincas",
+                    "mantenimiento",
                     "finanzas",
                     "administracion"
                   ]
@@ -3501,6 +3502,99 @@
           "tipo",
           "fecha",
           "cantidad"
+        ]
+      },
+      "Equipo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "maquinaria",
+              "infraestructura"
+            ]
+          },
+          "descripcion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "necesitaMantenimiento": {
+            "type": "boolean"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "tipo",
+          "descripcion",
+          "necesitaMantenimiento",
+          "activo",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosEquipo": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "example": "Tractor John Deere 6120M"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "maquinaria",
+              "infraestructura"
+            ]
+          },
+          "descripcion": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Matrícula E-1234-BCD"
+          },
+          "necesitaMantenimiento": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "nombre",
+          "tipo"
+        ]
+      },
+      "CambioEstadoEquipo": {
+        "type": "object",
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "activo"
         ]
       },
       "RecintoSigpac": {
@@ -9093,6 +9187,464 @@
           },
           "404": {
             "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/equipos": {
+      "get": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Maquinaria e infraestructuras de la explotación",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Busca en el nombre y la descripción"
+            },
+            "required": false,
+            "description": "Busca en el nombre y la descripción",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "maquinaria",
+                "infraestructura"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Solo los activos (true) o los desactivados (false); sin él, todos"
+            },
+            "required": false,
+            "description": "Solo los activos (true) o los desactivados (false); sin él, todos",
+            "name": "activo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Los que necesitan mantenimiento primero, y después por nombre",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Equipo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Dar de alta una máquina o una infraestructura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosEquipo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "El equipo creado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un equipo con ese nombre (nombre_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/equipos/{equipoId}": {
+      "get": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Un equipo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "equipoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El equipo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Cambiar los datos de un equipo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "equipoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosEquipo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El equipo actualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ya hay un equipo con ese nombre (nombre_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/equipos/{equipoId}/estado": {
+      "patch": {
+        "tags": [
+          "Mantenimiento"
+        ],
+        "summary": "Desactivar o reactivar un equipo",
+        "description": "Un equipo no se borra: se desactiva, y sus datos y su historial se conservan.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "equipoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoEquipo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El equipo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Equipo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su mantenimiento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
             "content": {
               "application/json": {
                 "schema": {

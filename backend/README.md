@@ -127,7 +127,7 @@ Módulos y roles (`PERMISOS`):
 
 | Módulo | administrador | empleado |
 |---|---|---|
-| `animales`, `comida`, `fincas` | sí | sí |
+| `animales`, `comida`, `fincas`, `mantenimiento` | sí | sí |
 | `finanzas` | sí | no |
 | `administracion` (equipo y datos de la explotación) | sí | no |
 
@@ -304,6 +304,18 @@ Entradas, salidas y ajustes de inventario, en `src/rutas/movimientos.ts` (módul
 - **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo.
 
 **Stock:** lo calcula PostgreSQL (migración `0028`). `movimientos_con_stock(almacen)` recorre los movimientos por fecha y, el mismo día, por orden de registro: las entradas suman, las salidas y mermas restan, y un recuento fija el stock en lo contado. `stock_almacen(almacen)` es el que deja el último, o 0. Puede ser negativo: se guarda igual, y la pantalla lo avisa y lo marca en rojo. Las cantidades van en la unidad del almacén, con dos decimales. Cada tipo lleva sus datos y no los de los demás (check `movimientos_comida_datos`); el almacén y la finca son de la explotación (claves foráneas compuestas). Los cambios quedan en el historial.
+
+## Mantenimiento
+
+Maquinaria e infraestructuras de la explotación (GH-111), en `src/rutas/equipos.ts` (módulo `mantenimiento`: administrador y empleado):
+
+- **`GET /api/explotaciones/{id}/equipos`:** los que necesitan mantenimiento primero, y después por nombre. Búsqueda (`q`, en nombre y descripción) y filtros `tipo` (`maquinaria` o `infraestructura`) y `activo=true|false`.
+- **`GET /api/explotaciones/{id}/equipos/{equipoId}`:** un equipo.
+- **`POST /api/explotaciones/{id}/equipos`:** `{ nombre, tipo, descripcion?, necesitaMantenimiento? }` da de alta una máquina o una infraestructura.
+- **`PUT /api/explotaciones/{id}/equipos/{equipoId}`:** cambia sus datos.
+- **`PATCH /api/explotaciones/{id}/equipos/{equipoId}/estado`:** `{ activo }` desactiva o reactiva. Un equipo no se borra.
+
+El nombre no se repite en la explotación (409 `nombre_en_uso`). Migraciones `0030` (tabla) y `0031` (historial de cambios).
 
 ## Historial de cambios
 

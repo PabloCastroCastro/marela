@@ -251,6 +251,15 @@ export const movimientoSimulado = (
   ...datos,
 })
 
+export type EquipoSimulado = {
+  id: string
+  nombre: string
+  tipo: 'maquinaria' | 'infraestructura'
+  descripcion: string | null
+  necesitaMantenimiento: boolean
+  activo: boolean
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -276,13 +285,14 @@ export type EstadoSimulado = {
   pastoreos: PastoreoSimulado[]
   almacenes: AlmacenSimulado[]
   movimientos: MovimientoSimulado[]
+  equipos: EquipoSimulado[]
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
   sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
 
 const MODULOS: Record<Rol, string[]> = {
-  administrador: ['animales', 'comida', 'fincas', 'finanzas', 'administracion'],
-  empleado: ['animales', 'comida', 'fincas'],
+  administrador: ['animales', 'comida', 'fincas', 'mantenimiento', 'finanzas', 'administracion'],
+  empleado: ['animales', 'comida', 'fincas', 'mantenimiento'],
 }
 
 export const A_VEIGA: ExplotacionSimulada = {
@@ -519,6 +529,24 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
       },
     ],
     movimientos: [],
+    equipos: [
+      {
+        id: 'eq1',
+        nombre: 'Tractor John Deere',
+        tipo: 'maquinaria',
+        descripcion: 'Matrícula E-1234-BCD',
+        necesitaMantenimiento: true,
+        activo: true,
+      },
+      {
+        id: 'eq2',
+        nombre: 'Nave de las vacas',
+        tipo: 'infraestructura',
+        descripcion: null,
+        necesitaMantenimiento: false,
+        activo: true,
+      },
+    ],
     ...cambios,
   }
 }
@@ -552,6 +580,8 @@ const APLICACIONES =
 // Las labores de una finca, el registro o una labor
 const LABORES = /^\/api\/explotaciones\/[^/]+\/(?:fincas\/([^/]+)\/labores|labores(?:\/([^/]+))?)$/
 const FINCAS = /^\/api\/explotaciones\/[^/]+\/fincas(?:\/([^/]+))?(\/estado)?$/
+// La maquinaria y las infraestructuras, una o su estado
+const EQUIPOS = /^\/api\/explotaciones\/[^/]+\/equipos(?:\/([^/]+))?(\/estado)?$/
 // Los almacenes de comida, uno o su estado
 const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
 // Los movimientos de un almacén, el registro o uno
@@ -954,6 +984,69 @@ export function simularApi(estado: EstadoSimulado) {
         motivo: cuerpo.motivo,
       }
       return json({ ...a, ...sello })
+    }
+
+    const deEquipos = ruta.match(EQUIPOS)
+    if (deEquipos) {
+      const [, equipoId, estadoEquipo] = deEquipos
+      const completo = (e: EquipoSimulado) => ({
+        ...e,
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      const q = new URL(peticion.url).searchParams
+      if (!equipoId && metodo === 'GET')
+        return json(
+          estado.equipos
+            .filter((e) => !q.get('tipo') || e.tipo === q.get('tipo'))
+            .filter((e) => !q.get('activo') || String(e.activo) === q.get('activo'))
+            .filter(
+              (e) =>
+                !q.get('q') ||
+                `${e.nombre} ${e.descripcion ?? ''}`
+                  .toLowerCase()
+                  .includes((q.get('q') ?? '').toLowerCase()),
+            )
+            .sort(
+              (x, y) =>
+                Number(y.necesitaMantenimiento) - Number(x.necesitaMantenimiento) ||
+                x.nombre.localeCompare(y.nombre),
+            )
+            .map(completo),
+        )
+      const repetido = (nombre: string, id?: string) =>
+        estado.equipos.some(
+          (e) => e.nombre.toLowerCase() === nombre.trim().toLowerCase() && e.id !== id,
+        )
+      const nombreEnUso = () =>
+        errorApi(409, 'nombre_en_uso', [
+          { campo: 'nombre', mensaje: 'Ya hay un equipo con este nombre' },
+        ])
+      const datosEquipo = () => ({
+        nombre: (cuerpo.nombre as string).trim(),
+        tipo: cuerpo.tipo,
+        descripcion: (cuerpo.descripcion as string | undefined)?.trim() || null,
+        necesitaMantenimiento: Boolean(cuerpo.necesitaMantenimiento),
+      })
+      if (!equipoId) {
+        if (repetido(cuerpo.nombre)) return nombreEnUso()
+        const nuevo: EquipoSimulado = {
+          id: `eq${estado.equipos.length + 1}`,
+          activo: true,
+          ...datosEquipo(),
+        }
+        estado.equipos.push(nuevo)
+        return json(completo(nuevo), 201)
+      }
+      const e = estado.equipos.find((x) => x.id === equipoId)
+      if (!e) return errorApi(404, 'equipo_no_encontrado')
+      if (metodo === 'GET') return json(completo(e))
+      if (estadoEquipo) e.activo = cuerpo.activo
+      else {
+        if (repetido(cuerpo.nombre, e.id)) return nombreEnUso()
+        Object.assign(e, datosEquipo())
+      }
+      return json(completo(e))
     }
 
     const deMovimientos = ruta.match(MOVIMIENTOS)

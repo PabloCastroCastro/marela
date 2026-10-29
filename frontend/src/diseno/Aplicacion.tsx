@@ -10,6 +10,7 @@ import {
   Tractor,
   Users,
   Wheat,
+  Wrench,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router'
@@ -41,6 +42,7 @@ const secciones: { ruta: string; texto: string; icono: typeof Vaca; modulo: Modu
   { ruta: 'animales', texto: 'Animales', icono: Vaca, modulo: 'animales' },
   { ruta: 'comida', texto: 'Comida', icono: Wheat, modulo: 'comida' },
   { ruta: 'fincas', texto: 'Fincas', icono: Tractor, modulo: 'fincas' },
+  { ruta: 'mantenimiento', texto: 'Mantenimiento', icono: Wrench, modulo: 'mantenimiento' },
   { ruta: 'finanzas', texto: 'Finanzas', icono: Euro, modulo: 'finanzas' },
 ]
 

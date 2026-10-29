@@ -17,6 +17,8 @@ import {
 import { PaginaEquipo } from './explotaciones/PaginaEquipo'
 import { PaginaFinca } from './fincas/PaginaFinca'
 import { PaginaFincas } from './fincas/PaginaFincas'
+import { PaginaFichaEquipo } from './mantenimiento/PaginaFichaEquipo'
+import { PaginaMantenimiento } from './mantenimiento/PaginaMantenimiento'
 import { PaginaInicio } from './paginas/PaginaInicio'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada'
 import { PaginaSeccion } from './paginas/PaginaSeccion'
@@ -88,6 +90,22 @@ export const rutas: RouteObject[] = [
             element: (
               <SoloModulo modulo="comida">
                 <PaginaAlmacen />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'mantenimiento',
+            element: (
+              <SoloModulo modulo="mantenimiento">
+                <PaginaMantenimiento />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'mantenimiento/:equipoId',
+            element: (
+              <SoloModulo modulo="mantenimiento">
+                <PaginaFichaEquipo />
               </SoloModulo>
             ),
           },

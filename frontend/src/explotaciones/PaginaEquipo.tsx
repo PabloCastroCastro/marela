@@ -271,7 +271,7 @@ function FormularioAnadir({
           <p className={estilos.ayuda}>
             {persona.rol === 'administrador'
               ? 'Accede a todo, también a Finanzas y al equipo.'
-              : 'Accede a Animales, Comida y Fincas, pero no a Finanzas.'}
+              : 'Accede a Animales, Comida, Fincas y Mantenimiento, pero no a Finanzas.'}
           </p>
         </fieldset>
       </form>
