@@ -3,11 +3,23 @@ import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { api, datos } from '../src/api/cliente'
 import { CLAVE_SESION } from '../src/auth/sesion'
 import { crearClienteConsultas, Proveedores } from '../src/proveedores'
 import { rutas } from '../src/rutas'
-import { encolar, type Pendiente, procesarCola, verCola } from '../src/sinConexion/cola'
-import { hayConexion, marcarConConexion } from '../src/sinConexion/conexion'
+import {
+  encolar,
+  enviarOGuardar,
+  type Pendiente,
+  procesarCola,
+  verCola,
+} from '../src/sinConexion/cola'
+import {
+  hayConexion,
+  LIMITES,
+  marcarConConexion,
+  marcarSinConexion,
+} from '../src/sinConexion/conexion'
 import { guardarConsultas, restaurarConsultas } from '../src/sinConexion/persistencia'
 import { A_VEIGA, type EstadoSimulado, estadoInicial, simularApi } from './simulacion'
 
@@ -505,5 +517,63 @@ describe('animales sin conexión (GH-33)', () => {
       sexo: 'hembra',
       crotal: null,
     })
+  })
+})
+
+describe('cobertura lenta y fichas descargadas', () => {
+  it('si el servidor no responde a tiempo, el registro va a la cola y se marca sin conexión', async () => {
+    const antes = { ...LIMITES }
+    LIMITES.registro = 50
+    // Una raya de cobertura: la petición no falla, se queda esperando
+    vi.stubGlobal(
+      'fetch',
+      (_: RequestInfo | URL, init?: RequestInit) =>
+        new Promise((_resolver, rechazar) =>
+          init?.signal?.addEventListener('abort', () =>
+            rechazar(new DOMException('', 'TimeoutError')),
+          ),
+        ),
+    )
+    try {
+      const resultado = await enviarOGuardar(pendiente(), () =>
+        datos(
+          api.POST('/api/explotaciones/{explotacionId}/animales/{animalId}/pesos', {
+            params: { path: { explotacionId: A_VEIGA.id, animalId: 'a3' } },
+            body: { fecha: '2026-06-01', kg: 150, momento: 'otro' },
+          }),
+        ),
+      )
+      expect(resultado).toEqual({ pendiente: true })
+      expect(verCola()).toHaveLength(1)
+      expect(hayConexion()).toBe(false)
+    } finally {
+      Object.assign(LIMITES, antes)
+    }
+  })
+
+  it('si ya se sabe que no hay conexión, va a la cola sin intentar enviarlo', async () => {
+    act(() => marcarSinConexion())
+    const enviar = vi.fn()
+    expect(await enviarOGuardar(pendiente(), enviar)).toEqual({ pendiente: true })
+    expect(enviar).not.toHaveBeenCalled()
+    expect(verCola()).toHaveLength(1)
+  })
+
+  it('al entrar en la explotación descarga las fichas de los animales y fincas activos', async () => {
+    simularApi(estado)
+    const cliente = crearClienteConsultas()
+    abrir(`/explotaciones/${A_VEIGA.id}/animales`, cliente)
+    await screen.findByRole('list', { name: 'Animales' })
+    const activos = estado.animales.filter((a) => a.estado === 'activo').map((a) => a.id)
+    const fincas = estado.fincas.filter((f) => f.activa).map((f) => f.id)
+    await waitFor(
+      () => {
+        for (const id of activos)
+          expect(cliente.getQueryData(['animales', A_VEIGA.id, 'ficha', id])).toBeDefined()
+        for (const id of fincas)
+          expect(cliente.getQueryData(['fincas', A_VEIGA.id, 'ficha', id])).toBeDefined()
+      },
+      { timeout: 5000 },
+    )
   })
 })

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router'
-import { consultaAnimales } from '../animales/datos'
 import { ErrorApi } from '../api/cliente'
 import { RUTA_CAMBIAR_CONTRASENA } from '../auth/RutaProtegida'
 import { useSesion } from '../auth/sesion'
@@ -33,8 +32,8 @@ import {
 } from '../explotaciones/datos'
 import { ProveedorExplotacion, useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { ListaExplotaciones } from '../explotaciones/PaginaElegirExplotacion'
-import { consultaFincas } from '../fincas/datos'
 import { ActualizacionPwa } from '../pwa/ActualizacionPwa'
+import { descargarParaSinConexion } from '../sinConexion/descarga'
 import { IndicadorConexion } from '../sinConexion/IndicadorConexion'
 import estilos from './Aplicacion.module.css'
 
@@ -102,23 +101,18 @@ function Estructura({ explotacion }: { explotacion: DetalleExplotacion }) {
   const base = rutaExplotacion(explotacion.id)
   const cliente = useQueryClient()
 
-  // Al entrar con cobertura, los listados de animales y fincas (los de por defecto, sin filtros) se
-  // descargan para tenerlos sin conexión; las fichas se guardan al abrirlas (GH-31)
-  // Cuando el navegador queda libre: la pantalla que se abre va primero
+  // Al entrar con cobertura, los listados de animales y fincas y las fichas de los activos se
+  // descargan para trabajar sin conexión (GH-31). Cuando el navegador queda libre: la pantalla que se
+  // abre va primero.
   useEffect(() => {
-    const descargar = () => {
-      if (explotacion.modulos.includes('animales'))
-        void cliente.prefetchQuery(consultaAnimales(explotacion.id, { estado: 'activo' }))
-      if (explotacion.modulos.includes('fincas'))
-        void cliente.prefetchQuery(consultaFincas(explotacion.id, { activa: 'true' }))
-    }
+    const descargar = () => void descargarParaSinConexion(cliente, explotacion)
     if (typeof globalThis.requestIdleCallback === 'function') {
       const id = globalThis.requestIdleCallback(descargar, { timeout: 5000 })
       return () => globalThis.cancelIdleCallback(id)
     }
     const id = setTimeout(descargar, 2000)
     return () => clearTimeout(id)
-  }, [cliente, explotacion.id, explotacion.modulos])
+  }, [cliente, explotacion])
 
   const [cuentaAbierta, setCuentaAbierta] = useState(false)
   const visibles = secciones.filter((s) => explotacion.modulos.includes(s.modulo))

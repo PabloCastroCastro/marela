@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch'
-import { marcarSinConexion } from '../sinConexion/conexion'
+import { pedir, SinRespuesta } from '../sinConexion/conexion'
 import type { paths } from './esquema'
 
 // Cliente tipado de la API. Los tipos se generan del contrato del backend (npm run api:generar), así
@@ -10,12 +10,13 @@ export const api = createClient<paths>({
   credentials: 'same-origin',
   // fetch se resuelve en cada petición (y no al crear el cliente), para poder simularlo en los tests.
   // Si no llega al servidor, se marca sin conexión (GH-31) y se lanza un ErrorApi con estado 0.
+  // Con un límite de espera: con poca cobertura, antes de que el navegador la dé por perdida.
   fetch: async (peticion) => {
     try {
-      return await globalThis.fetch(peticion)
-    } catch {
-      marcarSinConexion()
-      throw errorSinConexion()
+      return await pedir(peticion)
+    } catch (error) {
+      if (error instanceof SinRespuesta) throw errorSinConexion()
+      throw error
     }
   },
 })

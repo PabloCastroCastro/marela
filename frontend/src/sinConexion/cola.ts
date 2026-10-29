@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react'
 import { ErrorApi, esSinConexion } from '../api/cliente'
 import { CLAVE_SESION } from '../auth/sesion'
 import { guardar, leer } from './almacen'
-import { marcarSinConexion } from './conexion'
+import { hayConexion, pedir } from './conexion'
 
 // Registros pendientes de enviar (GH-31). Lo que se registra sin cobertura se guarda en el
 // dispositivo, en orden, y se envía solo al recuperarla. Cada registro lleva el id que generó el
@@ -131,14 +131,13 @@ async function enviarTodos(cliente: QueryClient, usuarioId: string): Promise<Res
     actualizar(p.id, { estado: 'enviando' })
     let respuesta: Response
     try {
-      respuesta = await globalThis.fetch(p.ruta, {
+      respuesta = await pedir(p.ruta, {
         method: p.metodo,
         credentials: 'same-origin',
         headers: { 'content-type': 'application/json' },
         body: p.cuerpo === undefined ? undefined : JSON.stringify(p.cuerpo),
       })
     } catch {
-      marcarSinConexion()
       actualizar(p.id, { estado: 'pendiente' })
       return { ...resultado, parado: true }
     }
@@ -180,12 +179,18 @@ async function enviarTodos(cliente: QueryClient, usuarioId: string): Promise<Res
 export const puedeEsperar = (error: unknown) =>
   esSinConexion(error) || (error instanceof ErrorApi && [502, 503, 504].includes(error.estado))
 
-// Para los formularios que funcionan sin conexión: envía y, si no llega, lo deja en la cola. Lo que
-// el servidor rechaza (un dato no válido) se lanza como siempre, para mostrarlo en el formulario.
+// Para los formularios que funcionan sin conexión: envía y, si no llega, lo deja en la cola; si ya se
+// sabe que no hay conexión, lo deja directamente. Lo que el servidor rechaza (un dato no válido) se
+// lanza como siempre, para mostrarlo en el formulario.
 export async function enviarOGuardar<T>(
   p: Omit<Pendiente, 'estado' | 'creadoEn'>,
   enviar: () => Promise<T>,
 ): Promise<{ enviado: T } | { pendiente: true }> {
+  // Ya se sabe que no hay conexión: a la cola sin esperar a que falle
+  if (!hayConexion()) {
+    encolar(p)
+    return { pendiente: true }
+  }
   try {
     return { enviado: await enviar() }
   } catch (error) {
