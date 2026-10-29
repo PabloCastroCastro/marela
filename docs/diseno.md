@@ -165,10 +165,27 @@ Decisiones (GH-23):
 
 Decisiones (GH-25):
 
-- Una finca junta una o varias parcelas, cada una con su referencia SIGPAC (provincia, municipio, polígono, parcela y recinto) o su referencia catastral, y su superficie. La superficie de la finca es la suma de la de sus parcelas.
+- Una finca junta una o varias parcelas, cada una con su referencia SIGPAC (provincia, municipio, polígono, parcela y recinto; desde GH-52, también agregado y zona) o su referencia catastral, y su superficie. La superficie de la finca es la suma de la de sus parcelas.
 - Un recinto SIGPAC está en una sola finca de la explotación, y no hay dos fincas con el mismo nombre.
 - Régimen: propiedad, arrendamiento, aparcería, cesión u otro.
 - Una finca no se borra: se desactiva y sale de la lista de activas; sus datos y su historial se conservan y se puede reactivar.
+
+Decisiones (GH-52):
+
+- Las parcelas se eligen en un mapa: la ortofoto del PNOA (IGN) con los recintos SIGPAC encima. Al tocar un recinto se añade con su referencia, superficie, uso y contorno, y con la referencia catastral de la parcela en la que está. Si la finca no tiene municipio o provincia, se rellenan.
+- También por referencia: con la SIGPAC completa se consulta el SIGPAC; si no, con la catastral, el Catastro.
+- La referencia SIGPAC tiene siete partes: provincia, municipio, agregado, zona, polígono, parcela y recinto. El agregado y la zona casi siempre son 0, y así quedan si no se escriben.
+- El mapa se centra en las parcelas que ya tiene la finca; si no tiene, en el municipio de la explotación. Con "Ir a mi ubicación", donde está el móvil.
+- Los servicios son públicos y gratuitos (SIGPAC, Catastro, CartoCiudad e IGN). Si no responden o no hay conexión, se sigue pudiendo escribir todo a mano.
+
+Decisiones (GH-91):
+
+- En Fincas, "Lista" o "Mapa", con los mismos filtros. La vista se guarda en la dirección (`?vista=mapa`), para volver a ella desde una ficha.
+- En el mapa, cada finca con el color de su estado: en plazo de seguridad (naranja, primero porque es un aviso), en pastoreo (azul) o sin nada (claro). Al tocar una se ven su nombre, superficie, municipio, régimen e insignias, y el acceso a su ficha.
+- Las fincas con parcelas escritas a mano no salen en el mapa: se avisa de cuáles son, con un enlace que abre su edición con el mapa ya abierto. En su ficha, lo mismo con "Completar en el mapa".
+- La ficha muestra un mapa pequeño con sus parcelas. No se acerca con la rueda del ratón, para no estorbar al desplazar la página.
+- El mapa de las fincas encuadra todas las que pasan el filtro, no tu posición: "Ir a mi ubicación" la marca con un punto, para saber en qué finca estás. Al elegir las parcelas de una finca sin ninguna, el mapa va a tu posición si el móvil ya dio permiso; si no, al municipio, sin pedirlo al abrir.
+- Sobre la ortofoto, los colores son fijos y vivos, los mismos en el tema claro y en el oscuro.
 
 ### Eventos de finca
 
@@ -229,7 +246,7 @@ Decisiones (GH-28):
 
 ### Para más adelante
 
-- Conexión con el catastro, SIGPAC y Maps.
+- Conexión con el catastro, SIGPAC y mapas: adelantada al ciclo 4b (GH-52 y GH-91).
 - Tener en cuenta la normativa (cuaderno de explotación / SIEX).
 - Posible conexión entre cosecha y entrada de comida con origen "producción propia".
 

@@ -4,6 +4,7 @@ import {
   check,
   foreignKey,
   index,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -57,20 +58,32 @@ export const fincas = pgTable(
 // solo descarta errores al teclear.
 export const HECTAREAS_MAXIMO = 100_000
 
+// Polígono o multipolígono GeoJSON, en longitud y latitud
+export type Contorno =
+  | { type: 'Polygon'; coordinates: number[][][] }
+  | { type: 'MultiPolygon'; coordinates: number[][][][] }
+
 export const parcelas = pgTable(
   'parcelas',
   {
     id: id(),
     ...deExplotacion(),
     fincaId: uuid('finca_id').notNull(),
-    // Referencia SIGPAC, como texto: o las cinco partes o ninguna
+    // Referencia SIGPAC, como texto: o las siete partes o ninguna. El agregado y la zona casi siempre
+    // son 0 (GH-52)
     provincia: text('sigpac_provincia'),
     municipio: text('sigpac_municipio'),
+    agregado: text('sigpac_agregado'),
+    zona: text('sigpac_zona'),
     poligono: text('sigpac_poligono'),
     parcela: text('sigpac_parcela'),
     recinto: text('sigpac_recinto'),
     referenciaCatastral: text('referencia_catastral'),
     superficie: numeric('superficie', { precision: 10, scale: 4, mode: 'number' }).notNull(),
+    // Uso SIGPAC del recinto ("PS" pastizal, "TA" tierra arable...) y su contorno en GeoJSON (WGS 84),
+    // cuando se elige en el mapa o se consulta por referencia (GH-52)
+    uso: text('uso'),
+    contorno: jsonb('contorno').$type<Contorno>(),
     ...auditoria(),
   },
   (t) => [
@@ -83,7 +96,16 @@ export const parcelas = pgTable(
     index('parcelas_finca_idx').on(t.fincaId),
     // Un recinto SIGPAC, en una sola finca de la explotación
     uniqueIndex('parcelas_sigpac_unico')
-      .on(t.explotacionId, t.provincia, t.municipio, t.poligono, t.parcela, t.recinto)
+      .on(
+        t.explotacionId,
+        t.provincia,
+        t.municipio,
+        t.agregado,
+        t.zona,
+        t.poligono,
+        t.parcela,
+        t.recinto,
+      )
       .where(sql`${t.recinto} is not null`),
     check(
       'parcelas_superficie',
@@ -91,7 +113,8 @@ export const parcelas = pgTable(
     ),
     check(
       'parcelas_sigpac_completa',
-      sql`num_nonnulls(${t.provincia}, ${t.municipio}, ${t.poligono}, ${t.parcela}, ${t.recinto}) in (0, 5)`,
+      sql`num_nonnulls(${t.provincia}, ${t.municipio}, ${t.agregado}, ${t.zona}, ${t.poligono},
+        ${t.parcela}, ${t.recinto}) in (0, 7)`,
     ),
     // Con alguna referencia: SIGPAC o catastral
     check(

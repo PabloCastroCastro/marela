@@ -2272,6 +2272,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/fincas/contornos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contornos de las parcelas de todas las fincas, para el mapa
+         * @description Solo los de las parcelas elegidas en el mapa o consultadas por referencia.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description En el orden de alta de las parcelas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            fincaId: string;
+                            /** Format: uuid */
+                            parcelaId: string;
+                            contorno: components["schemas"]["Contorno"];
+                        }[];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la finca (finca_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/fincas/{fincaId}": {
         parameters: {
             query?: never;
@@ -3521,6 +3595,264 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/cartografia/recinto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recinto SIGPAC en un punto del mapa o con una referencia */
+        get: {
+            parameters: {
+                query?: {
+                    lon?: number | null;
+                    lat?: number;
+                    /** @description Referencia SIGPAC completa */
+                    referencia?: string;
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description El recinto */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecintoSigpac"];
+                    };
+                };
+                /** @description Consulta no válida (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No hay recinto ahí o con esa referencia (recinto_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El servicio no responde (servicio_no_disponible) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/cartografia/catastro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Superficie, municipio y contorno de una parcela catastral */
+        get: {
+            parameters: {
+                query: {
+                    referencia: string;
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description La parcela */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ParcelaCatastral"];
+                    };
+                };
+                /** @description Consulta no válida (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe esa referencia (parcela_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El servicio no responde (servicio_no_disponible) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/cartografia/municipio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dónde está un municipio, para centrar el mapa */
+        get: {
+            parameters: {
+                query: {
+                    nombre: string;
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Su recuadro */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SituacionMunicipio"];
+                    };
+                };
+                /** @description Consulta no válida (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a sus fincas */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El servicio no responde (servicio_no_disponible) */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plataforma/explotaciones": {
         parameters: {
             query?: never;
@@ -4325,17 +4657,31 @@ export interface components {
             /** Format: date-time */
             modificadoEn: string;
         };
+        Contorno: {
+            /** @enum {string} */
+            type: "Polygon";
+            coordinates: number[][][];
+        } | {
+            /** @enum {string} */
+            type: "MultiPolygon";
+            coordinates: number[][][][];
+        };
         FincaDetalle: components["schemas"]["Finca"] & {
             parcelas: {
                 /** Format: uuid */
                 id: string;
                 provincia: string | null;
                 municipio: string | null;
+                agregado: string | null;
+                zona: string | null;
                 poligono: string | null;
                 parcela: string | null;
                 recinto: string | null;
                 referenciaCatastral: string | null;
                 superficie: number;
+                /** @description Uso SIGPAC: PS, TA... */
+                uso: string | null;
+                contorno: components["schemas"]["Contorno"];
             }[];
         };
         DatosFinca: {
@@ -4356,6 +4702,8 @@ export interface components {
                 id?: string;
                 provincia?: string | null;
                 municipio?: string | null;
+                agregado?: string | null;
+                zona?: string | null;
                 poligono?: string | null;
                 parcela?: string | null;
                 recinto?: string | null;
@@ -4363,6 +4711,8 @@ export interface components {
                 referenciaCatastral?: string | null;
                 /** @example 1.2345 */
                 superficie: number;
+                uso?: string | null;
+                contorno?: components["schemas"]["Contorno"];
             }[];
         };
         CambioEstadoFinca: {
@@ -4576,6 +4926,36 @@ export interface components {
         DatosSalida: {
             /** Format: date */
             fechaSalida: string;
+        };
+        RecintoSigpac: {
+            provincia: string;
+            municipio: string;
+            agregado: string;
+            zona: string;
+            poligono: string;
+            parcela: string;
+            recinto: string;
+            /** @description Hectáreas */
+            superficie: number;
+            /** @description Uso SIGPAC: PS, TA... */
+            uso: string | null;
+            contorno: components["schemas"]["Contorno"];
+            /** @description La de la parcela catastral en la que está, si el Catastro responde */
+            referenciaCatastral: string | null;
+            nombreMunicipio: string | null;
+            nombreProvincia: string | null;
+        };
+        ParcelaCatastral: {
+            referenciaCatastral: string;
+            /** @description Hectáreas */
+            superficie: number | null;
+            contorno: components["schemas"]["Contorno"];
+            nombreMunicipio: string | null;
+            nombreProvincia: string | null;
+        };
+        SituacionMunicipio: {
+            /** @description [oeste, sur, este, norte], o null si no se encuentra */
+            recuadro: number[] | null;
         };
         ExplotacionPlataforma: {
             /** Format: uuid */

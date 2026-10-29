@@ -1,10 +1,83 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { crearClienteConsultas, Proveedores } from '../src/proveedores'
 import { rutas } from '../src/rutas'
 import { A_VEIGA, type EstadoSimulado, estadoInicial, simularApi } from './simulacion'
+
+// El mapa (Leaflet) no funciona en jsdom: en su lugar, un botón que elige un recinto de Lalín
+vi.mock('../src/fincas/MapaParcelas', () => ({
+  default: ({ alAnadir, alCerrar }: { alAnadir: (r: unknown[]) => void; alCerrar: () => void }) => (
+    <button
+      type="button"
+      onClick={() => {
+        alAnadir([
+          {
+            provincia: '36',
+            municipio: '24',
+            agregado: '0',
+            zona: '0',
+            poligono: '57',
+            parcela: '37',
+            recinto: '2',
+            superficie: 1.2346,
+            uso: 'PS',
+            contorno: {
+              type: 'Polygon',
+              coordinates: [
+                [
+                  [-8.096, 42.679],
+                  [-8.095, 42.679],
+                  [-8.095, 42.68],
+                  [-8.096, 42.679],
+                ],
+              ],
+            },
+            referenciaCatastral: '36024A05700037',
+            nombreMunicipio: 'Lalín',
+            nombreProvincia: 'Pontevedra',
+          },
+        ])
+        alCerrar()
+      }}
+    >
+      Elegir el recinto de prueba
+    </button>
+  ),
+}))
+
+// Leaflet tampoco: los mapas de las fincas (GH-91) dibujan en un mapa falso que guarda, por finca,
+// lo que pasa al tocarla
+const toquesMapa = vi.hoisted(() => new Map<string, () => void>())
+vi.mock('../src/fincas/leaflet', () => {
+  const grupo = () => {
+    const g = {
+      on: (_: string, alTocar: () => void) => {
+        g.alTocar = alTocar
+        return g
+      },
+      bindTooltip: (nombre: string) => {
+        toquesMapa.set(nombre, () => g.alTocar())
+        return g
+      },
+      addTo: () => g,
+      remove: () => g,
+      alTocar: (): void => undefined,
+    }
+    return g
+  }
+  return {
+    COLORES: { finca: '#fff', elegida: '#ff0', pastoreo: '#00f', plazo: '#f80' },
+    crearMapa: () => ({ mapa: { on: () => undefined }, desmontar: () => undefined }),
+    capaContorno: () => ({ addTo: () => ({}) }),
+    encuadrar: () => undefined,
+    centrarEnMunicipio: () => undefined,
+    ubicar: () => undefined,
+    ubicarSiHayPermiso: async () => false,
+    L: { featureGroup: grupo, DomEvent: { stopPropagation: () => undefined } },
+  }
+})
 
 function abrir(ruta: string) {
   const router = createMemoryRouter(rutas, { initialEntries: [ruta] })
@@ -52,7 +125,7 @@ describe('fincas', () => {
       await screen.findByRole('heading', { level: 1, name: 'Agra de abaixo' }),
     ).toBeInTheDocument()
     const parcelas = screen.getByRole('list', { name: 'Parcelas' })
-    expect(within(parcelas).getByText('SIGPAC 36:24:12:45:1')).toBeInTheDocument()
+    expect(within(parcelas).getByText('SIGPAC 36:24:0:0:12:45:1')).toBeInTheDocument()
     expect(within(parcelas).getByText('2,3456 ha')).toBeInTheDocument()
 
     await usuario.click(screen.getByRole('button', { name: 'Registrar' }))
@@ -448,5 +521,154 @@ describe('pastoreo', () => {
     expect(within(lista).getByText('Pastando 12 animales desde el 18/10/2026')).toBeInTheDocument()
     await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'En pastoreo')
     expect(await screen.findByText(/^1 finca/)).toBeInTheDocument()
+  })
+})
+
+describe('parcelas desde el mapa o por referencia', () => {
+  it('añade los recintos elegidos en el mapa en lugar de la parcela vacía', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(fincas)
+    await tarjetas()
+    await usuario.click(screen.getAllByRole('button', { name: 'Añadir finca' })[0] as HTMLElement)
+    const hoja = screen.getByRole('dialog', { name: 'Nueva finca' })
+    await usuario.type(within(hoja).getByLabelText(/^Nombre/), 'Veiga nova')
+    // La primera es la de la finca; la segunda, la de la referencia SIGPAC
+    const provincia = within(hoja).getAllByLabelText('Provincia')[0] as HTMLElement
+    await usuario.clear(provincia)
+    await usuario.click(within(hoja).getByRole('button', { name: 'Elegir en el mapa' }))
+    await usuario.click(await screen.findByRole('button', { name: 'Elegir el recinto de prueba' }))
+
+    const [parcela, ...resto] = within(hoja).getAllByRole('group', { name: /^Parcela/ })
+    expect(resto).toHaveLength(0)
+    if (!parcela) throw new Error('Falta la parcela')
+    expect(within(parcela).getByLabelText('Polígono')).toHaveValue('57')
+    expect(within(parcela).getByLabelText(/^Superficie/)).toHaveValue('1,2346')
+    expect(within(parcela).getByLabelText('Referencia catastral')).toHaveValue('36024A05700037')
+    expect(within(parcela).getByText('En el mapa · Pastizal')).toBeInTheDocument()
+    // La provincia vacía se rellena con la del recinto
+    expect(provincia).toHaveValue('Pontevedra')
+
+    await usuario.click(within(hoja).getByRole('button', { name: 'Dar de alta' }))
+    expect(await screen.findByText('Finca Veiga nova dada de alta')).toBeInTheDocument()
+    expect(estado.fincas.at(-1)?.parcelas).toEqual([
+      expect.objectContaining({
+        agregado: '0',
+        zona: '0',
+        recinto: '2',
+        uso: 'PS',
+        contorno: expect.objectContaining({ type: 'Polygon' }),
+      }),
+    ])
+  })
+
+  it('consulta la superficie por la referencia SIGPAC o la catastral', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(fincas)
+    await tarjetas()
+    await usuario.click(screen.getAllByRole('button', { name: 'Añadir finca' })[0] as HTMLElement)
+    const hoja = screen.getByRole('dialog', { name: 'Nueva finca' })
+    await usuario.click(within(hoja).getByRole('button', { name: 'Añadir otra parcela' }))
+    const [primera, segunda] = within(hoja).getAllByRole('group', { name: /^Parcela \d$/ })
+    if (!primera || !segunda) throw new Error('Faltan las parcelas')
+
+    const consultar = within(primera).getByRole('button', { name: /^Consultar/ })
+    expect(consultar).toBeDisabled()
+    for (const [campo, valor] of [
+      ['Provincia', '36'],
+      ['Municipio', '24'],
+      ['Polígono', '57'],
+      ['Parcela', '37'],
+      ['Recinto', '2'],
+    ] as const) {
+      await usuario.type(within(primera).getByLabelText(campo), valor)
+    }
+    await usuario.click(consultar)
+    expect(await within(primera).findByText('En el mapa · Pastizal')).toBeInTheDocument()
+    expect(within(primera).getByLabelText(/^Superficie/)).toHaveValue('1,2346')
+    expect(within(primera).getByLabelText('Agregado')).toHaveValue('0')
+
+    await usuario.type(within(segunda).getByLabelText('Referencia catastral'), '36024a05709037')
+    await usuario.click(within(segunda).getByRole('button', { name: /^Consultar/ }))
+    await waitFor(() => expect(within(segunda).getByLabelText(/^Superficie/)).toHaveValue('0,7295'))
+    expect(within(hoja).getByText('Superficie total: 1,9641 ha')).toBeInTheDocument()
+  })
+})
+
+describe('mapa de las fincas', () => {
+  const contorno = {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [-8.096, 42.679],
+        [-8.095, 42.679],
+        [-8.095, 42.68],
+        [-8.096, 42.679],
+      ],
+    ],
+  }
+
+  it('dibuja las fincas con contorno, muestra la elegida y avisa de las que faltan', async () => {
+    const [agra, leira] = estado.fincas
+    if (!agra?.parcelas[0] || !leira) throw new Error('Faltan fincas')
+    agra.parcelas[0].contorno = contorno
+    leira.activa = true
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(fincas)
+    await tarjetas()
+    await usuario.click(screen.getByRole('button', { name: 'Mapa' }))
+    expect(router.state.location.search).toBe('?vista=mapa')
+    expect(await screen.findByRole('list', { name: 'Leyenda del mapa' })).toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Fincas' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ir a mi ubicación' })).toBeInTheDocument()
+
+    // Leira vella no tiene contorno: se avisa, con el enlace para completarla
+    expect(
+      await screen.findByText(
+        /^1 finca no sale en el mapa porque sus parcelas se escribieron a mano/,
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Leira vella: completar en el mapa' })).toHaveAttribute(
+      'href',
+      `${fincas}/f2?completar=mapa`,
+    )
+
+    act(() => toquesMapa.get('Agra de abaixo')?.())
+    const elegida = await screen.findByRole('region', { name: 'Agra de abaixo' })
+    expect(within(elegida).getByText(/^3,4456 ha · Lalín/)).toBeInTheDocument()
+    expect(within(elegida).getByRole('link', { name: 'Abrir la ficha' })).toHaveAttribute(
+      'href',
+      `${fincas}/f1`,
+    )
+
+    // Los filtros se aplican también al mapa
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /^Estado/ }), 'En pastoreo')
+    expect(await screen.findByText(/^Ninguna finca coincide/)).toBeInTheDocument()
+  })
+
+  it('en la ficha, sin contorno, ofrece completar las parcelas en el mapa', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${fincas}/f1`)
+    const parcelas = await screen.findByRole('region', { name: 'Parcelas' })
+    expect(
+      within(parcelas).getByText('Sus parcelas no salen en el mapa: se escribieron a mano.'),
+    ).toBeInTheDocument()
+    await usuario.click(within(parcelas).getByRole('button', { name: 'Completar en el mapa' }))
+    // La edición se abre con el mapa ya abierto
+    expect(screen.getByRole('dialog', { name: 'Editar Agra de abaixo' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Elegir el recinto de prueba' }),
+    ).toBeInTheDocument()
+  })
+
+  it('llega a la edición con el mapa abierto desde el aviso del mapa', async () => {
+    simularApi(estado)
+    abrir(`${fincas}/f1?completar=mapa`)
+    expect(
+      await screen.findByRole('button', { name: 'Elegir el recinto de prueba' }),
+    ).toBeInTheDocument()
   })
 })

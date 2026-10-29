@@ -122,6 +122,45 @@ describe('fincas', () => {
     expect(lista.map((f) => f.id)).toContain(finca.id)
   })
 
+  it('guarda la referencia SIGPAC de siete partes, el uso y el contorno del mapa', async () => {
+    const contorno = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-8.096, 42.679],
+          [-8.095, 42.679],
+          [-8.095, 42.68],
+          [-8.096, 42.679],
+        ],
+      ],
+    }
+    const res = await alta({
+      parcelas: [{ ...recinto(), agregado: '1', zona: '2', uso: 'PS', contorno }, recinto()],
+    })
+    const finca = (await res.json()) as {
+      id: string
+      parcelas: { agregado: string; zona: string; uso: string | null; contorno: unknown }[]
+    }
+    expect(finca.parcelas.map((p) => [p.agregado, p.zona, p.uso])).toEqual([
+      ['1', '2', 'PS'],
+      // Sin agregado ni zona, 0
+      ['0', '0', null],
+    ])
+    expect(finca.parcelas[0]?.contorno).toEqual(contorno)
+    // Para el mapa de la explotación, solo las parcelas con contorno (GH-91)
+    const todos = (await (
+      await pedir('GET', `/explotaciones/${a}/fincas/contornos`, ana.cookie)
+    ).json()) as { fincaId: string; contorno: unknown }[]
+    const suyos = todos.filter((c) => c.fincaId === finca.id)
+    expect(suyos).toEqual([expect.objectContaining({ contorno })])
+    const deB = await pedir('GET', `/explotaciones/${b}/fincas/contornos`, carla.cookie)
+    expect(((await deB.json()) as { fincaId: string }[]).some((c) => c.fincaId === finca.id)).toBe(
+      false,
+    )
+    const malo = await alta({ parcelas: [{ ...recinto(), contorno: { type: 'Point' } }] })
+    expect(await campos(malo)).toContain('parcelas.0.contorno.type')
+  })
+
   it('valida el nombre, las referencias y la superficie', async () => {
     expect(await campos(await alta({ nombre: ' ' }))).toContain('nombre')
     expect(await campos(await alta({ parcelas: [] }))).toContain('parcelas')

@@ -164,10 +164,10 @@
   background: var(--color-superficie-elevada);
 }
 
-/* Las cinco partes de la referencia SIGPAC: en dos filas en el móvil y en una desde 40rem */
+/* Las siete partes de la referencia SIGPAC: en dos filas en el móvil y en una desde 40rem */
 .sigpac {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--espacio-2) var(--espacio-3);
 }
 
@@ -186,7 +186,7 @@
 
 @media (min-width: 40rem) {
   .sigpac {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(7, 1fr);
   }
 
   .dosCampos {
@@ -350,4 +350,119 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--espacio-2);
+}
+
+/* Mapa para elegir los recintos de una finca (GH-52): casi toda la altura de la hoja */
+.mapaElegir {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.mapa {
+  position: relative;
+  height: min(60dvh, 32rem);
+  overflow: hidden;
+  border-radius: var(--radio-m);
+  background: var(--color-superficie-elevada);
+}
+
+.lienzo {
+  position: absolute;
+  inset: 0;
+  /* Encima del mapa, que pinta sus propias capas con z-index */
+  z-index: 0;
+}
+
+.ubicarme {
+  position: absolute;
+  right: var(--espacio-2);
+  bottom: var(--espacio-6);
+  z-index: 1000;
+  background: var(--color-superficie-elevada);
+  box-shadow: var(--sombra-2);
+}
+
+.parcelaDatos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+/* Mapa de las fincas (GH-91) */
+.mapaFincas {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.mapaFincas .mapa {
+  height: min(65dvh, 36rem);
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2) var(--espacio-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--texto-sm);
+  color: var(--color-texto-suave);
+}
+
+.leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+}
+
+.leyenda span {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: 3px;
+}
+
+.elegidaMapa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.elegidaMapa h2 {
+  margin: 0;
+  font-size: var(--texto-base);
+}
+
+.enlaceFicha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  min-height: 44px;
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.sinContorno {
+  margin: var(--espacio-1) 0 0;
+  padding-left: var(--espacio-4);
+}
+
+.sinContorno a {
+  color: inherit;
+}
+
+/* Mapa pequeño en la ficha de la finca */
+.mapaFicha {
+  height: 14rem;
+}
+
+/* En el listado, abajo a la derecha está el botón flotante de añadir: la ubicación, arriba */
+.mapaFincas .ubicarme {
+  top: var(--espacio-2);
+  bottom: auto;
 }

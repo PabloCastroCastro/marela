@@ -3,7 +3,9 @@ import { REGIMENES_FINCA } from '../db/schema/index.js'
 import { EsquemaError, validacionFallida } from '../errores.js'
 import {
   CambioEstadoFinca,
+  Contorno,
   cambiarEstadoFinca,
+  contornosFincas,
   crearFinca,
   DatosFinca,
   editarFinca,
@@ -46,11 +48,15 @@ const FincaDetalle = Finca.extend({
       id: z.uuid(),
       provincia: z.string().nullable(),
       municipio: z.string().nullable(),
+      agregado: z.string().nullable(),
+      zona: z.string().nullable(),
       poligono: z.string().nullable(),
       parcela: z.string().nullable(),
       recinto: z.string().nullable(),
       referenciaCatastral: z.string().nullable(),
       superficie: z.number(),
+      uso: z.string().nullable().openapi({ description: 'Uso SIGPAC: PS, TA...' }),
+      contorno: Contorno.nullable(),
     }),
   ),
 }).openapi('FincaDetalle')
@@ -111,6 +117,24 @@ const listar = createRoute({
   middleware: [permitir('fincas')] as const,
   request: { params: Parametros, query: Filtros },
   responses: { 200: json(z.array(Finca), 'Ordenadas por nombre'), ...comunes },
+})
+
+const contornos = createRoute({
+  method: 'get',
+  path: `${ruta}/contornos`,
+  tags: ['Fincas'],
+  summary: 'Contornos de las parcelas de todas las fincas, para el mapa',
+  description: 'Solo los de las parcelas elegidas en el mapa o consultadas por referencia.',
+  security: [{ sesion: [] }],
+  middleware: [permitir('fincas')] as const,
+  request: { params: Parametros },
+  responses: {
+    200: json(
+      z.array(z.object({ fincaId: z.uuid(), parcelaId: z.uuid(), contorno: Contorno })),
+      'En el orden de alta de las parcelas',
+    ),
+    ...comunes,
+  },
 })
 
 const ver = createRoute({
@@ -178,6 +202,8 @@ export const rutasFincas = () =>
     .openapi(listar, async (c) =>
       c.json(await enLaExplotacion(c, (tx) => listarFincas(tx, c.req.valid('query'))), 200),
     )
+    // Antes que /{fincaId}, para que "contornos" no se tome por un identificador
+    .openapi(contornos, async (c) => c.json(await enLaExplotacion(c, contornosFincas), 200))
     .openapi(ver, async (c) => {
       const { fincaId } = c.req.valid('param')
       return c.json(await enLaExplotacion(c, (tx) => verFinca(tx, fincaId)), 200)

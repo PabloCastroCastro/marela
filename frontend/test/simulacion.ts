@@ -152,6 +152,10 @@ export type ParcelaSimulada = {
   poligono: string | null
   parcela: string | null
   recinto: string | null
+  agregado?: string | null
+  zona?: string | null
+  uso?: string | null
+  contorno?: unknown
   referenciaCatastral: string | null
   superficie: number
 }
@@ -701,6 +705,58 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...p, ...sello })
     }
 
+    // Cartografía (GH-52): un recinto de Lalín, el de la referencia pedida
+    if (ruta.endsWith('/cartografia/recinto')) {
+      const q = new URL(peticion.url).searchParams
+      const [provincia, municipio, agregado, zona, poligono, parcela, recinto] = (
+        q.get('referencia') ?? '36:24:0:0:57:37:2'
+      ).split(':')
+      return json({
+        provincia,
+        municipio,
+        agregado,
+        zona,
+        poligono,
+        parcela,
+        recinto,
+        superficie: 1.2346,
+        uso: 'PS',
+        contorno: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-8.096, 42.679],
+              [-8.095, 42.679],
+              [-8.095, 42.68],
+              [-8.096, 42.679],
+            ],
+          ],
+        },
+        referenciaCatastral: '36024A05700037',
+        nombreMunicipio: 'Lalín',
+        nombreProvincia: 'Pontevedra',
+      })
+    }
+    if (ruta.endsWith('/cartografia/catastro')) {
+      const referencia = new URL(peticion.url).searchParams.get('referencia') ?? ''
+      return json({
+        referenciaCatastral: referencia.replace(/\s/g, '').toUpperCase(),
+        superficie: 0.7295,
+        contorno: null,
+        nombreMunicipio: 'Lalín',
+        nombreProvincia: 'Pontevedra',
+      })
+    }
+    if (ruta.endsWith('/cartografia/municipio')) return json({ recuadro: null })
+    if (ruta.endsWith('/fincas/contornos')) {
+      return json(
+        estado.fincas.flatMap((f) =>
+          f.parcelas.flatMap((p) =>
+            p.contorno ? [{ fincaId: f.id, parcelaId: p.id, contorno: p.contorno }] : [],
+          ),
+        ),
+      )
+    }
     if (ruta.endsWith('/aplicaciones/opciones')) {
       return json({
         personas: estado.miembros
@@ -793,6 +849,14 @@ export function simularApi(estado: EstadoSimulado) {
       }
       const ficha = (f: FincaSimulada) => ({
         ...f,
+        // Las parcelas, con los datos del mapa (GH-52) aunque no los tengan
+        parcelas: f.parcelas.map((p) => ({
+          agregado: p.recinto ? '0' : null,
+          zona: p.recinto ? '0' : null,
+          uso: null,
+          contorno: null,
+          ...p,
+        })),
         superficie: f.parcelas.reduce((t, x) => t + x.superficie, 0),
         numeroParcelas: f.parcelas.length,
         finSeguridad: finSeguridad(f),
@@ -807,6 +871,10 @@ export function simularApi(estado: EstadoSimulado) {
           poligono: x.poligono || null,
           parcela: x.parcela || null,
           recinto: x.recinto || null,
+          agregado: x.recinto ? x.agregado || '0' : null,
+          zona: x.recinto ? x.zona || '0' : null,
+          uso: x.uso ?? null,
+          contorno: x.contorno ?? null,
           referenciaCatastral: x.referenciaCatastral || null,
           superficie: x.superficie,
           id: x.id ?? `pc${Date.now()}${i}`,

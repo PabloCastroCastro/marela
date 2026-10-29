@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil, PowerOff, RotateCcw } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { ArrowLeft, Map as IconoMapa, Pencil, PowerOff, RotateCcw } from 'lucide-react'
+import { lazy, type ReactNode, Suspense, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { api, datos, ErrorApi } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
@@ -11,6 +11,7 @@ import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, hectareas } from '../formato'
+import { usoSigpac } from './cartografia'
 import { CLAVE_FINCAS, REGIMENES, referenciaSigpac, useFinca } from './datos'
 import estilos from './Fincas.module.css'
 import { FormularioFinca } from './FormularioFinca'
@@ -20,6 +21,9 @@ import { MenuRegistrarFinca } from './MenuRegistrarFinca'
 import { TarjetaAplicaciones } from './TarjetaAplicaciones'
 import { TarjetaLabores } from './TarjetaLabores'
 import { TarjetaPastoreos } from './TarjetaPastoreos'
+
+// Leaflet pesa: el mapa de la ficha se descarga aparte (GH-91)
+const MapaFinca = lazy(() => import('./MapaFinca'))
 
 // Ficha de una finca: sus datos y sus parcelas con las referencias SIGPAC y catastral (GH-25), y sus
 // labores (GH-26), sus abonados y tratamientos fitosanitarios (GH-27) y sus pastoreos (GH-28), con
@@ -31,7 +35,15 @@ export function PaginaFinca() {
   const cliente = useQueryClient()
   const { avisar } = useAvisos()
   const confirmar = useConfirmacion()
-  const [editando, setEditando] = useState(false)
+  // Desde el mapa de las fincas, "completar en el mapa" abre la edición con el mapa ya abierto
+  const [busqueda, setBusqueda] = useSearchParams()
+  const [editando, setEditando] = useState<'datos' | 'mapa' | undefined>(
+    busqueda.get('completar') === 'mapa' ? 'mapa' : undefined,
+  )
+  const cerrarEdicion = () => {
+    setEditando(undefined)
+    if (busqueda.has('completar')) setBusqueda({}, { replace: true })
+  }
   const lista = `${rutaExplotacion(explotacion.id)}/fincas`
 
   const cambiarEstado = useMutation({
@@ -85,6 +97,7 @@ export function PaginaFinca() {
   }
 
   const f = finca.data
+  const contornos = f.parcelas.flatMap((p) => (p.contorno ? [p.contorno] : []))
   return (
     <section className={estilos.pagina}>
       {volver}
@@ -125,7 +138,7 @@ export function PaginaFinca() {
           <Boton
             variante="secundario"
             icono={<Pencil aria-hidden size={18} />}
-            onClick={() => setEditando(true)}
+            onClick={() => setEditando('datos')}
           >
             Editar
           </Boton>
@@ -154,18 +167,45 @@ export function PaginaFinca() {
           <h2 id="finca-parcelas" className={estilos.tituloTarjeta}>
             Parcelas
           </h2>
+          {contornos.length > 0 && (
+            <Suspense fallback={<div className={`${estilos.mapa} ${estilos.mapaFicha}`} />}>
+              <MapaFinca contornos={contornos} />
+            </Suspense>
+          )}
+          {contornos.length < f.parcelas.length && f.activa && (
+            <div className={estilos.parcelaDatos}>
+              <span className={estilos.suave}>
+                {contornos.length === 0
+                  ? 'Sus parcelas no salen en el mapa: se escribieron a mano.'
+                  : 'Alguna parcela no sale en el mapa: se escribió a mano.'}
+              </span>
+              <Boton
+                variante="secundario"
+                tamano="compacto"
+                icono={<IconoMapa aria-hidden size={18} />}
+                onClick={() => setEditando('mapa')}
+              >
+                Completar en el mapa
+              </Boton>
+            </div>
+          )}
           <ul className={estilos.parcelas} aria-label="Parcelas">
             {f.parcelas.map((p) => {
               const sigpac = referenciaSigpac(p)
+              // El uso SIGPAC y, si también la tiene, la referencia catastral
+              const detalle = [
+                usoSigpac(p.uso),
+                sigpac && p.referenciaCatastral && `Catastro ${p.referenciaCatastral}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')
               return (
                 <li key={p.id}>
                   <div>
                     <span className={estilos.referencia}>
                       {sigpac ? `SIGPAC ${sigpac}` : `Catastro ${p.referenciaCatastral}`}
                     </span>
-                    {sigpac && p.referenciaCatastral && (
-                      <span className={estilos.suave}>Catastro {p.referenciaCatastral}</span>
-                    )}
+                    {detalle && <span className={estilos.suave}>{detalle}</span>}
                   </div>
                   <span className={estilos.superficie}>{hectareas(p.superficie)}</span>
                 </li>
@@ -189,7 +229,9 @@ export function PaginaFinca() {
         Alta el {fecha(f.creadoEn)} · Última modificación el {fecha(f.modificadoEn)}
       </p>
 
-      {editando && <FormularioFinca finca={f} alCerrar={() => setEditando(false)} />}
+      {editando && (
+        <FormularioFinca finca={f} abrirMapa={editando === 'mapa'} alCerrar={cerrarEdicion} />
+      )}
     </section>
   )
 }
