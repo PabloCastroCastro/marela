@@ -1,9 +1,10 @@
 import { z } from '@hono/zod-openapi'
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, desc, eq, exists, gte, lte, not, sql } from 'drizzle-orm'
 import { verAlmacen } from './almacenes.js'
 import type { Transaccion } from './db/explotacion.js'
 import {
   CANTIDAD_MAXIMA,
+  facturasMovimientosComida,
   fincas,
   movimientosComida,
   ORIGENES_ENTRADA,
@@ -65,7 +66,20 @@ export type FiltrosMovimientos = {
   desde?: string
   hasta?: string
   tipo?: (typeof TIPOS_MOVIMIENTO)[number]
+  origen?: (typeof ORIGENES_ENTRADA)[number]
+  // Con factura o sin ella (GH-36): solo para quien accede a Finanzas
+  factura?: 'con' | 'sin'
 }
+
+// La factura de una entrada comprada (GH-36), si la tiene
+export const facturaDeMovimiento = sql<{ id: string; numero: string; tercero: string } | null>`(
+  select json_build_object('id', fa.id, 'numero', fa.numero, 'tercero', fa.tercero)
+  from facturas_movimientos_comida fm join facturas fa on fa.id = fm.factura_id
+  where fm.movimiento_id = "movimientos_comida"."id")`
+
+const conFactura = exists(
+  sql`(select 1 from facturas_movimientos_comida fm where fm.movimiento_id = "movimientos_comida"."id")`,
+)
 
 const columnas = {
   id: movimientosComida.id,
@@ -102,19 +116,30 @@ const movimiento = <T extends { creadoEn: Date; modificadoEn: Date }>(m: T) => (
   modificadoEn: m.modificadoEn.toISOString(),
 })
 
-// Los de un almacén, del más reciente al más antiguo, con filtros de fecha y tipo
+// Los de un almacén, del más reciente al más antiguo, con filtros de fecha, tipo, origen y factura.
+// Con `verFacturas` (quien accede a Finanzas), cada entrada comprada lleva su factura.
 export async function listarMovimientos(
   tx: Transaccion,
   almacenId: string,
   filtros: FiltrosMovimientos,
+  verFacturas = false,
 ) {
   await verAlmacen(tx, almacenId)
-  const filas = await consulta(tx, almacenId)
+  const filas = await tx
+    .select({ ...columnas, factura: facturaDeMovimiento })
+    .from(movimientosComida)
+    .innerJoin(
+      sql`movimientos_con_stock(${almacenId}) s`,
+      sql`s.movimiento_id = ${movimientosComida.id}`,
+    )
     .where(
       and(
         filtros.desde ? gte(movimientosComida.fecha, filtros.desde) : undefined,
         filtros.hasta ? lte(movimientosComida.fecha, filtros.hasta) : undefined,
         filtros.tipo ? eq(movimientosComida.tipo, filtros.tipo) : undefined,
+        filtros.origen ? eq(movimientosComida.origen, filtros.origen) : undefined,
+        filtros.factura === 'con' ? conFactura : undefined,
+        filtros.factura === 'sin' ? not(conFactura) : undefined,
       ),
     )
     .orderBy(
@@ -122,7 +147,10 @@ export async function listarMovimientos(
       desc(movimientosComida.creadoEn),
       desc(movimientosComida.id),
     )
-  return filas.map(movimiento)
+  return filas.map(({ factura, ...m }) => ({
+    ...movimiento(m),
+    ...(verFacturas ? { factura } : {}),
+  }))
 }
 
 async function verMovimiento(tx: Transaccion, almacenId: string, movimientoId: string) {
@@ -168,6 +196,24 @@ export async function crearMovimiento(tx: Transaccion, almacenId: string, datos:
   return verMovimiento(tx, almacenId, creado?.id ?? '')
 }
 
+// Una entrada con factura (GH-36) sigue siendo una compra y no se borra hasta que el administrador
+// la quite de la factura. La base de datos lo impide también; aquí se da un error claro.
+async function comprobarFactura(tx: Transaccion, movimientoId: string, datos?: DatosMovimiento) {
+  if (datos?.tipo === 'entrada' && datos.origen === 'compra') return
+  const [enlace] = await tx
+    .select({ id: facturasMovimientosComida.id })
+    .from(facturasMovimientosComida)
+    .where(eq(facturasMovimientosComida.movimientoId, movimientoId))
+  if (enlace)
+    throw new ErrorApi(
+      409,
+      'entrada_con_factura',
+      datos
+        ? 'Esta entrada tiene factura: tiene que seguir siendo una compra. El administrador puede quitarla de la factura.'
+        : 'Esta entrada tiene factura: el administrador tiene que quitarla de la factura antes de borrarla.',
+    )
+}
+
 // Corrige un movimiento: todo menos el almacén
 export async function corregirMovimiento(
   tx: Transaccion,
@@ -176,6 +222,7 @@ export async function corregirMovimiento(
   datos: DatosMovimiento,
 ) {
   await verMovimiento(tx, almacenId, movimientoId)
+  await comprobarFactura(tx, movimientoId, datos)
   await comprobarFinca(tx, datos.fincaId)
   await tx
     .update(movimientosComida)
@@ -188,6 +235,7 @@ export async function corregirMovimiento(
 // historial.
 export async function borrarMovimiento(tx: Transaccion, almacenId: string, movimientoId: string) {
   const borrado = await verMovimiento(tx, almacenId, movimientoId)
+  await comprobarFactura(tx, movimientoId)
   await tx.delete(movimientosComida).where(eq(movimientosComida.id, movimientoId))
   return borrado
 }

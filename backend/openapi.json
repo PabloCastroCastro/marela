@@ -3408,6 +3408,30 @@
             "type": "number",
             "description": "El stock que dejó en el almacén"
           },
+          "factura": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "tercero": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "numero",
+              "tercero"
+            ],
+            "description": "La factura de una entrada comprada (GH-36). Solo en el listado y para quien accede a Finanzas."
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -3806,6 +3830,76 @@
               ]
             }
           },
+          "entradasComida": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fecha": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "cantidad": {
+                  "type": "number",
+                  "description": "En la unidad del almacén"
+                },
+                "origen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "compra",
+                    "produccion_propia",
+                    null
+                  ]
+                },
+                "observaciones": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "almacen": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "unidad": {
+                      "type": "string",
+                      "enum": [
+                        "unidades",
+                        "kg"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "nombre",
+                    "unidad"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "fecha",
+                "cantidad",
+                "origen",
+                "observaciones",
+                "almacen"
+              ]
+            },
+            "description": "Entradas de comida compradas con la factura (GH-36)"
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -3832,6 +3926,7 @@
           "pagadaEn",
           "archivo",
           "animales",
+          "entradasComida",
           "creadoEn",
           "modificadoEn"
         ]
@@ -3980,6 +4075,113 @@
         },
         "required": [
           "pagadaEn"
+        ]
+      },
+      "EntradasFactura": {
+        "type": "object",
+        "properties": {
+          "movimientoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "movimientoIds"
+        ]
+      },
+      "EntradaComida": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cantidad": {
+            "type": "number",
+            "description": "En la unidad del almacén"
+          },
+          "origen": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "compra",
+              "produccion_propia",
+              null
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "almacen": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "unidad": {
+                "type": "string",
+                "enum": [
+                  "unidades",
+                  "kg"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "nombre",
+              "unidad"
+            ]
+          },
+          "factura": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "tercero": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "numero",
+              "tercero"
+            ],
+            "description": "La factura con la que se compró, si la tiene"
+          }
+        },
+        "required": [
+          "id",
+          "fecha",
+          "cantidad",
+          "origen",
+          "observaciones",
+          "almacen",
+          "factura"
         ]
       },
       "Tarea": {
@@ -9374,7 +9576,7 @@
         "tags": [
           "Comida"
         ],
-        "summary": "Movimientos de un almacén, con filtros de fecha y tipo",
+        "summary": "Movimientos de un almacén, con filtros de fecha, tipo, origen y factura",
         "security": [
           {
             "sesion": []
@@ -9432,6 +9634,32 @@
             "required": false,
             "name": "tipo",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "compra",
+                "produccion_propia"
+              ]
+            },
+            "required": false,
+            "name": "origen",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ],
+              "description": "Con factura o sin ella; solo para quien accede a Finanzas"
+            },
+            "required": false,
+            "description": "Con factura o sin ella; solo para quien accede a Finanzas",
+            "name": "factura",
+            "in": "query"
           }
         ],
         "responses": {
@@ -9459,7 +9687,7 @@
             }
           },
           "403": {
-            "description": "Sin acceso a la explotación o a su comida",
+            "description": "Sin acceso a la comida, o filtra por factura quien no accede a Finanzas",
             "content": {
               "application/json": {
                 "schema": {
@@ -9683,6 +9911,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -9758,6 +9996,16 @@
           },
           "404": {
             "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11267,6 +11515,231 @@
           },
           "404": {
             "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/entradas-comida": {
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Asociar a una factura recibida sus entradas de comida",
+        "description": "Las entradas compradas que se indican, en lugar de las que tuviera; una lista vacía las quita todas. Una entrada solo es de una factura.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradasFactura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura con sus entradas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No es recibida, o alguna no es una entrada comprada (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Alguna entrada ya es de otra factura (entrada_con_factura)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/entradas-comida": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Entradas de comida de todos los almacenes, con su factura",
+        "description": "De la más reciente a la más antigua. Para asociarlas a una factura (GH-36).",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "compra",
+                "produccion_propia"
+              ]
+            },
+            "required": false,
+            "name": "origen",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ]
+            },
+            "required": false,
+            "name": "factura",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "almacenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Las entradas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntradaComida"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
             "content": {
               "application/json": {
                 "schema": {

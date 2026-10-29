@@ -88,7 +88,14 @@ export const useAlmacen = (explotacionId: string, almacenId: string) =>
       ),
   })
 
-export type FiltrosMovimientos = { desde?: string; hasta?: string; tipo?: TipoMovimiento }
+export type FiltrosMovimientos = {
+  desde?: string
+  hasta?: string
+  tipo?: TipoMovimiento
+  origen?: OrigenEntrada
+  // Con factura o sin ella (GH-36): solo para el administrador
+  factura?: 'con' | 'sin'
+}
 
 export const useMovimientos = (
   explotacionId: string,

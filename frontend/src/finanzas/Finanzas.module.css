@@ -367,3 +367,21 @@
   color: var(--color-primario);
   font-weight: var(--peso-medio);
 }
+
+/* Las entradas de comida para elegir (GH-36) */
+.casillas {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.casillas li {
+  display: grid;
+  padding: var(--espacio-1) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.casillas li > span {
+  padding-left: calc(48px + var(--espacio-2));
+}

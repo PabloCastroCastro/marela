@@ -253,6 +253,20 @@
       "when": 1793287359388,
       "tag": "0035_facturas_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793289259913,
+      "tag": "0036_facturas_comida",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793289261440,
+      "tag": "0037_facturas_comida_triggers",
+      "breakpoints": true
     }
   ]
 }

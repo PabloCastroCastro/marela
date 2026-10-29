@@ -1,11 +1,14 @@
 import { Pencil } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
+import { Link } from 'react-router'
 import { BotonIcono } from '../componentes/Boton'
 import { CampoFecha } from '../componentes/Campo'
 import { clases } from '../componentes/clases'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
-import { Chips, Tarjeta } from '../componentes/Etiquetas'
+import { Chips, Insignia, Tarjeta } from '../componentes/Etiquetas'
+import { FiltroDesplegable } from '../componentes/Filtros'
 import { useRecorte } from '../componentes/Recorte'
+import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, hoy } from '../formato'
 import estilos from './Comida.module.css'
@@ -15,6 +18,7 @@ import {
   diferencia,
   type Movimiento,
   ORIGENES_ENTRADA,
+  type OrigenEntrada,
   type TipoMovimiento,
   useMovimientos,
 } from './datos'
@@ -24,6 +28,8 @@ import { FormularioMovimiento } from './FormularioMovimiento'
 const VISIBLES = 20
 
 type FiltroTipo = TipoMovimiento | 'todos'
+type FiltroOrigen = OrigenEntrada | 'todos'
+type FiltroFactura = 'con' | 'sin' | 'todas'
 
 // "Entrada · Compra", "Entrada · Producción propia (Agra de abaixo)", "Salida", "Recuento"
 const titulo = (m: Movimiento) =>
@@ -35,21 +41,28 @@ const titulo = (m: Movimiento) =>
         ? 'Recuento'
         : 'Merma'
 
-// Historial de movimientos de un almacén, del más reciente al más antiguo, con filtros de fecha y
-// tipo (GH-30). Cada uno, con lo que cambió el stock y el stock que dejó; se corrige con el lápiz.
+// Historial de movimientos de un almacén, del más reciente al más antiguo, con filtros de fecha,
+// tipo y origen (GH-30). Cada uno, con lo que cambió el stock y el stock que dejó; se corrige con el
+// lápiz. El administrador ve además la factura de cada compra y filtra por ella (GH-36).
 export function TarjetaMovimientos({ almacen }: { almacen: Almacen }) {
   const explotacion = useExplotacionActual()
+  const verFacturas = explotacion.modulos.includes('finanzas')
   const [tipo, setTipo] = useState<FiltroTipo>('todos')
+  const [origen, setOrigen] = useState<FiltroOrigen>('todos')
+  const [factura, setFactura] = useState<FiltroFactura>('todas')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const movimientos = useMovimientos(explotacion.id, almacen.id, {
     tipo: tipo === 'todos' ? undefined : tipo,
+    origen: origen === 'todos' ? undefined : origen,
+    factura: verFacturas && factura !== 'todas' ? factura : undefined,
     desde: desde || undefined,
     hasta: hasta || undefined,
   })
   const recorte = useRecorte(movimientos.data ?? [], VISIBLES)
   const [corrigiendo, setCorrigiendo] = useState<Movimiento>()
-  const filtrado = tipo !== 'todos' || desde !== '' || hasta !== ''
+  const filtrado =
+    tipo !== 'todos' || origen !== 'todos' || factura !== 'todas' || desde !== '' || hasta !== ''
 
   let contenido: ReactNode
   if (movimientos.isPending) {
@@ -77,6 +90,20 @@ export function TarjetaMovimientos({ almacen }: { almacen: Almacen }) {
               <span className={estilos.suave}>{fecha(m.fecha)}</span>
               {m.motivo && <span className={estilos.suave}>{m.motivo}</span>}
               {m.observaciones && <span className={estilos.suave}>{m.observaciones}</span>}
+              {verFacturas &&
+                m.origen === 'compra' &&
+                (m.factura ? (
+                  <Link
+                    to={`${rutaExplotacion(explotacion.id)}/finanzas/facturas/${m.factura.id}`}
+                    className={estilos.enlaceFactura}
+                  >
+                    Factura {m.factura.numero} · {m.factura.tercero}
+                  </Link>
+                ) : (
+                  <span>
+                    <Insignia tipo="aviso">Sin factura</Insignia>
+                  </span>
+                ))}
             </div>
             <div className={estilos.cifras}>
               <span
@@ -120,6 +147,32 @@ export function TarjetaMovimientos({ almacen }: { almacen: Almacen }) {
           seleccion={tipo}
           alCambiar={setTipo}
         />
+        <div className={estilos.desplegables}>
+          <FiltroDesplegable
+            etiqueta="Origen"
+            opciones={[
+              { valor: 'todos', texto: 'Todos' },
+              { valor: 'compra', texto: ORIGENES_ENTRADA.compra },
+              { valor: 'produccion_propia', texto: ORIGENES_ENTRADA.produccion_propia },
+            ]}
+            valor={origen}
+            porDefecto="todos"
+            alCambiar={setOrigen}
+          />
+          {verFacturas && (
+            <FiltroDesplegable
+              etiqueta="Factura"
+              opciones={[
+                { valor: 'todas', texto: 'Todas' },
+                { valor: 'con', texto: 'Con factura' },
+                { valor: 'sin', texto: 'Sin factura' },
+              ]}
+              valor={factura}
+              porDefecto="todas"
+              alCambiar={setFactura}
+            />
+          )}
+        </div>
         <div className={estilos.fechas}>
           <CampoFecha
             etiqueta="Desde"
