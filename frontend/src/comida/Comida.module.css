@@ -53,12 +53,13 @@
 
 .cabeceraAlmacen h2 {
   min-width: 0;
-  font-size: var(--texto-lg);
+  font-size: var(--texto-base);
+  font-weight: var(--peso-medio);
   overflow-wrap: anywhere;
 }
 
 .stock {
-  font-size: var(--texto-2xl);
+  font-size: var(--texto-xl);
   font-weight: var(--peso-fuerte);
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
