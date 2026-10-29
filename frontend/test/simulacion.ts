@@ -284,6 +284,8 @@ export type FacturaSimulada = {
   pagadaEn: string | null
   archivo: { nombre: string; tipo: string; tamano: number } | null
   animalIds: string[]
+  // Las entradas de comida compradas con ella (GH-36)
+  movimientoIds?: string[]
 }
 
 export type EstadoSimulado = {
@@ -680,7 +682,28 @@ const EQUIPOS = /^\/api\/explotaciones\/[^/]+\/equipos(?:\/([^/]+))?(\/estado)?$
 const TAREAS = /^\/api\/explotaciones\/([^/]+)\/tareas(?:\/([^/]+))?(\/hecha)?$/
 // Los almacenes de comida, uno o su estado
 // Las facturas, el siguiente número, una, su pago o su archivo
-const FACTURAS = /^\/api\/explotaciones\/([^/]+)\/facturas(?:\/([^/]+))?(?:\/(pago|archivo))?$/
+const FACTURAS =
+  /^\/api\/explotaciones\/([^/]+)\/facturas(?:\/([^/]+))?(?:\/(pago|archivo|entradas-comida))?$/
+// Las entradas de comida de todos los almacenes, con su factura (GH-36)
+const ENTRADAS_COMIDA = /^\/api\/explotaciones\/([^/]+)\/entradas-comida$/
+
+// La factura de una entrada de comida, si la tiene
+const facturaDe = (estado: EstadoSimulado, movimientoId: string) => {
+  const fa = estado.facturas.find((x) => x.movimientoIds?.includes(movimientoId))
+  return fa ? { id: fa.id, numero: fa.numero, tercero: fa.tercero } : null
+}
+
+const entradaDe = (estado: EstadoSimulado, m: MovimientoSimulado) => {
+  const a = estado.almacenes.find((x) => x.id === m.almacenId)
+  return {
+    id: m.id,
+    fecha: m.fecha,
+    cantidad: m.cantidad,
+    origen: m.origen,
+    observaciones: m.observaciones,
+    almacen: { id: m.almacenId, nombre: a?.nombre ?? '', unidad: a?.unidad ?? 'kg' },
+  }
+}
 const LETRAS_DNI = 'TRWAGMYFPDXBNJZSQVHLCKE'
 const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
 // Los movimientos de un almacén, el registro o uno
@@ -1107,6 +1130,20 @@ export function simularApi(estado: EstadoSimulado) {
       })
     }
 
+    const deEntradas = ruta.match(ENTRADAS_COMIDA)
+    if (deEntradas) {
+      const e = estado.explotaciones.find((x) => x.id === deEntradas[1])
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const q = new URL(peticion.url).searchParams
+      return json(
+        estado.movimientos
+          .filter((m) => m.tipo === 'entrada')
+          .filter((m) => !q.get('origen') || m.origen === q.get('origen'))
+          .map((m) => ({ ...entradaDe(estado, m), factura: facturaDe(estado, m.id) })),
+      )
+    }
+
     const deFacturas = ruta.match(FACTURAS)
     if (deFacturas) {
       const [, explotacionId, facturaId, accion] = deFacturas
@@ -1124,6 +1161,9 @@ export function simularApi(estado: EstadoSimulado) {
           animales: estado.animales
             .filter((a) => fa.animalIds.includes(a.id))
             .map((a) => ({ id: a.id, crotal: a.crotal, nombre: a.nombre })),
+          entradasComida: estado.movimientos
+            .filter((m) => fa.movimientoIds?.includes(m.id))
+            .map((m) => entradaDe(estado, m)),
           creadoEn: '2026-10-01T10:00:00.000Z',
           modificadoEn: '2026-10-01T10:00:00.000Z',
         }
@@ -1198,6 +1238,10 @@ export function simularApi(estado: EstadoSimulado) {
       }
       const fa = estado.facturas.find((x) => x.id === facturaId)
       if (!fa) return errorApi(404, 'factura_no_encontrada')
+      if (accion === 'entradas-comida') {
+        fa.movimientoIds = cuerpo.movimientoIds
+        return json(completa(fa))
+      }
       if (accion === 'pago') {
         fa.pagadaEn = cuerpo.pagadaEn
         return json(completa(fa))
@@ -1378,11 +1422,19 @@ export function simularApi(estado: EstadoSimulado) {
       })
       if (!movimientoId && metodo === 'GET') {
         const q = new URL(peticion.url).searchParams
+        // Las facturas (GH-36), solo para el administrador
+        const verFacturas =
+          estado.explotaciones.find((x) => ruta.includes(x.id))?.rol === 'administrador'
+        if (q.get('factura') && !verFacturas) return errorApi(403, 'sin_permiso')
         return json(
           conStock(estado, almacenId)
             .filter((m) => !q.get('tipo') || m.tipo === q.get('tipo'))
+            .filter((m) => !q.get('origen') || m.origen === q.get('origen'))
+            .filter((m) => q.get('factura') !== 'con' || facturaDe(estado, m.id))
+            .filter((m) => q.get('factura') !== 'sin' || !facturaDe(estado, m.id))
             .filter((m) => !q.get('desde') || m.fecha >= (q.get('desde') ?? ''))
             .filter((m) => !q.get('hasta') || m.fecha <= (q.get('hasta') ?? ''))
+            .map((m) => (verFacturas ? { ...m, factura: facturaDe(estado, m.id) } : m))
             .reverse(),
         )
       }

@@ -4066,7 +4066,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Movimientos de un almacén, con filtros de fecha y tipo */
+        /** Movimientos de un almacén, con filtros de fecha, tipo, origen y factura */
         get: {
             parameters: {
                 query?: {
@@ -4075,6 +4075,9 @@ export interface paths {
                     /** @description Hasta esta fecha, incluida */
                     hasta?: string;
                     tipo?: "entrada" | "salida" | "ajuste";
+                    origen?: "compra" | "produccion_propia";
+                    /** @description Con factura o sin ella; solo para quien accede a Finanzas */
+                    factura?: "con" | "sin";
                 };
                 header?: never;
                 path: {
@@ -4103,7 +4106,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Sin acceso a la explotación o a su comida */
+                /** @description Sin acceso a la comida, o filtra por factura quien no accede a Finanzas */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -4277,6 +4280,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         post?: never;
@@ -4326,6 +4338,15 @@ export interface paths {
                 };
                 /** @description No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado) */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -5507,6 +5528,171 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/entradas-comida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Asociar a una factura recibida sus entradas de comida
+         * @description Las entradas compradas que se indican, en lugar de las que tuviera; una lista vacía las quita todas. Una entrada solo es de una factura.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    facturaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EntradasFactura"];
+                };
+            };
+            responses: {
+                /** @description La factura con sus entradas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Factura"];
+                    };
+                };
+                /** @description No es recibida, o alguna no es una entrada comprada (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o la factura (factura_no_encontrada) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Alguna entrada ya es de otra factura (entrada_con_factura) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/entradas-comida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Entradas de comida de todos los almacenes, con su factura
+         * @description De la más reciente a la más antigua. Para asociarlas a una factura (GH-36).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    origen?: "compra" | "produccion_propia";
+                    factura?: "con" | "sin";
+                    almacenId?: string;
+                    desde?: string;
+                    hasta?: string;
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Las entradas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EntradaComida"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -7387,6 +7573,13 @@ export interface components {
             diferencia: number;
             /** @description El stock que dejó en el almacén */
             stock: number;
+            /** @description La factura de una entrada comprada (GH-36). Solo en el listado y para quien accede a Finanzas. */
+            factura?: {
+                /** Format: uuid */
+                id: string;
+                numero: string;
+                tercero: string;
+            } | null;
             /** Format: date-time */
             creadoEn: string;
             /** Format: date-time */
@@ -7504,6 +7697,25 @@ export interface components {
                 crotal: string | null;
                 nombre: string | null;
             }[];
+            /** @description Entradas de comida compradas con la factura (GH-36) */
+            entradasComida: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                fecha: string;
+                /** @description En la unidad del almacén */
+                cantidad: number;
+                /** @enum {string|null} */
+                origen: "compra" | "produccion_propia" | null;
+                observaciones: string | null;
+                almacen: {
+                    /** Format: uuid */
+                    id: string;
+                    nombre: string;
+                    /** @enum {string} */
+                    unidad: "unidades" | "kg";
+                };
+            }[];
             /** Format: date-time */
             creadoEn: string;
             /** Format: date-time */
@@ -7561,6 +7773,34 @@ export interface components {
              * @description Fecha de pago; null para dejarla pendiente
              */
             pagadaEn: string | null;
+        };
+        EntradasFactura: {
+            movimientoIds: string[];
+        };
+        EntradaComida: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            fecha: string;
+            /** @description En la unidad del almacén */
+            cantidad: number;
+            /** @enum {string|null} */
+            origen: "compra" | "produccion_propia" | null;
+            observaciones: string | null;
+            almacen: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+                /** @enum {string} */
+                unidad: "unidades" | "kg";
+            };
+            /** @description La factura con la que se compró, si la tiene */
+            factura: {
+                /** Format: uuid */
+                id: string;
+                numero: string;
+                tercero: string;
+            } | null;
         };
         Tarea: {
             /** Format: uuid */

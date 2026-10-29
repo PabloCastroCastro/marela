@@ -296,13 +296,13 @@ Una explotación nueva recibe en su misma transacción los almacenes por defecto
 
 Entradas, salidas y ajustes de inventario, en `src/rutas/movimientos.ts` (módulo `comida`, también el empleado):
 
-- **`GET /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** del más reciente al más antiguo, con filtros `desde`, `hasta` (fechas incluidas) y `tipo`. Cada uno lleva `diferencia` (lo que cambió el stock) y `stock` (el que dejó).
+- **`GET /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** del más reciente al más antiguo, con filtros `desde`, `hasta` (fechas incluidas), `tipo` y `origen`, y para quien accede a Finanzas `factura` (`con` o `sin`; si no, 403). Cada uno lleva `diferencia` (lo que cambió el stock) y `stock` (el que dejó) y, para quien accede a Finanzas, `factura` (`{ id, numero, tercero }` o `null`).
 - **`POST /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** `{ tipo, fecha, cantidad, origen?, fincaId?, ajuste?, motivo?, observaciones? }` en un almacén activo (si no, 409 `almacen_desactivado`).
   - `entrada`: con `origen` (`compra` o `produccion_propia`) y, si es producción propia, `fincaId` opcional.
   - `salida`: solo fecha y cantidad.
   - `ajuste`: `recuento` (`cantidad` es lo contado; puede ser 0) o `merma` (`cantidad` es lo perdido), con `motivo`.
-- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo corrige.
-- **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo.
+- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo corrige. Una entrada con factura sigue siendo una compra (409 `entrada_con_factura`).
+- **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo. Una entrada con factura no se borra hasta que el administrador la quite de la factura (409 `entrada_con_factura`).
 
 **Stock:** lo calcula PostgreSQL (migración `0028`). `movimientos_con_stock(almacen)` recorre los movimientos por fecha y, el mismo día, por orden de registro: las entradas suman, las salidas y mermas restan, y un recuento fija el stock en lo contado. `stock_almacen(almacen)` es el que deja el último, o 0. Puede ser negativo: se guarda igual, y la pantalla lo avisa y lo marca en rojo. Las cantidades van en la unidad del almacén, con dos decimales. Cada tipo lleva sus datos y no los de los demás (check `movimientos_comida_datos`); el almacén y la finca son de la explotación (claves foráneas compuestas). Los cambios quedan en el historial.
 
@@ -354,6 +354,13 @@ Una fila por explotación en `configuracion_fiscal` (migraciones `0032` y `0033`
   - `animalIds`, los animales comprados: solo en las recibidas (las ventas los enlazan desde Ventas, GH-38).
 - **`PATCH /api/explotaciones/{id}/facturas/{facturaId}/pago`:** `{ pagadaEn }`, la fecha de pago o `null` para dejarla pendiente.
 - **`PUT`, `GET` y `DELETE /api/explotaciones/{id}/facturas/{facturaId}/archivo`:** el archivo adjunto, uno por factura. Se sube como `multipart/form-data` (campo `archivo`) y sustituye al anterior: un PDF o una foto JPEG, PNG o WebP, reconocidos por su contenido, de hasta 10 MB (413 `archivo_demasiado_grande`, 415 `tipo_de_archivo`).
+
+**Entradas de comida de las facturas** (GH-36):
+
+- **`GET /api/explotaciones/{id}/entradas-comida`:** las entradas de todos los almacenes, de la más reciente a la más antigua, con su almacén y su factura. Filtros `origen`, `factura` (`con` o `sin`), `almacenId`, `desde` y `hasta`.
+- **`PUT /api/explotaciones/{id}/facturas/{facturaId}/entradas-comida`:** `{ movimientoIds }`, las entradas compradas de una factura recibida, en lugar de las que tuviera. Una entrada solo es de una factura (409 `entrada_con_factura`). La factura las devuelve en `entradasComida`.
+
+Tabla `facturas_movimientos_comida` (migraciones `0036` y `0037`): solo facturas recibidas y entradas compradas, una entrada con factura no deja de ser una compra ni se borra, y una factura con entradas no pasa a emitida. Al borrar la factura, sus entradas se quedan sin factura.
 
 Tablas `facturas` y `facturas_animales` (migraciones `0034` y `0035`, con reglas e historial de cambios). La base de datos comprueba el formato del NIF, que el total sea la suma y que solo las recibidas tengan animales.
 

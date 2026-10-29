@@ -105,6 +105,8 @@ export const movimientosComida = pgTable(
     }).onDelete('restrict'),
     index('movimientos_comida_explotacion_idx').on(t.explotacionId),
     index('movimientos_comida_almacen_idx').on(t.almacenId, t.fecha),
+    // Las facturas de las compras, de la misma explotación (clave foránea compuesta, GH-36)
+    unique('movimientos_comida_explotacion_id_unique').on(t.explotacionId, t.id),
     check(
       'movimientos_comida_cantidad',
       sql`${t.cantidad} <= ${sql.raw(String(CANTIDAD_MAXIMA))} and (${t.cantidad} > 0

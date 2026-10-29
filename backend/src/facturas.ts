@@ -16,11 +16,15 @@ import {
 } from 'drizzle-orm'
 import type { Transaccion } from './db/explotacion.js'
 import {
+  almacenes,
   animales,
   facturas,
   facturasAnimales,
+  facturasMovimientosComida,
   IMPUESTOS_FACTURA,
   LINEAS_FACTURA_MAXIMO,
+  movimientosComida,
+  type ORIGENES_ENTRADA,
   TIPOS_FACTURA,
 } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
@@ -158,6 +162,7 @@ const columnas = {
 
 type Fila = Awaited<ReturnType<typeof consulta>>[number]
 type AnimalFactura = { id: string; crotal: string | null; nombre: string | null }
+type EntradaFactura = Awaited<ReturnType<typeof consultaEntradas>>[number]
 
 const consulta = (tx: Transaccion) => tx.select(columnas).from(facturas)
 
@@ -182,10 +187,80 @@ async function animalesDe(tx: Transaccion, facturaIds: string[]) {
   return porFactura
 }
 
+// Las entradas de comida (GH-36), con su almacén y su factura
+const consultaEntradas = (tx: Transaccion) =>
+  tx
+    .select({
+      id: movimientosComida.id,
+      fecha: movimientosComida.fecha,
+      cantidad: movimientosComida.cantidad,
+      origen: movimientosComida.origen,
+      observaciones: movimientosComida.observaciones,
+      almacen: {
+        id: almacenes.id,
+        nombre: almacenes.nombre,
+        unidad: almacenes.unidad,
+      },
+      facturaId: facturasMovimientosComida.facturaId,
+      facturaNumero: facturas.numero,
+      facturaTercero: facturas.tercero,
+    })
+    .from(movimientosComida)
+    .innerJoin(almacenes, eq(almacenes.id, movimientosComida.almacenId))
+    .leftJoin(
+      facturasMovimientosComida,
+      eq(facturasMovimientosComida.movimientoId, movimientosComida.id),
+    )
+    .leftJoin(facturas, eq(facturas.id, facturasMovimientosComida.facturaId))
+    // Cada uso pone su where, siempre con tipo = 'entrada'
+    .$dynamic()
+
+const entrada = ({ facturaId, facturaNumero, facturaTercero, ...e }: EntradaFactura) => ({
+  ...e,
+  factura:
+    facturaId && facturaNumero && facturaTercero
+      ? { id: facturaId, numero: facturaNumero, tercero: facturaTercero }
+      : null,
+})
+
+// Las entradas de comida de cada factura, de la más reciente a la más antigua
+async function entradasDe(tx: Transaccion, facturaIds: string[]) {
+  const porFactura = new Map<string, ReturnType<typeof entrada>[]>()
+  if (facturaIds.length === 0) return porFactura
+  const filas = await consultaEntradas(tx)
+    .where(
+      and(
+        eq(movimientosComida.tipo, 'entrada'),
+        inArray(facturasMovimientosComida.facturaId, facturaIds),
+      ),
+    )
+    .orderBy(desc(movimientosComida.fecha), desc(movimientosComida.creadoEn))
+  for (const fila of filas) {
+    const e = entrada(fila)
+    if (e.factura) porFactura.set(e.factura.id, [...(porFactura.get(e.factura.id) ?? []), e])
+  }
+  return porFactura
+}
+
+// Los animales y las entradas de comida de cada factura
+async function enlacesDe(tx: Transaccion, facturaIds: string[]) {
+  const [deAnimales, deEntradas] = [
+    await animalesDe(tx, facturaIds),
+    await entradasDe(tx, facturaIds),
+  ]
+  return (id: string) => ({
+    animales: deAnimales.get(id) ?? [],
+    entradasComida: (deEntradas.get(id) ?? []).map(({ factura: _, ...e }) => e),
+  })
+}
+
 // El archivo, sin la ruta interna; las fechas, como texto
 const factura = (
   { archivoRuta, archivoNombre, archivoTipo, archivoTamano, ...f }: Fila,
-  animalesFactura: AnimalFactura[],
+  enlaces: {
+    animales: AnimalFactura[]
+    entradasComida: Omit<ReturnType<typeof entrada>, 'factura'>[]
+  },
 ) => ({
   ...f,
   lineas: f.lineas.map((l) => ({ base: l.base, porcentaje: l.porcentaje, cuota: l.cuota })),
@@ -193,7 +268,7 @@ const factura = (
     archivoRuta && archivoNombre && archivoTipo && archivoTamano !== null
       ? { nombre: archivoNombre, tipo: archivoTipo, tamano: archivoTamano }
       : null,
-  animales: animalesFactura,
+  ...enlaces,
   creadoEn: f.creadoEn.toISOString(),
   modificadoEn: f.modificadoEn.toISOString(),
 })
@@ -229,11 +304,11 @@ export async function listarFacturas(tx: Transaccion, filtros: FiltrosFacturas) 
   const filas = await consulta(tx)
     .where(and(...condiciones))
     .orderBy(desc(facturas.fecha), desc(facturas.creadoEn))
-  const deCada = await animalesDe(
+  const enlaces = await enlacesDe(
     tx,
     filas.map((f) => f.id),
   )
-  return filas.map((f) => factura(f, deCada.get(f.id) ?? []))
+  return filas.map((f) => factura(f, enlaces(f.id)))
 }
 
 async function filaFactura(tx: Transaccion, facturaId: string) {
@@ -245,7 +320,7 @@ async function filaFactura(tx: Transaccion, facturaId: string) {
 
 export async function verFactura(tx: Transaccion, facturaId: string) {
   const fila = await filaFactura(tx, facturaId)
-  return factura(fila, (await animalesDe(tx, [facturaId])).get(facturaId) ?? [])
+  return factura(fila, (await enlacesDe(tx, [facturaId]))(facturaId))
 }
 
 const invalido = (campo: string, mensaje: string) =>
@@ -320,7 +395,9 @@ export async function crearFactura(tx: Transaccion, datos: DatosFactura) {
 }
 
 export async function corregirFactura(tx: Transaccion, facturaId: string, datos: DatosFactura) {
-  await filaFactura(tx, facturaId)
+  const actual = await verFactura(tx, facturaId)
+  if (datos.tipo !== 'recibida' && actual.entradasComida.length > 0)
+    throw invalido('tipo', 'Tiene entradas de comida: quítalas antes de cambiarla a emitida')
   const animalIds = await comprobarAnimales(tx, datos.animalIds)
   // Primero los animales, por si deja de ser recibida
   await enlazarAnimales(tx, facturaId, [])
@@ -387,4 +464,62 @@ export async function archivoDe(tx: Transaccion, facturaId: string) {
   if (!f.archivoRuta || !f.archivoTipo)
     throw new ErrorApi(404, 'archivo_no_encontrado', 'La factura no tiene archivo')
   return { ruta: f.archivoRuta, nombre: f.archivoNombre ?? 'factura', tipo: f.archivoTipo }
+}
+
+// Las entradas de comida (GH-36) de todos los almacenes, de la más reciente a la más antigua, con su
+// factura. Para elegir las de una factura: las compras sin factura.
+export type FiltrosEntradasComida = {
+  origen?: (typeof ORIGENES_ENTRADA)[number]
+  factura?: 'con' | 'sin'
+  almacenId?: string
+  desde?: string
+  hasta?: string
+}
+
+export async function listarEntradasComida(tx: Transaccion, filtros: FiltrosEntradasComida) {
+  const filas = await consultaEntradas(tx)
+    .where(
+      and(
+        eq(movimientosComida.tipo, 'entrada'),
+        filtros.origen ? eq(movimientosComida.origen, filtros.origen) : undefined,
+        filtros.factura === 'con' ? isNotNull(facturasMovimientosComida.facturaId) : undefined,
+        filtros.factura === 'sin' ? isNull(facturasMovimientosComida.facturaId) : undefined,
+        filtros.almacenId ? eq(movimientosComida.almacenId, filtros.almacenId) : undefined,
+        filtros.desde ? gte(movimientosComida.fecha, filtros.desde) : undefined,
+        filtros.hasta ? lte(movimientosComida.fecha, filtros.hasta) : undefined,
+      ),
+    )
+    .orderBy(desc(movimientosComida.fecha), desc(movimientosComida.creadoEn))
+  return filas.map(entrada)
+}
+
+// Asocia a una factura recibida sus entradas de comida compradas (GH-36): las que se indican, en lugar
+// de las que tuviera. Una entrada que ya tiene otra factura no se cambia de factura sin quitarla antes.
+export async function asociarEntradas(tx: Transaccion, facturaId: string, movimientoIds: string[]) {
+  const actual = await filaFactura(tx, facturaId)
+  if (actual.tipo !== 'recibida')
+    throw invalido('movimientoIds', 'Solo las facturas recibidas tienen entradas de comida')
+  const ids = [...new Set(movimientoIds)]
+  if (ids.length > 0) {
+    const encontradas = (
+      await consultaEntradas(tx).where(
+        and(eq(movimientosComida.tipo, 'entrada'), inArray(movimientosComida.id, ids)),
+      )
+    ).map(entrada)
+    if (encontradas.length !== ids.length || encontradas.some((e) => e.origen !== 'compra'))
+      throw invalido('movimientoIds', 'Solo se asocian entradas de comida compradas')
+    const deOtra = encontradas.find((e) => e.factura && e.factura.id !== facturaId)
+    if (deOtra?.factura) {
+      const mensaje = `La entrada del ${deOtra.fecha} en ${deOtra.almacen.nombre} ya es de la factura ${deOtra.factura.numero}`
+      throw new ErrorApi(409, 'entrada_con_factura', mensaje, [{ campo: 'movimientoIds', mensaje }])
+    }
+  }
+  await tx
+    .delete(facturasMovimientosComida)
+    .where(eq(facturasMovimientosComida.facturaId, facturaId))
+  if (ids.length > 0)
+    await tx
+      .insert(facturasMovimientosComida)
+      .values(ids.map((movimientoId) => ({ facturaId, movimientoId })))
+  return verFactura(tx, facturaId)
 }

@@ -1,16 +1,23 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { bodyLimit } from 'hono/body-limit'
 import { borrarArchivo, guardarArchivo, leerArchivo, TAMANO_MAXIMO_ARCHIVO } from '../archivos.js'
-import { IMPUESTOS_FACTURA, TIPOS_FACTURA } from '../db/schema/index.js'
+import {
+  IMPUESTOS_FACTURA,
+  ORIGENES_ENTRADA,
+  TIPOS_FACTURA,
+  UNIDADES_ALMACEN,
+} from '../db/schema/index.js'
 import { ErrorApi, EsquemaError, validacionFallida } from '../errores.js'
 import {
   archivoDe,
+  asociarEntradas,
   borrarFactura,
   CambioPago,
   cambiarPago,
   corregirFactura,
   crearFactura,
   DatosFactura,
+  listarEntradasComida,
   listarFacturas,
   ponerArchivo,
   siguienteNumero,
@@ -19,7 +26,27 @@ import {
 import { hoyEnMadrid } from '../fechas.js'
 import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
 
-// Facturas (GH-35), en Finanzas: solo el administrador
+// Facturas (GH-35) y sus entradas de comida (GH-36), en Finanzas: solo el administrador
+
+// Una entrada de comida comprada, con su almacén
+const campoEntrada = {
+  id: z.uuid(),
+  fecha: z.iso.date(),
+  cantidad: z.number().openapi({ description: 'En la unidad del almacén' }),
+  origen: z.enum(ORIGENES_ENTRADA).nullable(),
+  observaciones: z.string().nullable(),
+  almacen: z.object({ id: z.uuid(), nombre: z.string(), unidad: z.enum(UNIDADES_ALMACEN) }),
+}
+
+const EntradaComida = z
+  .object({
+    ...campoEntrada,
+    factura: z
+      .object({ id: z.uuid(), numero: z.string(), tercero: z.string() })
+      .nullable()
+      .openapi({ description: 'La factura con la que se compró, si la tiene' }),
+  })
+  .openapi('EntradaComida')
 
 const Factura = z
   .object({
@@ -43,6 +70,9 @@ const Factura = z
     animales: z.array(
       z.object({ id: z.uuid(), crotal: z.string().nullable(), nombre: z.string().nullable() }),
     ),
+    entradasComida: z
+      .array(z.object(campoEntrada))
+      .openapi({ description: 'Entradas de comida compradas con la factura (GH-36)' }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -273,6 +303,61 @@ const quitarArchivo = createRoute({
   responses: { 200: json(Factura, 'La factura sin archivo'), ...comunes },
 })
 
+const entradas = createRoute({
+  method: 'put',
+  path: `${ruta}/{facturaId}/entradas-comida`,
+  tags: ['Finanzas'],
+  summary: 'Asociar a una factura recibida sus entradas de comida',
+  description:
+    'Las entradas compradas que se indican, en lugar de las que tuviera; una lista vacía las quita todas. Una entrada solo es de una factura.',
+  security: [{ sesion: [] }],
+  middleware: [permitir('finanzas')] as const,
+  request: {
+    params: ParametrosFactura,
+    body: {
+      content: {
+        'application/json': {
+          schema: z
+            .object({ movimientoIds: z.array(z.uuid()).max(500) })
+            .openapi('EntradasFactura'),
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: json(Factura, 'La factura con sus entradas'),
+    400: error('No es recibida, o alguna no es una entrada comprada (validacion)'),
+    409: error('Alguna entrada ya es de otra factura (entrada_con_factura)'),
+    ...comunes,
+  },
+})
+
+const listarEntradas = createRoute({
+  method: 'get',
+  path: '/explotaciones/{explotacionId}/entradas-comida',
+  tags: ['Finanzas'],
+  summary: 'Entradas de comida de todos los almacenes, con su factura',
+  description: 'De la más reciente a la más antigua. Para asociarlas a una factura (GH-36).',
+  security: [{ sesion: [] }],
+  middleware: [permitir('finanzas')] as const,
+  request: {
+    params: Parametros,
+    query: z.object({
+      origen: z.enum(ORIGENES_ENTRADA).optional(),
+      factura: z.enum(['con', 'sin']).optional(),
+      almacenId: z.uuid().optional(),
+      desde: z.iso.date().optional(),
+      hasta: z.iso.date().optional(),
+    }),
+  },
+  responses: {
+    200: json(z.array(EntradaComida), 'Las entradas'),
+    ...comunes,
+    404: error('No existe la explotación'),
+  },
+})
+
 export const rutasFacturas = () =>
   new OpenAPIHono<EnvExplotacion>({ defaultHook: validacionFallida })
     .openapi(listar, async (c) => {
@@ -348,4 +433,16 @@ export const rutasFacturas = () =>
       )
       await borrarArchivo(anterior)
       return c.json(factura, 200)
+    })
+    .openapi(entradas, async (c) => {
+      const { facturaId } = c.req.valid('param')
+      const { movimientoIds } = c.req.valid('json')
+      return c.json(
+        await enLaExplotacion(c, (tx) => asociarEntradas(tx, facturaId, movimientoIds)),
+        200,
+      )
+    })
+    .openapi(listarEntradas, async (c) => {
+      const filtros = c.req.valid('query')
+      return c.json(await enLaExplotacion(c, (tx) => listarEntradasComida(tx, filtros)), 200)
     })

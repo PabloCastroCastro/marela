@@ -33,6 +33,7 @@ import {
   urlArchivo,
   useFactura,
 } from './datos'
+import { TarjetaEntradasComida } from './EntradasComida'
 import estilos from './Finanzas.module.css'
 import { ElegirArchivo, FormularioFactura } from './FormularioFactura'
 import { InsigniaPago } from './ListaFacturas'
@@ -305,6 +306,8 @@ export function PaginaFactura() {
         )}
         {adjuntar.isPending && <p className={estilos.suave}>Subiendo el archivo…</p>}
       </Tarjeta>
+
+      {f.tipo === 'recibida' && <TarjetaEntradasComida factura={f} />}
 
       {f.animales.length > 0 && (
         <Tarjeta aria-labelledby="factura-animales" className={estilos.tarjeta}>

@@ -140,7 +140,7 @@ Decisiones (GH-23):
 - Cantidad
 - Origen: compra o producción propia
 - Finca de origen, opcional, si es producción propia (puede venir de varias fincas)
-- Factura asociada, si es compra. La asocia el administrador después; el empleado registra la entrada sin factura. No habrá listado de entradas sin factura: el administrador filtra a mano.
+- Factura asociada, si es compra. La asocia el administrador después, desde la ficha de la factura, eligiendo entre las compras sin factura de todos los almacenes (GH-36); una factura paga una o varias entradas. El empleado registra la entrada sin factura y no ve las facturas. En la ficha del almacén, el historial se filtra por origen y, para el administrador, por tener o no factura, y cada compra muestra la suya. Una entrada con factura sigue siendo una compra y no se borra hasta que el administrador la quite de la factura.
 
 ### Salida (ración)
 

@@ -16,6 +16,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 import { animales } from './animales.js'
+import { movimientosComida } from './comida.js'
 import { id } from './comun.js'
 import { auditoria, deExplotacion, separacionPorExplotacion } from './explotacion.js'
 
@@ -184,6 +185,36 @@ export const facturasAnimales = pgTable(
     unique('facturas_animales_unico').on(t.facturaId, t.animalId),
     index('facturas_animales_explotacion_idx').on(t.explotacionId),
     index('facturas_animales_animal_idx').on(t.animalId),
+    separacionPorExplotacion(),
+  ],
+)
+
+// Entradas de comida compradas con una factura recibida (GH-36): una factura, una o varias entradas;
+// una entrada, como mucho una factura. Al borrar la factura se sueltan; una entrada con factura no se
+// borra ni deja de ser una compra hasta que el administrador la quite.
+export const facturasMovimientosComida = pgTable(
+  'facturas_movimientos_comida',
+  {
+    id: id(),
+    ...deExplotacion(),
+    facturaId: uuid('factura_id').notNull(),
+    movimientoId: uuid('movimiento_id').notNull(),
+    ...auditoria(),
+  },
+  (t) => [
+    foreignKey({
+      name: 'facturas_movimientos_comida_factura_fk',
+      columns: [t.explotacionId, t.facturaId],
+      foreignColumns: [facturas.explotacionId, facturas.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      name: 'facturas_movimientos_comida_movimiento_fk',
+      columns: [t.explotacionId, t.movimientoId],
+      foreignColumns: [movimientosComida.explotacionId, movimientosComida.id],
+    }).onDelete('restrict'),
+    unique('facturas_movimientos_comida_movimiento_unico').on(t.movimientoId),
+    index('facturas_movimientos_comida_explotacion_idx').on(t.explotacionId),
+    index('facturas_movimientos_comida_factura_idx').on(t.facturaId),
     separacionPorExplotacion(),
   ],
 )

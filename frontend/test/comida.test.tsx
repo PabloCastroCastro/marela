@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -365,4 +365,62 @@ it('saca la ración desde la tarjeta: empieza en 1, con − y +, y se deshace', 
   await usuario.type(cifra, '2,5')
   await usuario.click(within(seca).getByRole('button', { name: 'Sacar de Pacas de hierba seca' }))
   await vi.waitFor(() => expect(estado.movimientos.at(-1)?.cantidad).toBe(2.5))
+})
+
+describe('facturas de las entradas (GH-36)', () => {
+  const entradas = () => [
+    movimientoSimulado({ id: 'm1', almacenId: 'al4', tipo: 'entrada', cantidad: 500 }),
+    movimientoSimulado({ id: 'm2', almacenId: 'al4', tipo: 'entrada', cantidad: 300 }),
+    movimientoSimulado({
+      id: 'm3',
+      almacenId: 'al4',
+      tipo: 'entrada',
+      cantidad: 200,
+      origen: 'produccion_propia',
+    }),
+  ]
+
+  it('el administrador ve la factura de cada compra y filtra por origen y por factura', async () => {
+    estado.movimientos = entradas()
+    estado.facturas = estado.facturas.map((f) =>
+      f.id === 'fa1' ? { ...f, movimientoIds: ['m1'] } : f,
+    )
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${comida()}/al4`)
+    const lista = await screen.findByRole('list', { name: 'Movimientos' })
+    expect(within(lista).getByRole('link', { name: /Factura P-381/ })).toHaveAttribute(
+      'href',
+      `/explotaciones/${A_VEIGA.id}/finanzas/facturas/fa1`,
+    )
+    expect(within(lista).getAllByText('Sin factura')).toHaveLength(1)
+
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /Factura/ }), 'sin')
+    await waitFor(() =>
+      expect(within(lista).queryByRole('link', { name: /Factura P-381/ })).not.toBeInTheDocument(),
+    )
+    expect(within(lista).getAllByRole('listitem')).toHaveLength(2)
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /Factura/ }), 'todas')
+    await usuario.selectOptions(
+      screen.getByRole('combobox', { name: /Origen/ }),
+      'produccion_propia',
+    )
+    await waitFor(() => expect(within(lista).getAllByRole('listitem')).toHaveLength(1))
+    expect(within(lista).getByText(/Producción propia/)).toBeInTheDocument()
+  })
+
+  it('el empleado filtra por origen pero no ve las facturas', async () => {
+    estado.movimientos = entradas()
+    estado.facturas = estado.facturas.map((f) =>
+      f.id === 'fa1' ? { ...f, movimientoIds: ['m1'] } : f,
+    )
+    simularApi(estado)
+    abrir(`${comida(O_SOUTO.id)}/al4`)
+    const lista = await screen.findByRole('list', { name: 'Movimientos' })
+    expect(within(lista).getAllByRole('listitem')).toHaveLength(3)
+    expect(screen.getByRole('combobox', { name: /Origen/ })).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /Factura/ })).not.toBeInTheDocument()
+    expect(within(lista).queryByText(/Factura/)).not.toBeInTheDocument()
+    expect(within(lista).queryByText('Sin factura')).not.toBeInTheDocument()
+  })
 })

@@ -1,0 +1,5608 @@
+{
+  "id": "6b9ec302-583b-4393-a1c8-a150a19abe3c",
+  "prevId": "e8ac6e47-7d84-47c5-ace8-13de1246f97f",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.animales": {
+      "name": "animales",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "crotal": {
+          "name": "crotal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raza": {
+          "name": "raza",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sexo": {
+          "name": "sexo",
+          "type": "sexo_animal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_nacimiento": {
+          "name": "fecha_nacimiento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "madre_id": {
+          "name": "madre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "madre_texto": {
+          "name": "madre_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "padre_id": {
+          "name": "padre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "padre_texto": {
+          "name": "padre_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "origen_animal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'nacido'"
+        },
+        "fecha_entrada": {
+          "name": "fecha_entrada",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rega_origen": {
+          "name": "rega_origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_animal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'activo'"
+        },
+        "tipo_baja": {
+          "name": "tipo_baja",
+          "type": "tipo_baja",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_baja": {
+          "name": "fecha_baja",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "causa_baja": {
+          "name": "causa_baja",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parto_id": {
+          "name": "parto_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "no_apta_reposicion_desde": {
+          "name": "no_apta_reposicion_desde",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_no_apta_reposicion": {
+          "name": "motivo_no_apta_reposicion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alcance_no_apta_reposicion": {
+          "name": "alcance_no_apta_reposicion",
+          "type": "alcance_no_apta",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "animales_explotacion_idx": {
+          "name": "animales_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "animales_madre_idx": {
+          "name": "animales_madre_idx",
+          "columns": [
+            {
+              "expression": "madre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "animales_padre_idx": {
+          "name": "animales_padre_idx",
+          "columns": [
+            {
+              "expression": "padre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "animales_explotacion_id_organization_id_fk": {
+          "name": "animales_explotacion_id_organization_id_fk",
+          "tableFrom": "animales",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "animales_creado_por_user_id_fk": {
+          "name": "animales_creado_por_user_id_fk",
+          "tableFrom": "animales",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "animales_modificado_por_user_id_fk": {
+          "name": "animales_modificado_por_user_id_fk",
+          "tableFrom": "animales",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "animales_madre_fk": {
+          "name": "animales_madre_fk",
+          "tableFrom": "animales",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "madre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "animales_padre_fk": {
+          "name": "animales_padre_fk",
+          "tableFrom": "animales",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "padre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "animales_crotal_unique": {
+          "name": "animales_crotal_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "crotal"
+          ]
+        },
+        "animales_explotacion_id_unique": {
+          "name": "animales_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "animales_crotal_formato": {
+          "name": "animales_crotal_formato",
+          "value": "(\"animales\".\"crotal\" ~ '^ES[0-9]{12}$' or (\"animales\".\"crotal\" ~ '^[A-Z]{2}[0-9]{1,12}$' and left(\"animales\".\"crotal\", 2) <> 'ES'))"
+        },
+        "animales_raza_no_vacia": {
+          "name": "animales_raza_no_vacia",
+          "value": "btrim(\"animales\".\"raza\") <> ''"
+        },
+        "animales_nombre_no_vacio": {
+          "name": "animales_nombre_no_vacio",
+          "value": "(\"animales\".\"nombre\" is null or btrim(\"animales\".\"nombre\") <> '')"
+        },
+        "animales_madre_una": {
+          "name": "animales_madre_una",
+          "value": "\"animales\".\"madre_id\" is null or \"animales\".\"madre_texto\" is null"
+        },
+        "animales_padre_uno": {
+          "name": "animales_padre_uno",
+          "value": "\"animales\".\"padre_id\" is null or \"animales\".\"padre_texto\" is null"
+        },
+        "animales_madre_no_propia": {
+          "name": "animales_madre_no_propia",
+          "value": "\"animales\".\"madre_id\" is distinct from \"animales\".\"id\""
+        },
+        "animales_padre_no_propio": {
+          "name": "animales_padre_no_propio",
+          "value": "\"animales\".\"padre_id\" is distinct from \"animales\".\"id\""
+        },
+        "animales_no_apta_reposicion": {
+          "name": "animales_no_apta_reposicion",
+          "value": "(\"animales\".\"no_apta_reposicion_desde\" is null and \"animales\".\"motivo_no_apta_reposicion\" is null\n          and \"animales\".\"alcance_no_apta_reposicion\" is null)\n        or (\"animales\".\"no_apta_reposicion_desde\" is not null and btrim(coalesce(\"animales\".\"motivo_no_apta_reposicion\", '')) <> ''\n            and \"animales\".\"alcance_no_apta_reposicion\" is not null and \"animales\".\"sexo\" = 'hembra')"
+        },
+        "animales_origen": {
+          "name": "animales_origen",
+          "value": "(\"animales\".\"origen\" = 'nacido' and \"animales\".\"fecha_entrada\" is null and \"animales\".\"rega_origen\" is null)\n        or (\"animales\".\"origen\" = 'comprado' and \"animales\".\"fecha_entrada\" is not null\n            and \"animales\".\"rega_origen\" ~ '^ES[0-9]{12}$')"
+        },
+        "animales_baja": {
+          "name": "animales_baja",
+          "value": "(\"animales\".\"estado\"::text = 'activo' and \"animales\".\"tipo_baja\" is null and \"animales\".\"fecha_baja\" is null\n            and \"animales\".\"causa_baja\" is null)\n        or (\"animales\".\"fecha_baja\" is not null and (\"animales\".\"tipo_baja\"::text, \"animales\".\"estado\"::text) in (\n            ('venta', 'vendido'), ('muerte', 'muerto'), ('sacrificio', 'muerto'),\n            ('robo_extravio', 'baja'), ('otra', 'baja'))\n          and (\"animales\".\"tipo_baja\"::text <> 'otra' or btrim(coalesce(\"animales\".\"causa_baja\", '')) <> ''))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.historial_cambios": {
+      "name": "historial_cambios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "tabla": {
+          "name": "tabla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fila_id": {
+          "name": "fila_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operacion": {
+          "name": "operacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "usuario_actual()"
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "antes": {
+          "name": "antes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "despues": {
+          "name": "despues",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "historial_fila_idx": {
+          "name": "historial_fila_idx",
+          "columns": [
+            {
+              "expression": "tabla",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fila_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "historial_cambios_explotacion_id_organization_id_fk": {
+          "name": "historial_cambios_explotacion_id_organization_id_fk",
+          "tableFrom": "historial_cambios",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "historial_cambios_usuario_id_user_id_fk": {
+          "name": "historial_cambios_usuario_id_user_id_fk",
+          "tableFrom": "historial_cambios",
+          "tableTo": "user",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "historial_operacion": {
+          "name": "historial_operacion",
+          "value": "\"historial_cambios\".\"operacion\" in ('alta', 'cambio', 'borrado')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.aplicaciones": {
+      "name": "aplicaciones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "finca_id": {
+          "name": "finca_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_aplicacion",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "producto": {
+          "name": "producto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_abono": {
+          "name": "tipo_abono",
+          "type": "tipo_abono",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dosis": {
+          "name": "dosis",
+          "type": "numeric(12, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unidad_dosis": {
+          "name": "unidad_dosis",
+          "type": "unidad_dosis",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "superficie": {
+          "name": "superficie",
+          "type": "numeric(10, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aplicado_por_id": {
+          "name": "aplicado_por_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aplicado_por_texto": {
+          "name": "aplicado_por_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lote": {
+          "name": "lote",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plaga": {
+          "name": "plaga",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dias_seguridad": {
+          "name": "dias_seguridad",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "fin_seguridad": {
+          "name": "fin_seguridad",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "generated": {
+            "as": "fecha + dias_seguridad",
+            "type": "stored"
+          }
+        },
+        "ropo": {
+          "name": "ropo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "equipo": {
+          "name": "equipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_anulacion": {
+          "name": "motivo_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "aplicaciones_explotacion_idx": {
+          "name": "aplicaciones_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aplicaciones_finca_idx": {
+          "name": "aplicaciones_finca_idx",
+          "columns": [
+            {
+              "expression": "finca_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "aplicaciones_explotacion_id_organization_id_fk": {
+          "name": "aplicaciones_explotacion_id_organization_id_fk",
+          "tableFrom": "aplicaciones",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_aplicado_por_id_user_id_fk": {
+          "name": "aplicaciones_aplicado_por_id_user_id_fk",
+          "tableFrom": "aplicaciones",
+          "tableTo": "user",
+          "columnsFrom": [
+            "aplicado_por_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_anulado_por_user_id_fk": {
+          "name": "aplicaciones_anulado_por_user_id_fk",
+          "tableFrom": "aplicaciones",
+          "tableTo": "user",
+          "columnsFrom": [
+            "anulado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_creado_por_user_id_fk": {
+          "name": "aplicaciones_creado_por_user_id_fk",
+          "tableFrom": "aplicaciones",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_modificado_por_user_id_fk": {
+          "name": "aplicaciones_modificado_por_user_id_fk",
+          "tableFrom": "aplicaciones",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aplicaciones_finca_fk": {
+          "name": "aplicaciones_finca_fk",
+          "tableFrom": "aplicaciones",
+          "tableTo": "fincas",
+          "columnsFrom": [
+            "explotacion_id",
+            "finca_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "aplicaciones_producto": {
+          "name": "aplicaciones_producto",
+          "value": "btrim(\"aplicaciones\".\"producto\") <> ''"
+        },
+        "aplicaciones_dosis": {
+          "name": "aplicaciones_dosis",
+          "value": "\"aplicaciones\".\"dosis\" > 0"
+        },
+        "aplicaciones_superficie": {
+          "name": "aplicaciones_superficie",
+          "value": "\"aplicaciones\".\"superficie\" > 0 and \"aplicaciones\".\"superficie\" <= 100000"
+        },
+        "aplicaciones_datos": {
+          "name": "aplicaciones_datos",
+          "value": "case \"aplicaciones\".\"tipo\"\n        when 'abono' then \"aplicaciones\".\"tipo_abono\" is not null and \"aplicaciones\".\"plaga\" is null\n          and \"aplicaciones\".\"dias_seguridad\" = 0 and \"aplicaciones\".\"ropo\" is null and \"aplicaciones\".\"equipo\" is null\n        else \"aplicaciones\".\"tipo_abono\" is null and btrim(coalesce(\"aplicaciones\".\"plaga\", '')) <> ''\n      end"
+        },
+        "aplicaciones_dias_seguridad": {
+          "name": "aplicaciones_dias_seguridad",
+          "value": "\"aplicaciones\".\"dias_seguridad\" >= 0 and \"aplicaciones\".\"dias_seguridad\" <= 999"
+        },
+        "aplicaciones_aplicado_por": {
+          "name": "aplicaciones_aplicado_por",
+          "value": "not (\"aplicaciones\".\"aplicado_por_id\" is not null and \"aplicaciones\".\"aplicado_por_texto\" is not null)"
+        },
+        "aplicaciones_anulacion": {
+          "name": "aplicaciones_anulacion",
+          "value": "(\"aplicaciones\".\"anulado_en\" is null and \"aplicaciones\".\"anulado_por\" is null and \"aplicaciones\".\"motivo_anulacion\" is null)\n        or (\"aplicaciones\".\"anulado_en\" is not null and \"aplicaciones\".\"anulado_por\" is not null\n          and btrim(coalesce(\"aplicaciones\".\"motivo_anulacion\", '')) <> '')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.account": {
+      "name": "account",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "account_user_id_idx": {
+          "name": "account_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.invitation": {
+      "name": "invitation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inviter_id": {
+          "name": "inviter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "invitation_organization_id_idx": {
+          "name": "invitation_organization_id_idx",
+          "columns": [
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "invitation_email_idx": {
+          "name": "invitation_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "invitation_organization_id_organization_id_fk": {
+          "name": "invitation_organization_id_organization_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "invitation_inviter_id_user_id_fk": {
+          "name": "invitation_inviter_id_user_id_fk",
+          "tableFrom": "invitation",
+          "tableTo": "user",
+          "columnsFrom": [
+            "inviter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.member": {
+      "name": "member",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'empleado'"
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "member_user_id_idx": {
+          "name": "member_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "member_organization_id_organization_id_fk": {
+          "name": "member_organization_id_organization_id_fk",
+          "tableFrom": "member",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "member_user_id_user_id_fk": {
+          "name": "member_user_id_user_id_fk",
+          "tableFrom": "member",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "member_organization_user_unique": {
+          "name": "member_organization_user_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "organization_id",
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "member_role_valido": {
+          "name": "member_role_valido",
+          "value": "\"member\".\"role\" in ('administrador', 'empleado')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.organization": {
+      "name": "organization",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "logo": {
+          "name": "logo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rega": {
+          "name": "rega",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "municipio": {
+          "name": "municipio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provincia": {
+          "name": "provincia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "organization_slug_unique": {
+          "name": "organization_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        },
+        "organization_rega_unique": {
+          "name": "organization_rega_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "rega"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "organization_rega_formato": {
+          "name": "organization_rega_formato",
+          "value": "\"organization\".\"rega\" ~ '^ES[0-9]{12}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.session": {
+      "name": "session",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "active_organization_id": {
+          "name": "active_organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "session_user_id_idx": {
+          "name": "session_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "session_active_organization_id_organization_id_fk": {
+          "name": "session_active_organization_id_organization_id_fk",
+          "tableFrom": "session",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "active_organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user": {
+      "name": "user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_username": {
+          "name": "display_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "propietario": {
+          "name": "propietario",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "debe_cambiar_contrasena": {
+          "name": "debe_cambiar_contrasena",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        },
+        "user_username_unique": {
+          "name": "user_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verification": {
+      "name": "verification",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "verification_identifier_idx": {
+          "name": "verification_identifier_idx",
+          "columns": [
+            {
+              "expression": "identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.almacenes": {
+      "name": "almacenes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_almacen",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unidad": {
+          "name": "unidad",
+          "type": "unidad_almacen",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "almacenes_nombre_unico": {
+          "name": "almacenes_nombre_unico",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "almacenes_explotacion_idx": {
+          "name": "almacenes_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "almacenes_explotacion_id_organization_id_fk": {
+          "name": "almacenes_explotacion_id_organization_id_fk",
+          "tableFrom": "almacenes",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "almacenes_creado_por_user_id_fk": {
+          "name": "almacenes_creado_por_user_id_fk",
+          "tableFrom": "almacenes",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "almacenes_modificado_por_user_id_fk": {
+          "name": "almacenes_modificado_por_user_id_fk",
+          "tableFrom": "almacenes",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "almacenes_explotacion_id_unique": {
+          "name": "almacenes_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "almacenes_nombre_no_vacio": {
+          "name": "almacenes_nombre_no_vacio",
+          "value": "btrim(\"almacenes\".\"nombre\") <> ''"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.movimientos_comida": {
+      "name": "movimientos_comida",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "almacen_id": {
+          "name": "almacen_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_movimiento_comida",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cantidad": {
+          "name": "cantidad",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "origen": {
+          "name": "origen",
+          "type": "origen_entrada_comida",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "finca_id": {
+          "name": "finca_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ajuste": {
+          "name": "ajuste",
+          "type": "tipo_ajuste_comida",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "movimientos_comida_explotacion_idx": {
+          "name": "movimientos_comida_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movimientos_comida_almacen_idx": {
+          "name": "movimientos_comida_almacen_idx",
+          "columns": [
+            {
+              "expression": "almacen_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "movimientos_comida_explotacion_id_organization_id_fk": {
+          "name": "movimientos_comida_explotacion_id_organization_id_fk",
+          "tableFrom": "movimientos_comida",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "movimientos_comida_creado_por_user_id_fk": {
+          "name": "movimientos_comida_creado_por_user_id_fk",
+          "tableFrom": "movimientos_comida",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_comida_modificado_por_user_id_fk": {
+          "name": "movimientos_comida_modificado_por_user_id_fk",
+          "tableFrom": "movimientos_comida",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "movimientos_comida_almacen_fk": {
+          "name": "movimientos_comida_almacen_fk",
+          "tableFrom": "movimientos_comida",
+          "tableTo": "almacenes",
+          "columnsFrom": [
+            "explotacion_id",
+            "almacen_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "movimientos_comida_finca_fk": {
+          "name": "movimientos_comida_finca_fk",
+          "tableFrom": "movimientos_comida",
+          "tableTo": "fincas",
+          "columnsFrom": [
+            "explotacion_id",
+            "finca_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "movimientos_comida_explotacion_id_unique": {
+          "name": "movimientos_comida_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "movimientos_comida_cantidad": {
+          "name": "movimientos_comida_cantidad",
+          "value": "\"movimientos_comida\".\"cantidad\" <= 100000000 and (\"movimientos_comida\".\"cantidad\" > 0\n        or (\"movimientos_comida\".\"ajuste\" = 'recuento' and \"movimientos_comida\".\"cantidad\" = 0))"
+        },
+        "movimientos_comida_datos": {
+          "name": "movimientos_comida_datos",
+          "value": "case \"movimientos_comida\".\"tipo\"\n        when 'entrada' then \"movimientos_comida\".\"origen\" is not null and \"movimientos_comida\".\"ajuste\" is null and \"movimientos_comida\".\"motivo\" is null\n          and (\"movimientos_comida\".\"finca_id\" is null or \"movimientos_comida\".\"origen\" = 'produccion_propia')\n        when 'salida' then \"movimientos_comida\".\"origen\" is null and \"movimientos_comida\".\"finca_id\" is null and \"movimientos_comida\".\"ajuste\" is null\n          and \"movimientos_comida\".\"motivo\" is null\n        else \"movimientos_comida\".\"ajuste\" is not null and btrim(coalesce(\"movimientos_comida\".\"motivo\", '')) <> ''\n          and \"movimientos_comida\".\"origen\" is null and \"movimientos_comida\".\"finca_id\" is null\n      end"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.configuracion_fiscal": {
+      "name": "configuracion_fiscal",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "regimen": {
+          "name": "regimen",
+          "type": "regimen_fiscal",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'reagp'"
+        },
+        "compensacion_reagp": {
+          "name": "compensacion_reagp",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10.5
+        },
+        "tipos_iva": {
+          "name": "tipos_iva",
+          "type": "numeric(5, 2)[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{21,10,4}'"
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "configuracion_fiscal_explotacion_id_organization_id_fk": {
+          "name": "configuracion_fiscal_explotacion_id_organization_id_fk",
+          "tableFrom": "configuracion_fiscal",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "configuracion_fiscal_creado_por_user_id_fk": {
+          "name": "configuracion_fiscal_creado_por_user_id_fk",
+          "tableFrom": "configuracion_fiscal",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "configuracion_fiscal_modificado_por_user_id_fk": {
+          "name": "configuracion_fiscal_modificado_por_user_id_fk",
+          "tableFrom": "configuracion_fiscal",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "configuracion_fiscal_explotacion_unica": {
+          "name": "configuracion_fiscal_explotacion_unica",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "configuracion_fiscal_compensacion": {
+          "name": "configuracion_fiscal_compensacion",
+          "value": "\"configuracion_fiscal\".\"compensacion_reagp\" >= 0 and \"configuracion_fiscal\".\"compensacion_reagp\" <= 100"
+        },
+        "configuracion_fiscal_tipos_iva": {
+          "name": "configuracion_fiscal_tipos_iva",
+          "value": "cardinality(\"configuracion_fiscal\".\"tipos_iva\") between 1 and 8\n        and 0 <= all(\"configuracion_fiscal\".\"tipos_iva\") and 100 >= all(\"configuracion_fiscal\".\"tipos_iva\")"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.facturas": {
+      "name": "facturas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_factura",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero": {
+          "name": "numero",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tercero": {
+          "name": "tercero",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nif": {
+          "name": "nif",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nif_extranjero": {
+          "name": "nif_extranjero",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "concepto": {
+          "name": "concepto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "impuesto": {
+          "name": "impuesto",
+          "type": "impuesto_factura",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'iva'"
+        },
+        "lineas": {
+          "name": "lineas",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_imponible": {
+          "name": "base_imponible",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cuota": {
+          "name": "cuota",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total": {
+          "name": "total",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pagada_en": {
+          "name": "pagada_en",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archivo_ruta": {
+          "name": "archivo_ruta",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archivo_nombre": {
+          "name": "archivo_nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archivo_tipo": {
+          "name": "archivo_tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archivo_tamano": {
+          "name": "archivo_tamano",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "facturas_emitidas_numero_unico": {
+          "name": "facturas_emitidas_numero_unico",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"numero\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"facturas\".\"tipo\" = 'emitida'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "facturas_recibidas_numero_unico": {
+          "name": "facturas_recibidas_numero_unico",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nif",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"numero\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"facturas\".\"tipo\" = 'recibida'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "facturas_explotacion_fecha_idx": {
+          "name": "facturas_explotacion_fecha_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "facturas_explotacion_id_organization_id_fk": {
+          "name": "facturas_explotacion_id_organization_id_fk",
+          "tableFrom": "facturas",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "facturas_creado_por_user_id_fk": {
+          "name": "facturas_creado_por_user_id_fk",
+          "tableFrom": "facturas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "facturas_modificado_por_user_id_fk": {
+          "name": "facturas_modificado_por_user_id_fk",
+          "tableFrom": "facturas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "facturas_explotacion_id_unique": {
+          "name": "facturas_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "facturas_numero_no_vacio": {
+          "name": "facturas_numero_no_vacio",
+          "value": "btrim(\"facturas\".\"numero\") <> ''"
+        },
+        "facturas_tercero_no_vacio": {
+          "name": "facturas_tercero_no_vacio",
+          "value": "btrim(\"facturas\".\"tercero\") <> ''"
+        },
+        "facturas_concepto_no_vacio": {
+          "name": "facturas_concepto_no_vacio",
+          "value": "btrim(\"facturas\".\"concepto\") <> ''"
+        },
+        "facturas_nif": {
+          "name": "facturas_nif",
+          "value": "btrim(\"facturas\".\"nif\") <> '' and (\"facturas\".\"nif_extranjero\" or \"facturas\".\"nif\" ~ '^([0-9]{8}[A-Z]|[XYZKLM][0-9]{7}[A-Z]|[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J])$')"
+        },
+        "facturas_lineas": {
+          "name": "facturas_lineas",
+          "value": "jsonb_typeof(\"facturas\".\"lineas\") = 'array'\n        and jsonb_array_length(\"facturas\".\"lineas\") between 1 and 8"
+        },
+        "facturas_total": {
+          "name": "facturas_total",
+          "value": "\"facturas\".\"total\" = \"facturas\".\"base_imponible\" + \"facturas\".\"cuota\""
+        },
+        "facturas_archivo": {
+          "name": "facturas_archivo",
+          "value": "(\"facturas\".\"archivo_ruta\" is null) = (\"facturas\".\"archivo_nombre\" is null)\n        and (\"facturas\".\"archivo_ruta\" is null) = (\"facturas\".\"archivo_tipo\" is null)\n        and (\"facturas\".\"archivo_ruta\" is null) = (\"facturas\".\"archivo_tamano\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.facturas_animales": {
+      "name": "facturas_animales",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "factura_id": {
+          "name": "factura_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "animal_id": {
+          "name": "animal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "facturas_animales_explotacion_idx": {
+          "name": "facturas_animales_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "facturas_animales_animal_idx": {
+          "name": "facturas_animales_animal_idx",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "facturas_animales_explotacion_id_organization_id_fk": {
+          "name": "facturas_animales_explotacion_id_organization_id_fk",
+          "tableFrom": "facturas_animales",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "facturas_animales_creado_por_user_id_fk": {
+          "name": "facturas_animales_creado_por_user_id_fk",
+          "tableFrom": "facturas_animales",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "facturas_animales_modificado_por_user_id_fk": {
+          "name": "facturas_animales_modificado_por_user_id_fk",
+          "tableFrom": "facturas_animales",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "facturas_animales_factura_fk": {
+          "name": "facturas_animales_factura_fk",
+          "tableFrom": "facturas_animales",
+          "tableTo": "facturas",
+          "columnsFrom": [
+            "explotacion_id",
+            "factura_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "facturas_animales_animal_fk": {
+          "name": "facturas_animales_animal_fk",
+          "tableFrom": "facturas_animales",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "animal_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "facturas_animales_unico": {
+          "name": "facturas_animales_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "factura_id",
+            "animal_id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.facturas_movimientos_comida": {
+      "name": "facturas_movimientos_comida",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "factura_id": {
+          "name": "factura_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movimiento_id": {
+          "name": "movimiento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "facturas_movimientos_comida_explotacion_idx": {
+          "name": "facturas_movimientos_comida_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "facturas_movimientos_comida_factura_idx": {
+          "name": "facturas_movimientos_comida_factura_idx",
+          "columns": [
+            {
+              "expression": "factura_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "facturas_movimientos_comida_explotacion_id_organization_id_fk": {
+          "name": "facturas_movimientos_comida_explotacion_id_organization_id_fk",
+          "tableFrom": "facturas_movimientos_comida",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "facturas_movimientos_comida_creado_por_user_id_fk": {
+          "name": "facturas_movimientos_comida_creado_por_user_id_fk",
+          "tableFrom": "facturas_movimientos_comida",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "facturas_movimientos_comida_modificado_por_user_id_fk": {
+          "name": "facturas_movimientos_comida_modificado_por_user_id_fk",
+          "tableFrom": "facturas_movimientos_comida",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "facturas_movimientos_comida_factura_fk": {
+          "name": "facturas_movimientos_comida_factura_fk",
+          "tableFrom": "facturas_movimientos_comida",
+          "tableTo": "facturas",
+          "columnsFrom": [
+            "explotacion_id",
+            "factura_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "facturas_movimientos_comida_movimiento_fk": {
+          "name": "facturas_movimientos_comida_movimiento_fk",
+          "tableFrom": "facturas_movimientos_comida",
+          "tableTo": "movimientos_comida",
+          "columnsFrom": [
+            "explotacion_id",
+            "movimiento_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "facturas_movimientos_comida_movimiento_unico": {
+          "name": "facturas_movimientos_comida_movimiento_unico",
+          "nullsNotDistinct": false,
+          "columns": [
+            "movimiento_id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fincas": {
+      "name": "fincas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "municipio": {
+          "name": "municipio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provincia": {
+          "name": "provincia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "regimen": {
+          "name": "regimen",
+          "type": "regimen_finca",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'propiedad'"
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activa": {
+          "name": "activa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "fincas_nombre_unico": {
+          "name": "fincas_nombre_unico",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "fincas_explotacion_idx": {
+          "name": "fincas_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fincas_explotacion_id_organization_id_fk": {
+          "name": "fincas_explotacion_id_organization_id_fk",
+          "tableFrom": "fincas",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "fincas_creado_por_user_id_fk": {
+          "name": "fincas_creado_por_user_id_fk",
+          "tableFrom": "fincas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fincas_modificado_por_user_id_fk": {
+          "name": "fincas_modificado_por_user_id_fk",
+          "tableFrom": "fincas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "fincas_explotacion_id_unique": {
+          "name": "fincas_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "fincas_nombre_no_vacio": {
+          "name": "fincas_nombre_no_vacio",
+          "value": "btrim(\"fincas\".\"nombre\") <> ''"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.parcelas": {
+      "name": "parcelas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "finca_id": {
+          "name": "finca_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sigpac_provincia": {
+          "name": "sigpac_provincia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigpac_municipio": {
+          "name": "sigpac_municipio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigpac_agregado": {
+          "name": "sigpac_agregado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigpac_zona": {
+          "name": "sigpac_zona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigpac_poligono": {
+          "name": "sigpac_poligono",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigpac_parcela": {
+          "name": "sigpac_parcela",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigpac_recinto": {
+          "name": "sigpac_recinto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referencia_catastral": {
+          "name": "referencia_catastral",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "superficie": {
+          "name": "superficie",
+          "type": "numeric(10, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uso": {
+          "name": "uso",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contorno": {
+          "name": "contorno",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "parcelas_explotacion_idx": {
+          "name": "parcelas_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "parcelas_finca_idx": {
+          "name": "parcelas_finca_idx",
+          "columns": [
+            {
+              "expression": "finca_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "parcelas_sigpac_unico": {
+          "name": "parcelas_sigpac_unico",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_provincia",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_municipio",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_agregado",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_zona",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_poligono",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_parcela",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sigpac_recinto",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"parcelas\".\"sigpac_recinto\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "parcelas_explotacion_id_organization_id_fk": {
+          "name": "parcelas_explotacion_id_organization_id_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "parcelas_creado_por_user_id_fk": {
+          "name": "parcelas_creado_por_user_id_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "parcelas_modificado_por_user_id_fk": {
+          "name": "parcelas_modificado_por_user_id_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "parcelas_finca_fk": {
+          "name": "parcelas_finca_fk",
+          "tableFrom": "parcelas",
+          "tableTo": "fincas",
+          "columnsFrom": [
+            "explotacion_id",
+            "finca_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "parcelas_superficie": {
+          "name": "parcelas_superficie",
+          "value": "\"parcelas\".\"superficie\" > 0 and \"parcelas\".\"superficie\" <= 100000"
+        },
+        "parcelas_sigpac_completa": {
+          "name": "parcelas_sigpac_completa",
+          "value": "num_nonnulls(\"parcelas\".\"sigpac_provincia\", \"parcelas\".\"sigpac_municipio\", \"parcelas\".\"sigpac_agregado\", \"parcelas\".\"sigpac_zona\", \"parcelas\".\"sigpac_poligono\",\n        \"parcelas\".\"sigpac_parcela\", \"parcelas\".\"sigpac_recinto\") in (0, 7)"
+        },
+        "parcelas_con_referencia": {
+          "name": "parcelas_con_referencia",
+          "value": "\"parcelas\".\"sigpac_recinto\" is not null or \"parcelas\".\"referencia_catastral\" is not null"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.labores": {
+      "name": "labores",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "finca_id": {
+          "name": "finca_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_labor",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cultivo": {
+          "name": "cultivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "labor": {
+          "name": "labor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "superficie": {
+          "name": "superficie",
+          "type": "numeric(10, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cantidad": {
+          "name": "cantidad",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unidad": {
+          "name": "unidad",
+          "type": "unidad_cosecha",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "realizada_por_id": {
+          "name": "realizada_por_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "realizada_por_texto": {
+          "name": "realizada_por_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "labores_explotacion_idx": {
+          "name": "labores_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "labores_finca_idx": {
+          "name": "labores_finca_idx",
+          "columns": [
+            {
+              "expression": "finca_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "labores_explotacion_id_organization_id_fk": {
+          "name": "labores_explotacion_id_organization_id_fk",
+          "tableFrom": "labores",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "labores_realizada_por_id_user_id_fk": {
+          "name": "labores_realizada_por_id_user_id_fk",
+          "tableFrom": "labores",
+          "tableTo": "user",
+          "columnsFrom": [
+            "realizada_por_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "labores_creado_por_user_id_fk": {
+          "name": "labores_creado_por_user_id_fk",
+          "tableFrom": "labores",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "labores_modificado_por_user_id_fk": {
+          "name": "labores_modificado_por_user_id_fk",
+          "tableFrom": "labores",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "labores_finca_fk": {
+          "name": "labores_finca_fk",
+          "tableFrom": "labores",
+          "tableTo": "fincas",
+          "columnsFrom": [
+            "explotacion_id",
+            "finca_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "labores_superficie": {
+          "name": "labores_superficie",
+          "value": "\"labores\".\"superficie\" > 0 and \"labores\".\"superficie\" <= 100000"
+        },
+        "labores_datos": {
+          "name": "labores_datos",
+          "value": "case \"labores\".\"tipo\"\n        when 'otra' then btrim(coalesce(\"labores\".\"labor\", '')) <> '' and \"labores\".\"cultivo\" is null\n          and \"labores\".\"cantidad\" is null\n        else btrim(coalesce(\"labores\".\"cultivo\", '')) <> '' and \"labores\".\"labor\" is null\n      end"
+        },
+        "labores_cantidad": {
+          "name": "labores_cantidad",
+          "value": "(\"labores\".\"cantidad\" is null and \"labores\".\"unidad\" is null)\n        or (\"labores\".\"tipo\" = 'cosecha' and \"labores\".\"cantidad\" > 0 and \"labores\".\"unidad\" is not null)"
+        },
+        "labores_realizada_por": {
+          "name": "labores_realizada_por",
+          "value": "not (\"labores\".\"realizada_por_id\" is not null and \"labores\".\"realizada_por_texto\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.equipos": {
+      "name": "equipos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_equipo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "activo": {
+          "name": "activo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "equipos_nombre_unico": {
+          "name": "equipos_nombre_unico",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "lower(\"nombre\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "equipos_explotacion_idx": {
+          "name": "equipos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "equipos_explotacion_id_organization_id_fk": {
+          "name": "equipos_explotacion_id_organization_id_fk",
+          "tableFrom": "equipos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "equipos_creado_por_user_id_fk": {
+          "name": "equipos_creado_por_user_id_fk",
+          "tableFrom": "equipos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "equipos_modificado_por_user_id_fk": {
+          "name": "equipos_modificado_por_user_id_fk",
+          "tableFrom": "equipos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "equipos_explotacion_id_unique": {
+          "name": "equipos_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "equipos_nombre_no_vacio": {
+          "name": "equipos_nombre_no_vacio",
+          "value": "btrim(\"equipos\".\"nombre\") <> ''"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.tareas": {
+      "name": "tareas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipo_id": {
+          "name": "equipo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_limite": {
+          "name": "fecha_limite",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prioridad": {
+          "name": "prioridad",
+          "type": "prioridad_tarea",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "asignada_a_id": {
+          "name": "asignada_a_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hecha_en": {
+          "name": "hecha_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hecha_por_id": {
+          "name": "hecha_por_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "tareas_explotacion_idx": {
+          "name": "tareas_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tareas_equipo_idx": {
+          "name": "tareas_equipo_idx",
+          "columns": [
+            {
+              "expression": "equipo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tareas_asignada_idx": {
+          "name": "tareas_asignada_idx",
+          "columns": [
+            {
+              "expression": "asignada_a_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tareas_explotacion_id_organization_id_fk": {
+          "name": "tareas_explotacion_id_organization_id_fk",
+          "tableFrom": "tareas",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "tareas_asignada_a_id_user_id_fk": {
+          "name": "tareas_asignada_a_id_user_id_fk",
+          "tableFrom": "tareas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "asignada_a_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tareas_hecha_por_id_user_id_fk": {
+          "name": "tareas_hecha_por_id_user_id_fk",
+          "tableFrom": "tareas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "hecha_por_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tareas_creado_por_user_id_fk": {
+          "name": "tareas_creado_por_user_id_fk",
+          "tableFrom": "tareas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tareas_modificado_por_user_id_fk": {
+          "name": "tareas_modificado_por_user_id_fk",
+          "tableFrom": "tareas",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tareas_equipo_fk": {
+          "name": "tareas_equipo_fk",
+          "tableFrom": "tareas",
+          "tableTo": "equipos",
+          "columnsFrom": [
+            "explotacion_id",
+            "equipo_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "tareas_titulo_no_vacio": {
+          "name": "tareas_titulo_no_vacio",
+          "value": "btrim(\"tareas\".\"titulo\") <> ''"
+        },
+        "tareas_hecha": {
+          "name": "tareas_hecha",
+          "value": "(\"tareas\".\"hecha_en\" is null) = (\"tareas\".\"hecha_por_id\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.pastoreos": {
+      "name": "pastoreos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "finca_id": {
+          "name": "finca_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_entrada": {
+          "name": "fecha_entrada",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha_salida": {
+          "name": "fecha_salida",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "animales": {
+          "name": "animales",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "pastoreos_explotacion_idx": {
+          "name": "pastoreos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pastoreos_finca_idx": {
+          "name": "pastoreos_finca_idx",
+          "columns": [
+            {
+              "expression": "finca_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha_entrada",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pastoreos_en_curso_unico": {
+          "name": "pastoreos_en_curso_unico",
+          "columns": [
+            {
+              "expression": "finca_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"pastoreos\".\"fecha_salida\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pastoreos_explotacion_id_organization_id_fk": {
+          "name": "pastoreos_explotacion_id_organization_id_fk",
+          "tableFrom": "pastoreos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "pastoreos_creado_por_user_id_fk": {
+          "name": "pastoreos_creado_por_user_id_fk",
+          "tableFrom": "pastoreos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pastoreos_modificado_por_user_id_fk": {
+          "name": "pastoreos_modificado_por_user_id_fk",
+          "tableFrom": "pastoreos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pastoreos_finca_fk": {
+          "name": "pastoreos_finca_fk",
+          "tableFrom": "pastoreos",
+          "tableTo": "fincas",
+          "columnsFrom": [
+            "explotacion_id",
+            "finca_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "pastoreos_animales": {
+          "name": "pastoreos_animales",
+          "value": "\"pastoreos\".\"animales\" > 0 and \"pastoreos\".\"animales\" <= 9999"
+        },
+        "pastoreos_fechas": {
+          "name": "pastoreos_fechas",
+          "value": "\"pastoreos\".\"fecha_salida\" >= \"pastoreos\".\"fecha_entrada\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.pesos": {
+      "name": "pesos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "animal_id": {
+          "name": "animal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kg": {
+          "name": "kg",
+          "type": "numeric(5, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "momento": {
+          "name": "momento",
+          "type": "momento_pesada",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'otro'"
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "pesos_explotacion_idx": {
+          "name": "pesos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pesos_animal_idx": {
+          "name": "pesos_animal_idx",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "pesos_momento_unico": {
+          "name": "pesos_momento_unico",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "momento",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"pesos\".\"momento\" <> 'otro'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pesos_explotacion_id_organization_id_fk": {
+          "name": "pesos_explotacion_id_organization_id_fk",
+          "tableFrom": "pesos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "pesos_creado_por_user_id_fk": {
+          "name": "pesos_creado_por_user_id_fk",
+          "tableFrom": "pesos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pesos_modificado_por_user_id_fk": {
+          "name": "pesos_modificado_por_user_id_fk",
+          "tableFrom": "pesos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pesos_animal_fk": {
+          "name": "pesos_animal_fk",
+          "tableFrom": "pesos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "animal_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "pesos_kg": {
+          "name": "pesos_kg",
+          "value": "\"pesos\".\"kg\" > 0 and \"pesos\".\"kg\" <= 2000"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.eventos_reproductivos": {
+      "name": "eventos_reproductivos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "animal_id": {
+          "name": "animal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_evento_reproductivo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "padre_id": {
+          "name": "padre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "padre_texto": {
+          "name": "padre_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fecha_prevista_parto": {
+          "name": "fecha_prevista_parto",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "case when tipo in ('cubricion', 'inseminacion') then fecha + 283 end",
+            "type": "stored"
+          }
+        },
+        "metodo": {
+          "name": "metodo",
+          "type": "metodo_diagnostico",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resultado": {
+          "name": "resultado",
+          "type": "resultado_diagnostico",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_anulacion": {
+          "name": "motivo_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "eventos_reproductivos_explotacion_idx": {
+          "name": "eventos_reproductivos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "eventos_reproductivos_animal_idx": {
+          "name": "eventos_reproductivos_animal_idx",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "eventos_reproductivos_destete_unico": {
+          "name": "eventos_reproductivos_destete_unico",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"eventos_reproductivos\".\"tipo\" = 'destete' and \"eventos_reproductivos\".\"anulado_en\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "eventos_reproductivos_explotacion_id_organization_id_fk": {
+          "name": "eventos_reproductivos_explotacion_id_organization_id_fk",
+          "tableFrom": "eventos_reproductivos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "eventos_reproductivos_anulado_por_user_id_fk": {
+          "name": "eventos_reproductivos_anulado_por_user_id_fk",
+          "tableFrom": "eventos_reproductivos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "anulado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "eventos_reproductivos_creado_por_user_id_fk": {
+          "name": "eventos_reproductivos_creado_por_user_id_fk",
+          "tableFrom": "eventos_reproductivos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "eventos_reproductivos_modificado_por_user_id_fk": {
+          "name": "eventos_reproductivos_modificado_por_user_id_fk",
+          "tableFrom": "eventos_reproductivos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "eventos_reproductivos_animal_fk": {
+          "name": "eventos_reproductivos_animal_fk",
+          "tableFrom": "eventos_reproductivos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "animal_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "eventos_reproductivos_padre_fk": {
+          "name": "eventos_reproductivos_padre_fk",
+          "tableFrom": "eventos_reproductivos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "padre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "eventos_reproductivos_datos": {
+          "name": "eventos_reproductivos_datos",
+          "value": "case \"eventos_reproductivos\".\"tipo\"\n        when 'cubricion' then \"eventos_reproductivos\".\"metodo\" is null and \"eventos_reproductivos\".\"resultado\" is null\n          and not (\"eventos_reproductivos\".\"padre_id\" is not null and \"eventos_reproductivos\".\"padre_texto\" is not null)\n          and (\"eventos_reproductivos\".\"padre_id\" is not null or btrim(coalesce(\"eventos_reproductivos\".\"padre_texto\", '')) <> '')\n        when 'inseminacion' then \"eventos_reproductivos\".\"metodo\" is null and \"eventos_reproductivos\".\"resultado\" is null\n          and not (\"eventos_reproductivos\".\"padre_id\" is not null and \"eventos_reproductivos\".\"padre_texto\" is not null)\n          and (\"eventos_reproductivos\".\"padre_id\" is not null or btrim(coalesce(\"eventos_reproductivos\".\"padre_texto\", '')) <> '')\n        when 'diagnostico' then \"eventos_reproductivos\".\"padre_id\" is null and \"eventos_reproductivos\".\"padre_texto\" is null\n          and \"eventos_reproductivos\".\"metodo\" is not null and \"eventos_reproductivos\".\"resultado\" is not null\n        else \"eventos_reproductivos\".\"padre_id\" is null and \"eventos_reproductivos\".\"padre_texto\" is null\n          and \"eventos_reproductivos\".\"metodo\" is null and \"eventos_reproductivos\".\"resultado\" is null\n      end"
+        },
+        "eventos_reproductivos_anulacion": {
+          "name": "eventos_reproductivos_anulacion",
+          "value": "(\"eventos_reproductivos\".\"anulado_en\" is null and \"eventos_reproductivos\".\"anulado_por\" is null and \"eventos_reproductivos\".\"motivo_anulacion\" is null)\n        or (\"eventos_reproductivos\".\"anulado_en\" is not null and \"eventos_reproductivos\".\"anulado_por\" is not null\n          and btrim(coalesce(\"eventos_reproductivos\".\"motivo_anulacion\", '')) <> '')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.partos": {
+      "name": "partos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "madre_id": {
+          "name": "madre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_parto",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "padre_id": {
+          "name": "padre_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "padre_texto": {
+          "name": "padre_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_anulacion": {
+          "name": "motivo_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "partos_explotacion_idx": {
+          "name": "partos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "partos_madre_idx": {
+          "name": "partos_madre_idx",
+          "columns": [
+            {
+              "expression": "madre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "partos_explotacion_id_organization_id_fk": {
+          "name": "partos_explotacion_id_organization_id_fk",
+          "tableFrom": "partos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "partos_anulado_por_user_id_fk": {
+          "name": "partos_anulado_por_user_id_fk",
+          "tableFrom": "partos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "anulado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "partos_creado_por_user_id_fk": {
+          "name": "partos_creado_por_user_id_fk",
+          "tableFrom": "partos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "partos_modificado_por_user_id_fk": {
+          "name": "partos_modificado_por_user_id_fk",
+          "tableFrom": "partos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "partos_madre_fk": {
+          "name": "partos_madre_fk",
+          "tableFrom": "partos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "madre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "partos_padre_fk": {
+          "name": "partos_padre_fk",
+          "tableFrom": "partos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "padre_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "partos_explotacion_id_unique": {
+          "name": "partos_explotacion_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "explotacion_id",
+            "id"
+          ]
+        }
+      },
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "partos_padre_uno": {
+          "name": "partos_padre_uno",
+          "value": "not (\"partos\".\"padre_id\" is not null and \"partos\".\"padre_texto\" is not null)"
+        },
+        "partos_anulacion": {
+          "name": "partos_anulacion",
+          "value": "(\"partos\".\"anulado_en\" is null and \"partos\".\"anulado_por\" is null and \"partos\".\"motivo_anulacion\" is null)\n        or (\"partos\".\"anulado_en\" is not null and \"partos\".\"anulado_por\" is not null\n          and btrim(coalesce(\"partos\".\"motivo_anulacion\", '')) <> '')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.tratamientos": {
+      "name": "tratamientos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "uuidv7()"
+        },
+        "explotacion_id": {
+          "name": "explotacion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "explotacion_actual()"
+        },
+        "animal_id": {
+          "name": "animal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "producto": {
+          "name": "producto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dosis": {
+          "name": "dosis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "via": {
+          "name": "via",
+          "type": "via_administracion",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "motivo_tratamiento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "diagnostico": {
+          "name": "diagnostico",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aplicado_por_id": {
+          "name": "aplicado_por_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aplicado_por_texto": {
+          "name": "aplicado_por_texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lote": {
+          "name": "lote",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dias_supresion": {
+          "name": "dias_supresion",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "fin_supresion": {
+          "name": "fin_supresion",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "generated": {
+            "as": "fecha + dias_supresion",
+            "type": "stored"
+          }
+        },
+        "observaciones": {
+          "name": "observaciones",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_en": {
+          "name": "anulado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anulado_por": {
+          "name": "anulado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "motivo_anulacion": {
+          "name": "motivo_anulacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creado_en": {
+          "name": "creado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "creado_por": {
+          "name": "creado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        },
+        "modificado_en": {
+          "name": "modificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "modificado_por": {
+          "name": "modificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "usuario_actual()"
+        }
+      },
+      "indexes": {
+        "tratamientos_explotacion_idx": {
+          "name": "tratamientos_explotacion_idx",
+          "columns": [
+            {
+              "expression": "explotacion_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tratamientos_animal_idx": {
+          "name": "tratamientos_animal_idx",
+          "columns": [
+            {
+              "expression": "animal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "fecha",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tratamientos_explotacion_id_organization_id_fk": {
+          "name": "tratamientos_explotacion_id_organization_id_fk",
+          "tableFrom": "tratamientos",
+          "tableTo": "organization",
+          "columnsFrom": [
+            "explotacion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "tratamientos_aplicado_por_id_user_id_fk": {
+          "name": "tratamientos_aplicado_por_id_user_id_fk",
+          "tableFrom": "tratamientos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "aplicado_por_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tratamientos_anulado_por_user_id_fk": {
+          "name": "tratamientos_anulado_por_user_id_fk",
+          "tableFrom": "tratamientos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "anulado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tratamientos_creado_por_user_id_fk": {
+          "name": "tratamientos_creado_por_user_id_fk",
+          "tableFrom": "tratamientos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "creado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tratamientos_modificado_por_user_id_fk": {
+          "name": "tratamientos_modificado_por_user_id_fk",
+          "tableFrom": "tratamientos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "modificado_por"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tratamientos_animal_fk": {
+          "name": "tratamientos_animal_fk",
+          "tableFrom": "tratamientos",
+          "tableTo": "animales",
+          "columnsFrom": [
+            "explotacion_id",
+            "animal_id"
+          ],
+          "columnsTo": [
+            "explotacion_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "separacion_por_explotacion": {
+          "name": "separacion_por_explotacion",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "marela_app"
+          ],
+          "using": "explotacion_id = explotacion_actual()",
+          "withCheck": "explotacion_id = explotacion_actual()"
+        }
+      },
+      "checkConstraints": {
+        "tratamientos_producto": {
+          "name": "tratamientos_producto",
+          "value": "btrim(\"tratamientos\".\"producto\") <> ''"
+        },
+        "tratamientos_dias_supresion": {
+          "name": "tratamientos_dias_supresion",
+          "value": "\"tratamientos\".\"dias_supresion\" >= 0 and \"tratamientos\".\"dias_supresion\" <= 999"
+        },
+        "tratamientos_aplicado_por": {
+          "name": "tratamientos_aplicado_por",
+          "value": "not (\"tratamientos\".\"aplicado_por_id\" is not null and \"tratamientos\".\"aplicado_por_texto\" is not null)"
+        },
+        "tratamientos_anulacion": {
+          "name": "tratamientos_anulacion",
+          "value": "(\"tratamientos\".\"anulado_en\" is null and \"tratamientos\".\"anulado_por\" is null and \"tratamientos\".\"motivo_anulacion\" is null)\n        or (\"tratamientos\".\"anulado_en\" is not null and \"tratamientos\".\"anulado_por\" is not null\n          and btrim(coalesce(\"tratamientos\".\"motivo_anulacion\", '')) <> '')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.alcance_no_apta": {
+      "name": "alcance_no_apta",
+      "schema": "public",
+      "values": [
+        "hijas",
+        "descendencia"
+      ]
+    },
+    "public.estado_animal": {
+      "name": "estado_animal",
+      "schema": "public",
+      "values": [
+        "activo",
+        "vendido",
+        "muerto",
+        "baja"
+      ]
+    },
+    "public.origen_animal": {
+      "name": "origen_animal",
+      "schema": "public",
+      "values": [
+        "nacido",
+        "comprado"
+      ]
+    },
+    "public.sexo_animal": {
+      "name": "sexo_animal",
+      "schema": "public",
+      "values": [
+        "hembra",
+        "macho"
+      ]
+    },
+    "public.tipo_baja": {
+      "name": "tipo_baja",
+      "schema": "public",
+      "values": [
+        "venta",
+        "muerte",
+        "sacrificio",
+        "robo_extravio",
+        "otra"
+      ]
+    },
+    "public.tipo_abono": {
+      "name": "tipo_abono",
+      "schema": "public",
+      "values": [
+        "mineral",
+        "organico"
+      ]
+    },
+    "public.tipo_aplicacion": {
+      "name": "tipo_aplicacion",
+      "schema": "public",
+      "values": [
+        "abono",
+        "fitosanitario"
+      ]
+    },
+    "public.unidad_dosis": {
+      "name": "unidad_dosis",
+      "schema": "public",
+      "values": [
+        "kg_ha",
+        "t_ha",
+        "l_ha",
+        "m3_ha"
+      ]
+    },
+    "public.origen_entrada_comida": {
+      "name": "origen_entrada_comida",
+      "schema": "public",
+      "values": [
+        "compra",
+        "produccion_propia"
+      ]
+    },
+    "public.tipo_ajuste_comida": {
+      "name": "tipo_ajuste_comida",
+      "schema": "public",
+      "values": [
+        "recuento",
+        "merma"
+      ]
+    },
+    "public.tipo_almacen": {
+      "name": "tipo_almacen",
+      "schema": "public",
+      "values": [
+        "hierba_verde",
+        "hierba_seca",
+        "maiz",
+        "pienso",
+        "otro"
+      ]
+    },
+    "public.tipo_movimiento_comida": {
+      "name": "tipo_movimiento_comida",
+      "schema": "public",
+      "values": [
+        "entrada",
+        "salida",
+        "ajuste"
+      ]
+    },
+    "public.unidad_almacen": {
+      "name": "unidad_almacen",
+      "schema": "public",
+      "values": [
+        "unidades",
+        "kg"
+      ]
+    },
+    "public.impuesto_factura": {
+      "name": "impuesto_factura",
+      "schema": "public",
+      "values": [
+        "iva",
+        "compensacion"
+      ]
+    },
+    "public.regimen_fiscal": {
+      "name": "regimen_fiscal",
+      "schema": "public",
+      "values": [
+        "reagp",
+        "general"
+      ]
+    },
+    "public.tipo_factura": {
+      "name": "tipo_factura",
+      "schema": "public",
+      "values": [
+        "recibida",
+        "emitida"
+      ]
+    },
+    "public.regimen_finca": {
+      "name": "regimen_finca",
+      "schema": "public",
+      "values": [
+        "propiedad",
+        "arrendamiento",
+        "aparceria",
+        "cesion",
+        "otro"
+      ]
+    },
+    "public.tipo_labor": {
+      "name": "tipo_labor",
+      "schema": "public",
+      "values": [
+        "siembra",
+        "cosecha",
+        "otra"
+      ]
+    },
+    "public.unidad_cosecha": {
+      "name": "unidad_cosecha",
+      "schema": "public",
+      "values": [
+        "kg",
+        "t",
+        "pacas",
+        "rolos",
+        "remolques"
+      ]
+    },
+    "public.prioridad_tarea": {
+      "name": "prioridad_tarea",
+      "schema": "public",
+      "values": [
+        "baja",
+        "normal",
+        "alta"
+      ]
+    },
+    "public.tipo_equipo": {
+      "name": "tipo_equipo",
+      "schema": "public",
+      "values": [
+        "maquinaria",
+        "infraestructura"
+      ]
+    },
+    "public.momento_pesada": {
+      "name": "momento_pesada",
+      "schema": "public",
+      "values": [
+        "nacimiento",
+        "destete",
+        "venta",
+        "otro"
+      ]
+    },
+    "public.metodo_diagnostico": {
+      "name": "metodo_diagnostico",
+      "schema": "public",
+      "values": [
+        "ecografia",
+        "palpacion"
+      ]
+    },
+    "public.resultado_diagnostico": {
+      "name": "resultado_diagnostico",
+      "schema": "public",
+      "values": [
+        "gestante",
+        "vacia"
+      ]
+    },
+    "public.tipo_evento_reproductivo": {
+      "name": "tipo_evento_reproductivo",
+      "schema": "public",
+      "values": [
+        "cubricion",
+        "inseminacion",
+        "diagnostico",
+        "aborto",
+        "destete"
+      ]
+    },
+    "public.tipo_parto": {
+      "name": "tipo_parto",
+      "schema": "public",
+      "values": [
+        "normal",
+        "con_ayuda",
+        "cesarea"
+      ]
+    },
+    "public.motivo_tratamiento": {
+      "name": "motivo_tratamiento",
+      "schema": "public",
+      "values": [
+        "enfermedad",
+        "vacuna",
+        "desparasitacion",
+        "otro"
+      ]
+    },
+    "public.via_administracion": {
+      "name": "via_administracion",
+      "schema": "public",
+      "values": [
+        "intramuscular",
+        "subcutanea",
+        "intravenosa",
+        "oral",
+        "topica",
+        "intramamaria",
+        "intrauterina",
+        "otra"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

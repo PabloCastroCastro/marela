@@ -4,7 +4,15 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { crearClienteConsultas, Proveedores } from '../src/proveedores'
 import { rutas } from '../src/rutas'
-import { A_VEIGA, type EstadoSimulado, estadoInicial, O_SOUTO, simularApi } from './simulacion'
+import {
+  A_VEIGA,
+  type EstadoSimulado,
+  estadoInicial,
+  type FacturaSimulada,
+  movimientoSimulado,
+  O_SOUTO,
+  simularApi,
+} from './simulacion'
 
 function abrir(ruta: string) {
   const router = createMemoryRouter(rutas, { initialEntries: [ruta] })
@@ -213,5 +221,52 @@ describe('facturas (GH-35)', () => {
     )
     await waitFor(() => expect(router.state.location.pathname).toBe(finanzas()))
     expect(estado.facturas.map((f) => f.id)).toEqual(['fa2'])
+  })
+})
+
+describe('entradas de comida de una factura (GH-36)', () => {
+  it('se asocian desde la factura, entre las compras sin factura', async () => {
+    estado.movimientos = [
+      movimientoSimulado({ id: 'm1', almacenId: 'al4', tipo: 'entrada', cantidad: 500 }),
+      movimientoSimulado({ id: 'm2', almacenId: 'al4', tipo: 'entrada', cantidad: 300 }),
+      movimientoSimulado({
+        id: 'm3',
+        almacenId: 'al4',
+        tipo: 'entrada',
+        cantidad: 200,
+        origen: 'produccion_propia',
+      }),
+    ]
+    // La de 300 kg ya es de otra factura
+    estado.facturas.push({
+      ...(estado.facturas[0] as FacturaSimulada),
+      id: 'fa9',
+      numero: 'P-900',
+      movimientoIds: ['m2'],
+    })
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${finanzas()}/facturas/fa1`)
+    const tarjeta = await screen.findByRole('region', { name: 'Entradas de comida' })
+    await usuario.click(within(tarjeta).getByRole('button', { name: 'Asociar entradas' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Entradas de comida' })
+    const compras = await within(hoja).findByRole('list', { name: 'Compras de comida' })
+    // Solo las compras sin factura
+    expect(within(compras).getAllByRole('checkbox')).toHaveLength(1)
+    await usuario.click(within(compras).getByRole('checkbox', { name: /500 kg/ }))
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText('1 entrada de comida en la factura')).toBeInTheDocument()
+    expect(estado.facturas[0]?.movimientoIds).toEqual(['m1'])
+    expect(
+      await within(tarjeta).findByRole('link', { name: /Silo de pienso · 01\/10\/2026 · 500 kg/ }),
+    ).toHaveAttribute('href', `/explotaciones/${A_VEIGA.id}/comida/al4`)
+  })
+
+  it('las facturas emitidas no tienen entradas de comida', async () => {
+    simularApi(estado)
+    abrir(`${finanzas()}/facturas/fa2`)
+    expect(await screen.findByRole('heading', { name: 'Factura 2026-0006' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Entradas de comida' })).not.toBeInTheDocument()
   })
 })
