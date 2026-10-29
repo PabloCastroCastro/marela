@@ -284,12 +284,25 @@ Solo el número de animales, sin enlazar sus fichas. Una finca no tiene dos past
 
 Almacenes de comida de la explotación, en `src/rutas/almacenes.ts`. Los ve quien accede al módulo `comida`; los crea, edita y desactiva el administrador (`permitir('administracion')`):
 
-- **`GET /api/explotaciones/{id}/almacenes`:** en el orden en que se crearon, con su `stock` en su unidad. Filtro `activo=true|false`; sin él, todos.
+- **`GET /api/explotaciones/{id}/almacenes`:** en el orden en que se crearon, con su `stock` en su unidad y `conMovimientos`. Filtro `activo=true|false`; sin él, todos.
+- **`GET /api/explotaciones/{id}/almacenes/{almacenId}`:** un almacén.
 - **`POST /api/explotaciones/{id}/almacenes`:** `{ nombre, tipo, unidad }` crea un almacén. `tipo` es la comida que guarda: `hierba_verde`, `hierba_seca`, `maiz`, `pienso` u `otro`. `unidad` es `unidades` (pacas) o `kg`.
-- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}`:** cambia el nombre, el tipo o la unidad.
+- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}`:** cambia el nombre, el tipo o la unidad. La unidad, solo si aún no tiene movimientos (409 `unidad_con_movimientos`; el trigger `almacenes_unidad` lo impide también).
 - **`PATCH /api/explotaciones/{id}/almacenes/{almacenId}/estado`:** `{ activo }` desactiva o reactiva. Un almacén no se borra.
 
-Una explotación nueva recibe en su misma transacción los almacenes por defecto: pacas de hierba verde y de hierba seca (unidades), y silos de maíz y de pienso (kilos). Los registra `src/almacenes.ts` en `alCrearExplotacion`. La migración `0026` se los da a las explotaciones que ya existían, a nombre de su primer administrador, y añade el historial de cambios. El nombre no se repite en la explotación (409 `nombre_en_uso`). El stock es 0 hasta que lleguen las entradas, salidas y ajustes (GH-30).
+Una explotación nueva recibe en su misma transacción los almacenes por defecto: pacas de hierba verde y de hierba seca (unidades), y silos de maíz y de pienso (kilos). Los registra `src/almacenes.ts` en `alCrearExplotacion`. La migración `0026` se los da a las explotaciones que ya existían, a nombre de su primer administrador, y añade el historial de cambios. El nombre no se repite en la explotación (409 `nombre_en_uso`).
+
+Entradas, salidas y ajustes de inventario, en `src/rutas/movimientos.ts` (módulo `comida`, también el empleado):
+
+- **`GET /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** del más reciente al más antiguo, con filtros `desde`, `hasta` (fechas incluidas) y `tipo`. Cada uno lleva `diferencia` (lo que cambió el stock) y `stock` (el que dejó).
+- **`POST /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** `{ tipo, fecha, cantidad, origen?, fincaId?, ajuste?, motivo?, observaciones? }` en un almacén activo (si no, 409 `almacen_desactivado`).
+  - `entrada`: con `origen` (`compra` o `produccion_propia`) y, si es producción propia, `fincaId` opcional.
+  - `salida`: solo fecha y cantidad.
+  - `ajuste`: `recuento` (`cantidad` es lo contado; puede ser 0) o `merma` (`cantidad` es lo perdido), con `motivo`.
+- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo corrige.
+- **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo.
+
+**Stock:** lo calcula PostgreSQL (migración `0028`). `movimientos_con_stock(almacen)` recorre los movimientos por fecha y, el mismo día, por orden de registro: las entradas suman, las salidas y mermas restan, y un recuento fija el stock en lo contado. `stock_almacen(almacen)` es el que deja el último, o 0. Puede ser negativo: se guarda igual, y la pantalla lo avisa y lo marca en rojo. Las cantidades van en la unidad del almacén, con dos decimales. Cada tipo lleva sus datos y no los de los demás (check `movimientos_comida_datos`); el almacén y la finca son de la explotación (claves foráneas compuestas). Los cambios quedan en el historial.
 
 ## Historial de cambios
 

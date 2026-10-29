@@ -3077,7 +3077,11 @@
           },
           "stock": {
             "type": "number",
-            "description": "Cantidad actual, en su unidad"
+            "description": "Cantidad actual, en su unidad, de sus movimientos. Puede ser negativa."
+          },
+          "conMovimientos": {
+            "type": "boolean",
+            "description": "Si tiene movimientos, la unidad no cambia"
           },
           "creadoEn": {
             "type": "string",
@@ -3095,6 +3099,7 @@
           "unidad",
           "activo",
           "stock",
+          "conMovimientos",
           "creadoEn",
           "modificadoEn"
         ]
@@ -3141,6 +3146,191 @@
         },
         "required": [
           "activo"
+        ]
+      },
+      "MovimientoComida": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "almacenId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "entrada",
+              "salida",
+              "ajuste"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cantidad": {
+            "type": "number",
+            "description": "En la unidad del almacén. En un recuento, la cantidad contada."
+          },
+          "origen": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "compra",
+              "produccion_propia",
+              null
+            ]
+          },
+          "finca": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "nombre": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "nombre"
+            ],
+            "description": "De qué finca viene la producción propia, si se sabe"
+          },
+          "ajuste": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "recuento",
+              "merma",
+              null
+            ]
+          },
+          "motivo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "diferencia": {
+            "type": "number",
+            "description": "Lo que cambió el stock: positiva si sube, negativa si baja"
+          },
+          "stock": {
+            "type": "number",
+            "description": "El stock que dejó en el almacén"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "almacenId",
+          "tipo",
+          "fecha",
+          "cantidad",
+          "origen",
+          "finca",
+          "ajuste",
+          "motivo",
+          "observaciones",
+          "diferencia",
+          "stock",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosMovimiento": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "entrada",
+              "salida",
+              "ajuste"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cantidad": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000000,
+            "example": 120
+          },
+          "origen": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "compra",
+              "produccion_propia",
+              null
+            ]
+          },
+          "fincaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "ajuste": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "recuento",
+              "merma",
+              null
+            ]
+          },
+          "motivo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Recuento de fin de mes"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "tipo",
+          "fecha",
+          "cantidad"
         ]
       },
       "RecintoSigpac": {
@@ -7945,6 +8135,78 @@
       }
     },
     "/api/explotaciones/{explotacionId}/almacenes/{almacenId}": {
+      "get": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Un almacén, con su stock",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El almacén",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Almacen"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su comida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el almacén (almacen_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "Comida"
@@ -8036,7 +8298,7 @@
             }
           },
           "409": {
-            "description": "Ya hay un almacén con ese nombre (nombre_en_uso)",
+            "description": "Ya hay un almacén con ese nombre, o cambia la unidad de uno con movimientos (nombre_en_uso, unidad_con_movimientos)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8122,6 +8384,406 @@
           },
           "404": {
             "description": "No existe la explotación o el almacén (almacen_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/almacenes/{almacenId}/movimientos": {
+      "get": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Movimientos de un almacén, con filtros de fecha y tipo",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Desde esta fecha, incluida"
+            },
+            "required": false,
+            "description": "Desde esta fecha, incluida",
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Hasta esta fecha, incluida"
+            },
+            "required": false,
+            "description": "Hasta esta fecha, incluida",
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "entrada",
+                "salida",
+                "ajuste"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MovimientoComida"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su comida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Registrar una entrada, una salida o un ajuste de inventario",
+        "description": "Entrada: con origen (compra o producción propia) y, si es producción propia, la finca si se sabe. Salida: solo fecha y cantidad. Ajuste: recuento (la cantidad contada) o merma (la cantidad perdida), con motivo. El stock puede quedar en negativo.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosMovimiento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "El movimiento registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimientoComida"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su comida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El almacén está desactivado (almacen_desactivado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/almacenes/{almacenId}/movimientos/{movimientoId}": {
+      "put": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Corregir un movimiento",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "movimientoId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosMovimiento"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "El movimiento corregido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimientoComida"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su comida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Comida"
+        ],
+        "summary": "Borrar un movimiento registrado por error",
+        "description": "Devuelve el movimiento borrado, para poder deshacerlo. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "almacenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "movimientoId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El movimiento borrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimientoComida"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación o a su comida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
             "content": {
               "application/json": {
                 "schema": {

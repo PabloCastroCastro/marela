@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 import type { Transaccion } from './db/explotacion.js'
 import { almacenes, TIPOS_ALMACEN, UNIDADES_ALMACEN } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
@@ -63,12 +63,14 @@ const columnas = {
   activo: almacenes.activo,
   creadoEn: almacenes.creadoEn,
   modificadoEn: almacenes.modificadoEn,
+  // El stock sale de sus entradas, salidas y ajustes (GH-30, función stock_almacen)
+  stock: sql<number>`stock_almacen("almacenes"."id")::float8`,
+  conMovimientos: sql<boolean>`exists (select from movimientos_comida m
+    where m.almacen_id = "almacenes"."id")`,
 }
 
-// El stock sale de las entradas, salidas y ajustes, que llegan con GH-30: hasta entonces, 0
 const almacen = <T extends { creadoEn: Date; modificadoEn: Date }>(a: T) => ({
   ...a,
-  stock: 0,
   creadoEn: a.creadoEn.toISOString(),
   modificadoEn: a.modificadoEn.toISOString(),
 })
@@ -113,7 +115,12 @@ export async function crearAlmacen(tx: Transaccion, datos: DatosAlmacen) {
 }
 
 export async function editarAlmacen(tx: Transaccion, almacenId: string, datos: DatosAlmacen) {
-  await verAlmacen(tx, almacenId)
+  const actual = await verAlmacen(tx, almacenId)
+  // La base de datos lo impide también; aquí se comprueba antes para dar el error en su campo
+  if (actual.conMovimientos && datos.unidad !== actual.unidad) {
+    const mensaje = 'El almacén ya tiene movimientos: su unidad no cambia'
+    throw new ErrorApi(409, 'unidad_con_movimientos', mensaje, [{ campo: 'unidad', mensaje }])
+  }
   await conErroresClaros(() => tx.update(almacenes).set(datos).where(eq(almacenes.id, almacenId)))
   return verAlmacen(tx, almacenId)
 }

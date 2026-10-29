@@ -3741,7 +3741,57 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Un almacén, con su stock */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    almacenId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description El almacén */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Almacen"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su comida */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación o el almacén (almacen_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         /** Cambiar el nombre, el tipo o la unidad de un almacén (administrador) */
         put: {
             parameters: {
@@ -3804,7 +3854,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
-                /** @description Ya hay un almacén con ese nombre (nombre_en_uso) */
+                /** @description Ya hay un almacén con ese nombre, o cambia la unidad de uno con movimientos (nombre_en_uso, unidad_con_movimientos) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -3893,6 +3943,287 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/almacenes/{almacenId}/movimientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Movimientos de un almacén, con filtros de fecha y tipo */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Desde esta fecha, incluida */
+                    desde?: string;
+                    /** @description Hasta esta fecha, incluida */
+                    hasta?: string;
+                    tipo?: "entrada" | "salida" | "ajuste";
+                };
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    almacenId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Del más reciente al más antiguo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MovimientoComida"][];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su comida */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Registrar una entrada, una salida o un ajuste de inventario
+         * @description Entrada: con origen (compra o producción propia) y, si es producción propia, la finca si se sabe. Salida: solo fecha y cantidad. Ajuste: recuento (la cantidad contada) o merma (la cantidad perdida), con motivo. El stock puede quedar en negativo.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    almacenId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosMovimiento"];
+                };
+            };
+            responses: {
+                /** @description El movimiento registrado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MovimientoComida"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su comida */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El almacén está desactivado (almacen_desactivado) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/almacenes/{almacenId}/movimientos/{movimientoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corregir un movimiento */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    almacenId: string;
+                    movimientoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DatosMovimiento"];
+                };
+            };
+            responses: {
+                /** @description El movimiento corregido */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MovimientoComida"];
+                    };
+                };
+                /** @description Datos no válidos (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su comida */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Borrar un movimiento registrado por error
+         * @description Devuelve el movimiento borrado, para poder deshacerlo. Queda en el historial.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                    almacenId: string;
+                    movimientoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description El movimiento borrado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MovimientoComida"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación o a su comida */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/explotaciones/{explotacionId}/cartografia/recinto": {
@@ -5239,8 +5570,10 @@ export interface components {
             /** @enum {string} */
             unidad: "unidades" | "kg";
             activo: boolean;
-            /** @description Cantidad actual, en su unidad */
+            /** @description Cantidad actual, en su unidad, de sus movimientos. Puede ser negativa. */
             stock: number;
+            /** @description Si tiene movimientos, la unidad no cambia */
+            conMovimientos: boolean;
             /** Format: date-time */
             creadoEn: string;
             /** Format: date-time */
@@ -5256,6 +5589,55 @@ export interface components {
         };
         CambioEstadoAlmacen: {
             activo: boolean;
+        };
+        MovimientoComida: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            almacenId: string;
+            /** @enum {string} */
+            tipo: "entrada" | "salida" | "ajuste";
+            /** Format: date */
+            fecha: string;
+            /** @description En la unidad del almacén. En un recuento, la cantidad contada. */
+            cantidad: number;
+            /** @enum {string|null} */
+            origen: "compra" | "produccion_propia" | null;
+            /** @description De qué finca viene la producción propia, si se sabe */
+            finca: {
+                /** Format: uuid */
+                id: string;
+                nombre: string;
+            } | null;
+            /** @enum {string|null} */
+            ajuste: "recuento" | "merma" | null;
+            motivo: string | null;
+            observaciones: string | null;
+            /** @description Lo que cambió el stock: positiva si sube, negativa si baja */
+            diferencia: number;
+            /** @description El stock que dejó en el almacén */
+            stock: number;
+            /** Format: date-time */
+            creadoEn: string;
+            /** Format: date-time */
+            modificadoEn: string;
+        };
+        DatosMovimiento: {
+            /** @enum {string} */
+            tipo: "entrada" | "salida" | "ajuste";
+            /** Format: date */
+            fecha: string;
+            /** @example 120 */
+            cantidad: number;
+            /** @enum {string|null} */
+            origen?: "compra" | "produccion_propia" | null;
+            /** Format: uuid */
+            fincaId?: string | null;
+            /** @enum {string|null} */
+            ajuste?: "recuento" | "merma" | null;
+            /** @example Recuento de fin de mes */
+            motivo?: string | null;
+            observaciones?: string | null;
         };
         RecintoSigpac: {
             provincia: string;
