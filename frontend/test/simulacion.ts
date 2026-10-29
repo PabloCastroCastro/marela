@@ -274,6 +274,8 @@ export type EstadoSimulado = {
   pastoreos: PastoreoSimulado[]
   almacenes: AlmacenSimulado[]
   movimientos: MovimientoSimulado[]
+  // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
+  sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
 
 const MODULOS: Record<Rol, string[]> = {
@@ -590,6 +592,8 @@ export function simularApi(estado: EstadoSimulado) {
         : new Request(new URL(String(entrada), 'http://localhost'), opciones)
     const ruta = new URL(peticion.url).pathname
     const metodo = peticion.method
+    const sinRed = typeof estado.sinRed === 'function' ? estado.sinRed(ruta, metodo) : estado.sinRed
+    if (sinRed) throw new TypeError('Failed to fetch')
     const cuerpo = ['POST', 'PUT', 'PATCH'].includes(metodo)
       ? await peticion.json().catch(() => ({}))
       : {}
@@ -1373,16 +1377,22 @@ export function simularApi(estado: EstadoSimulado) {
       const repetido =
         cuerpo.momento !== 'otro' &&
         estado.pesadas.some(
-          (p) => p.animalId === animalId && p.momento === cuerpo.momento && p.id !== pesoId,
+          (p) =>
+            p.animalId === animalId &&
+            p.momento === cuerpo.momento &&
+            p.id !== (pesoId ?? cuerpo.id),
         )
       if (metodo !== 'DELETE' && repetido) {
         return errorApi(409, 'momento_repetido', [
           { campo: 'momento', mensaje: 'El animal ya tiene esa pesada' },
         ])
       }
+      // Reenviada con el id del dispositivo (GH-31): la que ya se guardó
+      const ya = estado.pesadas.find((x) => metodo === 'POST' && cuerpo.id && x.id === cuerpo.id)
+      if (ya) return json({ ...ya, ...sello }, 201)
       if (metodo === 'POST') {
         const nueva = {
-          id: `p${estado.pesadas.length + 1}`,
+          id: (cuerpo.id as string | undefined) ?? `p${estado.pesadas.length + 1}`,
           animalId,
           fecha: cuerpo.fecha as string,
           kg: cuerpo.kg as number,

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { marcarSinConexion } from '../sinConexion/conexion'
 
 // Sesión con Better Auth (backend: /api/auth). Estas rutas no forman parte del contrato OpenAPI, así
 // que se llaman con fetch y sus errores ({ code, message }) se traducen aquí.
@@ -47,6 +48,7 @@ async function llamar(ruta: string, cuerpo?: object) {
       body: cuerpo ? JSON.stringify(cuerpo) : undefined,
     })
   } catch {
+    marcarSinConexion()
     throw new ErrorAutenticacion(
       0,
       'sin_conexion',

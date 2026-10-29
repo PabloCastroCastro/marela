@@ -26,17 +26,19 @@ export type FiltrosFincas = {
   pastoreo?: 'en_curso'
 }
 
+// También para descargar el listado al entrar en la explotación, y tenerlo sin conexión (GH-31)
+export const consultaFincas = (explotacionId: string, filtros: FiltrosFincas = {}) => ({
+  queryKey: [...CLAVE_FINCAS, explotacionId, 'lista', filtros],
+  queryFn: () =>
+    datos(
+      api.GET('/api/explotaciones/{explotacionId}/fincas', {
+        params: { path: { explotacionId }, query: filtros },
+      }),
+    ),
+})
+
 export const useFincas = (explotacionId: string, filtros: FiltrosFincas = {}) =>
-  useQuery({
-    queryKey: [...CLAVE_FINCAS, explotacionId, 'lista', filtros],
-    queryFn: () =>
-      datos(
-        api.GET('/api/explotaciones/{explotacionId}/fincas', {
-          params: { path: { explotacionId }, query: filtros },
-        }),
-      ),
-    placeholderData: keepPreviousData,
-  })
+  useQuery({ ...consultaFincas(explotacionId, filtros), placeholderData: keepPreviousData })
 
 export const useFinca = (explotacionId: string, fincaId: string) =>
   useQuery({

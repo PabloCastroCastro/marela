@@ -5,31 +5,41 @@ import type { Transaccion } from './db/explotacion.js'
 import { KG_MAXIMO, MOMENTOS_PESADA, pesos } from './db/schema/index.js'
 import { ErrorApi } from './errores.js'
 import { hoyEnMadrid } from './fechas.js'
+import { IdCliente, idEnUso } from './idCliente.js'
 
 // Pesadas de un animal (GH-21). Como en animales.ts, todas las funciones reciben la transacción de
 // enLaExplotacion.
 
 const NOMBRE_MOMENTO = { nacimiento: 'al nacer', destete: 'al destete', venta: 'a la venta' }
 
-export const DatosPesada = z
-  .object({
-    fecha: z.iso.date('Fecha no válida (aaaa-mm-dd)'),
-    kg: z
-      .number('Indica el peso en kg')
-      .positive('El peso tiene que ser mayor que 0')
-      .max(KG_MAXIMO, `El peso no puede pasar de ${KG_MAXIMO} kg`)
-      // Un decimal, como se guarda
-      .transform((kg) => Math.round(kg * 10) / 10)
-      .openapi({ example: 412.5 }),
-    momento: z.enum(MOMENTOS_PESADA).default('otro'),
-  })
-  .superRefine((p, ctx) => {
-    if (p.fecha > hoyEnMadrid())
-      ctx.addIssue({ code: 'custom', path: ['fecha'], message: 'La fecha no puede ser futura' })
-  })
-  .openapi('DatosPesada')
+const Campos = z.object({
+  fecha: z.iso.date('Fecha no válida (aaaa-mm-dd)'),
+  kg: z
+    .number('Indica el peso en kg')
+    .positive('El peso tiene que ser mayor que 0')
+    .max(KG_MAXIMO, `El peso no puede pasar de ${KG_MAXIMO} kg`)
+    // Un decimal, como se guarda
+    .transform((kg) => Math.round(kg * 10) / 10)
+    .openapi({ example: 412.5 }),
+  momento: z.enum(MOMENTOS_PESADA).default('otro'),
+})
+
+const fechaNoFutura = (p: { fecha: string }, ctx: z.RefinementCtx) => {
+  if (p.fecha > hoyEnMadrid())
+    ctx.addIssue({ code: 'custom', path: ['fecha'], message: 'La fecha no puede ser futura' })
+}
+
+// Corregir una pesada
+export const DatosPesada = Campos.superRefine(fechaNoFutura).openapi('DatosPesada')
 
 export type DatosPesada = z.output<typeof DatosPesada>
+
+// Registrar una: con el id del dispositivo, si se registró sin conexión (GH-31)
+export const NuevaPesada = Campos.extend({ id: IdCliente })
+  .superRefine(fechaNoFutura)
+  .openapi('NuevaPesada')
+
+export type NuevaPesada = z.output<typeof NuevaPesada>
 
 const columnas = {
   id: pesos.id,
@@ -85,6 +95,8 @@ async function conErroresClaros<T>(datos: DatosPesada, fn: () => Promise<T>): Pr
     return await fn()
   } catch (error) {
     const causa = (error as { cause?: { code?: string; constraint?: string } }).cause
+    // El id del dispositivo, ya usado en otra explotación (que no se ve) o en otro animal
+    if (causa?.code === '23505' && causa.constraint === 'pesos_pkey') throw idEnUso()
     if (causa?.code === '23505' && causa.constraint === 'pesos_momento_unico') {
       const momento = NOMBRE_MOMENTO[datos.momento as keyof typeof NOMBRE_MOMENTO]
       const mensaje = `El animal ya tiene una pesada ${momento}`
@@ -94,12 +106,27 @@ async function conErroresClaros<T>(datos: DatosPesada, fn: () => Promise<T>): Pr
   }
 }
 
-export async function crearPesada(tx: Transaccion, animalId: string, datos: DatosPesada) {
+export async function crearPesada(tx: Transaccion, animalId: string, datos: NuevaPesada) {
+  // Reenviada desde el dispositivo: la que ya se guardó
+  if (datos.id) {
+    const [ya] = await tx
+      .select({ animalId: pesos.animalId })
+      .from(pesos)
+      .where(eq(pesos.id, datos.id))
+    if (ya && ya.animalId !== animalId) throw idEnUso()
+    if (ya) return verPesada(tx, animalId, datos.id)
+  }
   await comprobarFecha(tx, animalId, datos.fecha)
   const [creada] = await conErroresClaros(datos, () =>
     tx
       .insert(pesos)
-      .values({ animalId, fecha: datos.fecha, kg: datos.kg, momento: datos.momento })
+      .values({
+        ...(datos.id ? { id: datos.id } : {}),
+        animalId,
+        fecha: datos.fecha,
+        kg: datos.kg,
+        momento: datos.momento,
+      })
       .returning({ id: pesos.id }),
   )
   if (!creada) throw new Error('No se pudo registrar la pesada')

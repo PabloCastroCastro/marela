@@ -1,16 +1,25 @@
-import { Pencil, Scale } from 'lucide-react'
+import { CloudUpload, Pencil, Scale } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { BotonIcono } from '../componentes/Boton'
 import { Esqueleto, EstadoError } from '../componentes/Estados'
-import { Tarjeta } from '../componentes/Etiquetas'
+import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { useRecorte } from '../componentes/Recorte'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha, kilos } from '../formato'
+import { useCola } from '../sinConexion/cola'
 import estilos from './Animales.module.css'
 import type { AnimalDetalle } from './datos'
 import { FormularioPesada } from './FormularioPesada'
 import { GraficoPeso } from './GraficoPeso'
-import { conGanancia, ganancia, gananciaMedia, MOMENTOS, type Pesada, usePesadas } from './pesos'
+import {
+  conGanancia,
+  ganancia,
+  gananciaMedia,
+  MOMENTOS,
+  type NuevaPesada,
+  type Pesada,
+  usePesadas,
+} from './pesos'
 
 const peso = (kg: number) => kilos(kg, kg % 1 ? 1 : 0)
 
@@ -20,6 +29,9 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
   const pesadas = usePesadas(explotacion.id, animal.id)
   // undefined: cerrado; null: pesada nueva; una pesada: corregirla
   const [editando, setEditando] = useState<Pesada | null>()
+  const sinEnviar = useCola().filter(
+    (p) => p.tipo === 'pesada' && p.contexto.animalId === animal.id,
+  )
 
   // La lista, de la más reciente a la más antigua y con solo las últimas a la vista: el gráfico
   // ya muestra toda la evolución
@@ -85,6 +97,28 @@ export function TarjetaPesos({ animal }: { animal: AnimalDetalle }) {
           Pesos
         </h2>
       </div>
+      {/* Las registradas sin conexión, hasta que lleguen (GH-31) */}
+      {sinEnviar.length > 0 && (
+        <ul className={estilos.pesadas} aria-label="Pesadas sin enviar">
+          {sinEnviar.map((p) => {
+            const c = p.cuerpo as NuevaPesada
+            return (
+              <li key={p.id}>
+                <div>
+                  <span className={estilos.cifra}>{peso(c.kg)}</span>
+                  <span className={estilos.suave}>{fecha(c.fecha)}</span>
+                </div>
+                <Insignia
+                  tipo={p.estado === 'fallido' ? 'peligro' : 'aviso'}
+                  icono={<CloudUpload aria-hidden size={14} />}
+                >
+                  {p.estado === 'fallido' ? 'No enviada' : 'Sin enviar'}
+                </Insignia>
+              </li>
+            )
+          })}
+        </ul>
+      )}
       {contenido}
       {recorte.boton}
       {editando !== undefined && (

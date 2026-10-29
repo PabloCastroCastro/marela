@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { crearApp } from '../src/app.js'
@@ -150,6 +150,37 @@ describe('pesadas', () => {
 
     const otraVez = await pedir('DELETE', `${rutaPesos(animal)}/${p.id}`, ana.cookie)
     expect(await codigo(otraVez)).toBe('pesada_no_encontrada')
+  })
+
+  it('con el id del dispositivo, reenviarla no la duplica (sin conexión, GH-31)', async () => {
+    const animal = await ternero()
+    const id = randomUUID()
+    const primera = await pesar(animal, { id, fecha: '2026-03-01', kg: 70 })
+    expect(primera.status).toBe(201)
+    expect(((await primera.json()) as Pesada).id).toBe(id)
+    // El reenvío devuelve la misma, aunque llegue con otros datos
+    const reenvio = await pesar(animal, { id, fecha: '2026-03-01', kg: 71 })
+    expect(reenvio.status).toBe(201)
+    expect(await reenvio.json()).toMatchObject({ id, kg: 70 })
+    const lista = (await (await pedir('GET', rutaPesos(animal), ana.cookie)).json()) as Pesada[]
+    expect(lista.filter((p) => p.id === id)).toHaveLength(1)
+
+    // Con el id de una pesada de otro animal o de otra explotación, no
+    const otro = await pesar(await ternero(), { id, fecha: '2026-03-01', kg: 70 })
+    expect([otro.status, await codigo(otro)]).toEqual([409, 'id_en_uso'])
+    const deB = await pedir('POST', `/explotaciones/${b}/animales`, carla.cookie, {
+      crotal: crotal(),
+      raza: 'Rubia Gallega',
+      sexo: 'macho',
+      fechaNacimiento: '2026-02-01',
+    })
+    const animalB = ((await deB.json()) as { id: string }).id
+    const ajena = await pedir('POST', rutaPesos(animalB, b), carla.cookie, {
+      id,
+      fecha: '2026-03-01',
+      kg: 70,
+    })
+    expect([ajena.status, await codigo(ajena)]).toEqual([409, 'id_en_uso'])
   })
 
   it('otra explotación no ve ni toca las pesadas', async () => {

@@ -341,6 +341,21 @@ CONTRIBUTING.md
 - Dentro del frontend, el código se organiza por secciones (`animales/`, `comida/`, `fincas/`, `finanzas/`), más `componentes/`, `estilos/`, `auth/` y `api/`.
 - Sin conexión: Animales (partos, tratamientos, pesadas) y Fincas, con consulta y registro y sincronización al recuperar cobertura. La arquitectura debe permitir ampliarlo a otras secciones en el futuro.
 
+### Sin conexión
+
+Decisión de GH-31. El código está en `frontend/src/sinConexion/`; GH-32 (Fincas) y GH-33 (Animales) lo extienden a cada registro.
+
+- **Qué se guarda en el dispositivo:** las consultas ya descargadas de Animales y Fincas, la sesión y la explotación, en IndexedDB, durante 30 días (lo que dura la sesión). Al entrar en una explotación con cobertura se descargan los listados de animales y fincas; las fichas, las que se han abierto. Cada versión nueva de la aplicación empieza de cero. Comida, Finanzas y los servicios externos (mapas, catastro) no se guardan.
+- **Consultar sin conexión:** cuando una petición no llega al servidor, la aplicación se marca sin conexión y comprueba cada 15 s con `/api/health` si ha vuelto (`navigator.onLine` no basta: con poca cobertura dice que sí). Sin conexión, las consultas no fallan: se ve lo guardado. Lo que no está guardado lo dice ("Sin conexión. Esto no está guardado en el dispositivo") en lugar de cargar sin fin.
+- **Registrar sin conexión:** cada registro nuevo lleva un id generado en el dispositivo. Se intenta enviar; si no llega al servidor (o este no responde, 502–504), se guarda en la **cola de pendientes**, en IndexedDB, y se avisa. El backend acepta ese id: si ya existe un registro con él, devuelve ese en lugar de crear otro, así que reenviar nunca duplica. Lo que el servidor rechaza al registrarlo con cobertura se muestra en el formulario, como siempre.
+- **Sincronización:** al recuperar la conexión, al abrir la aplicación, al encolar y cada 30 s mientras quede algo, se envían los pendientes de uno en uno y en orden. Lo que llega se quita de la cola y se refresca. Si el servidor lo rechaza (un crotal repetido, una fecha no válida), queda como fallido, con el motivo, y los siguientes siguen.
+- **Indicador:** en la cabecera, cuando no hay conexión o hay registros sin enviar, con su número. Abre la lista de pendientes: cada uno con su estado y, los fallidos, con "Corregir" (con su formulario), "Reintentar" y "Descartar". Los registros sin enviar se ven también en su ficha, marcados.
+- **Conflictos:** gana el último cambio que llega al servidor; el anterior queda en el historial de cambios. Lo habitual sin conexión son altas nuevas, que no chocan entre sí.
+- **Sesión caducada sin conexión:** los pendientes se conservan en el dispositivo y se envían al volver a iniciar sesión (la pantalla de inicio de sesión lo avisa). Cada pendiente es de quien lo registró: con la sesión de otro usuario no se envía.
+- **Cerrar sesión:** borra del dispositivo las consultas guardadas y los pendientes del usuario. Si quedan sin enviar, avisa antes y se puede cancelar.
+- **Ampliarlo a otro registro:** que su alta en el backend acepte el id del dispositivo (`IdCliente` en `backend/src/idCliente.ts`); en su formulario, `enviarOGuardar` con su ruta, su descripción y las consultas que refresca; mostrar sus pendientes en la ficha (`useCola`) y, para corregirlo desde la lista, su formulario en `sinConexion/registros.tsx`. Para consultar otra sección sin conexión, su clave en `SE_GUARDAN` (`sinConexion/persistencia.ts`).
+- **Prueba de concepto:** las pesadas, de principio a fin.
+
 ## Alojamiento y acceso
 
 - En una Raspberry Pi con Docker, que puede compartirse con otras aplicaciones (guía en `docs/servidor.md`).

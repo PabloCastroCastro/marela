@@ -936,6 +936,40 @@
           "modificadoEn"
         ]
       },
+      "NuevaPesada": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "kg": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 2000,
+            "example": 412.5
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "nacimiento",
+              "destete",
+              "venta",
+              "otro"
+            ],
+            "default": "otro"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Generado en el dispositivo. Si ya existe un registro con este id, se devuelve ese en lugar de crear otro: reenviar no duplica."
+          }
+        },
+        "required": [
+          "fecha",
+          "kg"
+        ]
+      },
       "DatosPesada": {
         "type": "object",
         "properties": {
@@ -5024,6 +5058,7 @@
           "Animales"
         ],
         "summary": "Registrar una pesada",
+        "description": "Con id, la registrada sin conexión: si ya se guardó, se devuelve la misma en lugar de duplicarla.",
         "security": [
           {
             "sesion": []
@@ -5053,14 +5088,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DatosPesada"
+                "$ref": "#/components/schemas/NuevaPesada"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Registrada",
+            "description": "Registrada, o la que ya se registró con ese id",
             "content": {
               "application/json": {
                 "schema": {
@@ -5110,7 +5145,7 @@
             }
           },
           "409": {
-            "description": "Ya hay una pesada al nacer, al destete o a la venta (momento_repetido)",
+            "description": "Ya hay una pesada al nacer, al destete o a la venta, o el id es de otro registro (momento_repetido, id_en_uso)",
             "content": {
               "application/json": {
                 "schema": {

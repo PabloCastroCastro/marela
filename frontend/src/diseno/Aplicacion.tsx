@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Building2,
   ChevronsUpDown,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router'
+import { consultaAnimales } from '../animales/datos'
 import { ErrorApi } from '../api/cliente'
 import { RUTA_CAMBIAR_CONTRASENA } from '../auth/RutaProtegida'
 import { useSesion } from '../auth/sesion'
@@ -31,7 +33,9 @@ import {
 } from '../explotaciones/datos'
 import { ProveedorExplotacion, useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { ListaExplotaciones } from '../explotaciones/PaginaElegirExplotacion'
+import { consultaFincas } from '../fincas/datos'
 import { ActualizacionPwa } from '../pwa/ActualizacionPwa'
+import { IndicadorConexion } from '../sinConexion/IndicadorConexion'
 import estilos from './Aplicacion.module.css'
 
 const secciones: { ruta: string; texto: string; icono: typeof Vaca; modulo: Modulo }[] = [
@@ -54,7 +58,8 @@ export function Aplicacion() {
   }, [explotacion.data])
 
   if (explotacion.isPending) return <Cargando />
-  if (explotacion.isError) {
+  // Con la explotación guardada en el dispositivo, un fallo al refrescarla no impide trabajar (GH-31)
+  if (explotacion.isError && !explotacion.data) {
     const error = explotacion.error instanceof ErrorApi ? explotacion.error : null
     const desactivada = error?.codigo === 'explotacion_desactivada'
     const sinAcceso = error?.codigo === 'miembro_desactivado'
@@ -90,11 +95,22 @@ export function Aplicacion() {
     )
   }
 
-  return <Estructura explotacion={explotacion.data} />
+  return explotacion.data ? <Estructura explotacion={explotacion.data} /> : <Cargando />
 }
 
 function Estructura({ explotacion }: { explotacion: DetalleExplotacion }) {
   const base = rutaExplotacion(explotacion.id)
+  const cliente = useQueryClient()
+
+  // Al entrar con cobertura, los listados de animales y fincas (los de por defecto, sin filtros) se
+  // descargan para tenerlos sin conexión; las fichas se guardan al abrirlas (GH-31)
+  useEffect(() => {
+    if (explotacion.modulos.includes('animales'))
+      void cliente.prefetchQuery(consultaAnimales(explotacion.id, { estado: 'activo' }))
+    if (explotacion.modulos.includes('fincas'))
+      void cliente.prefetchQuery(consultaFincas(explotacion.id, { activa: 'true' }))
+  }, [cliente, explotacion.id, explotacion.modulos])
+
   const [cuentaAbierta, setCuentaAbierta] = useState(false)
   const visibles = secciones.filter((s) => explotacion.modulos.includes(s.modulo))
 
@@ -112,6 +128,7 @@ function Estructura({ explotacion }: { explotacion: DetalleExplotacion }) {
           <div className={estilos.selectorMovil}>
             <SelectorExplotacion explotacion={explotacion} />
           </div>
+          <IndicadorConexion />
           <BotonIcono
             etiqueta="Tu cuenta"
             icono={<CircleUserRound aria-hidden size={24} />}

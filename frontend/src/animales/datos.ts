@@ -40,15 +40,20 @@ export type FiltrosAnimales = {
   crotal?: 'sin'
 }
 
+// También para descargar el listado al entrar en la explotación, y tenerlo sin conexión (GH-31)
+export const consultaAnimales = (explotacionId: string, filtros: FiltrosAnimales = {}) => ({
+  queryKey: [...CLAVE_ANIMALES, explotacionId, 'lista', filtros],
+  queryFn: () =>
+    datos(
+      api.GET('/api/explotaciones/{explotacionId}/animales', {
+        params: { path: { explotacionId }, query: filtros },
+      }),
+    ),
+})
+
 export const useAnimales = (explotacionId: string, filtros: FiltrosAnimales = {}) =>
   useQuery({
-    queryKey: [...CLAVE_ANIMALES, explotacionId, 'lista', filtros],
-    queryFn: () =>
-      datos(
-        api.GET('/api/explotaciones/{explotacionId}/animales', {
-          params: { path: { explotacionId }, query: filtros },
-        }),
-      ),
+    ...consultaAnimales(explotacionId, filtros),
     // Mientras se escribe en el buscador se mantienen los resultados anteriores en vez de parpadear
     placeholderData: keepPreviousData,
   })

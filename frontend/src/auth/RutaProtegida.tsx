@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { Cargando, EstadoError } from '../componentes/Estados'
+import { Sincronizacion } from '../sinConexion/Sincronizacion'
 import { useSesion } from './sesion'
 
 export const RUTA_ENTRAR = '/entrar'
@@ -16,7 +17,8 @@ export function RutaProtegida() {
   const aqui = `${ubicacion.pathname}${ubicacion.search}`
 
   if (sesion.isPending) return <Cargando />
-  if (sesion.isError) {
+  // Sin conexión vale la sesión guardada en el dispositivo (GH-31)
+  if (sesion.isError && !sesion.data) {
     return <EstadoError alReintentar={() => sesion.refetch()} reintentando={sesion.isFetching} />
   }
   if (!sesion.data) {
@@ -27,5 +29,10 @@ export function RutaProtegida() {
       <Navigate to={RUTA_CAMBIAR_CONTRASENA} replace state={{ desde: aqui } satisfies DesdeDonde} />
     )
   }
-  return <Outlet />
+  return (
+    <>
+      <Sincronizacion usuarioId={sesion.data.usuario.id} />
+      <Outlet />
+    </>
+  )
 }

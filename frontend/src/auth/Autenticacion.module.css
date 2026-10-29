@@ -62,3 +62,19 @@
   font-size: var(--texto-sm);
   text-align: center;
 }
+
+/* Registros sin enviar de una sesión que caducó (GH-31) */
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-aviso-suave);
+  color: var(--color-aviso);
+  font-size: var(--texto-sm);
+}
+
+.aviso svg {
+  flex: none;
+}
