@@ -4,7 +4,7 @@ import { ErrorApi } from './api/cliente'
 import { CLAVE_SESION } from './auth/sesion'
 import { ProveedorAvisos } from './componentes/Avisos'
 import { ProveedorConfirmacion } from './componentes/Confirmacion'
-import { VIGENCIA } from './sinConexion/persistencia'
+import { RETENCION } from './sinConexion/persistencia'
 
 export function crearClienteConsultas() {
   const cliente: QueryClient = new QueryClient({
@@ -26,8 +26,8 @@ export function crearClienteConsultas() {
           !(error instanceof ErrorApi && error.estado >= 400 && error.estado < 500) && fallos < 1,
         staleTime: 30_000,
         // Lo descargado se guarda en el dispositivo para consultarlo sin conexión (GH-31): no se
-        // olvida a los 5 minutos de dejar de usarlo
-        gcTime: VIGENCIA,
+        // olvida a los 5 minutos de dejar de usarlo. Como mucho 24 días: es un setTimeout
+        gcTime: RETENCION,
       },
       // Sin conexión, los registros no esperan: fallan enseguida, y los formularios que funcionan
       // sin conexión los guardan en la cola de pendientes

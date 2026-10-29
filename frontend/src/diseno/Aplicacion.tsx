@@ -104,11 +104,20 @@ function Estructura({ explotacion }: { explotacion: DetalleExplotacion }) {
 
   // Al entrar con cobertura, los listados de animales y fincas (los de por defecto, sin filtros) se
   // descargan para tenerlos sin conexión; las fichas se guardan al abrirlas (GH-31)
+  // Cuando el navegador queda libre: la pantalla que se abre va primero
   useEffect(() => {
-    if (explotacion.modulos.includes('animales'))
-      void cliente.prefetchQuery(consultaAnimales(explotacion.id, { estado: 'activo' }))
-    if (explotacion.modulos.includes('fincas'))
-      void cliente.prefetchQuery(consultaFincas(explotacion.id, { activa: 'true' }))
+    const descargar = () => {
+      if (explotacion.modulos.includes('animales'))
+        void cliente.prefetchQuery(consultaAnimales(explotacion.id, { estado: 'activo' }))
+      if (explotacion.modulos.includes('fincas'))
+        void cliente.prefetchQuery(consultaFincas(explotacion.id, { activa: 'true' }))
+    }
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      const id = globalThis.requestIdleCallback(descargar, { timeout: 5000 })
+      return () => globalThis.cancelIdleCallback(id)
+    }
+    const id = setTimeout(descargar, 2000)
+    return () => clearTimeout(id)
   }, [cliente, explotacion.id, explotacion.modulos])
 
   const [cuentaAbierta, setCuentaAbierta] = useState(false)

@@ -8,7 +8,10 @@ import { borrar, guardar, leer } from './almacen'
 const CLAVE = 'consultas'
 
 // Lo que tenga más de esto no se recupera: la sesión dura 30 días
-export const VIGENCIA = 30 * 24 * 60 * 60 * 1000
+const VIGENCIA = 30 * 24 * 60 * 60 * 1000
+
+// Lo que se deja de usar se olvida a los 7 días (un setTimeout no admite más de 24)
+export const RETENCION = 7 * 24 * 60 * 60 * 1000
 
 // Cada cambio de versión empieza de cero: los datos guardados pueden tener otra forma
 const VERSION = typeof __VERSION__ === 'string' ? __VERSION__ : 'desarrollo'
