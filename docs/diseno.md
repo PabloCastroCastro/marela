@@ -287,6 +287,12 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 - Estado de pago (pagada / pendiente)
 - Archivo adjunto (PDF o foto)
 - Animales enlazados, si es una compra de animales (excepcional)
+- Detalle (GH-35):
+  - Una línea por tipo de IVA, con su base, su porcentaje y su cuota; en las ventas de quien está en el REAGP, la de la compensación. La cuota y el total se calculan al escribir la base, y la API comprueba que cuadren.
+  - Las emitidas proponen el siguiente número del año (`2026-0007`), que se puede cambiar; no se repite el número de una emitida, ni el de una recibida del mismo proveedor.
+  - El NIF es obligatorio y se comprueba su letra o dígito de control, salvo si se marca como extranjero.
+  - Un archivo por factura (PDF o foto, hasta 10 MB), que se puede cambiar o quitar.
+  - Las facturas se corrigen y se borran; los cambios quedan en el historial. Solo las recibidas enlazan animales: las ventas lo hacen desde Ventas.
 
 ### Otros ingresos y gastos
 

@@ -36,6 +36,7 @@ Es un proyecto independiente: tiene sus propias dependencias y no importa códig
 | `BETTER_AUTH_SECRET` | | Obligatoria. Clave de al menos 32 caracteres con la que se firman las sesiones, distinta en cada entorno (`openssl rand -base64 32`) |
 | `URL_PUBLICA` | | Obligatoria. Dirección desde la que se abre la aplicación (`https://servidor.tailnet.ts.net:8444`). Solo se aceptan peticiones de autenticación desde ella |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` o `silent` |
+| `ARCHIVOS_DIR` | `uploads` | Carpeta de los archivos adjuntos (facturas y, más adelante, fotos), relativa al directorio del backend. En Compose, `/app/uploads`, el volumen `uploads`; en los tests, una carpeta temporal |
 | `TEST_DATABASE_URL` | | Base de datos de los tests; debe terminar en `_test`. Si no está, se usa `DATABASE_URL` |
 | `CHOKIDAR_USEPOLLING` | `false` | `true` para que `npm run dev` detecte cambios por sondeo (código montado desde Windows). En Compose se activa con `RECARGA_POLLING` |
 
@@ -340,6 +341,23 @@ Solo el administrador (módulo `finanzas`).
 - **`PUT /api/explotaciones/{id}/fiscal`:** `{ regimen, compensacionReagp, tiposIva }`. `regimen` es `reagp` o `general`; los porcentajes, de 0 a 100 con dos decimales; los tipos de IVA, de 1 a 8, sin repetir, se guardan de mayor a menor.
 
 Una fila por explotación en `configuracion_fiscal` (migraciones `0032` y `0033`, con historial de cambios).
+
+**Facturas** (GH-35), en `src/rutas/facturas.ts`:
+
+- **`GET /api/explotaciones/{id}/facturas`:** de la más reciente a la más antigua. Filtros `tipo` (`recibida` o `emitida`), `estado` (`pendiente` o `pagada`), `desde`, `hasta` y `q` (proveedor o cliente, número o NIF).
+- **`GET /api/explotaciones/{id}/facturas/siguiente-numero?fecha=`:** el número que se propone para una emitida, el siguiente del año con el formato `aaaa-nnnn` (`2026-0007` tras la `2026-0006`).
+- **`GET`, `PUT` y `DELETE /api/explotaciones/{id}/facturas/{facturaId}`:** ver, corregir y borrar (con su archivo; 204).
+- **`POST /api/explotaciones/{id}/facturas`:** `{ tipo, numero, fecha, tercero, nif, nifExtranjero, concepto, impuesto, lineas: [{ base, porcentaje, cuota }], total, pagadaEn?, animalIds? }`.
+  - El NIF se guarda en mayúsculas y sin espacios ni guiones, y se comprueba su letra o dígito de control (DNI, NIE, K, L, M y entidades, en `src/nif.ts`), salvo con `nifExtranjero`.
+  - `impuesto` es `iva` o `compensacion` (el REAGP en las ventas). Cada `cuota` debe ser su porcentaje de la base, con un céntimo de margen por el redondeo del proveedor, y `total` la suma de bases y cuotas.
+  - Las emitidas no repiten número en la explotación, ni las recibidas de un mismo NIF (409 `numero_en_uso`).
+  - `animalIds`, los animales comprados: solo en las recibidas (las ventas los enlazan desde Ventas, GH-38).
+- **`PATCH /api/explotaciones/{id}/facturas/{facturaId}/pago`:** `{ pagadaEn }`, la fecha de pago o `null` para dejarla pendiente.
+- **`PUT`, `GET` y `DELETE /api/explotaciones/{id}/facturas/{facturaId}/archivo`:** el archivo adjunto, uno por factura. Se sube como `multipart/form-data` (campo `archivo`) y sustituye al anterior: un PDF o una foto JPEG, PNG o WebP, reconocidos por su contenido, de hasta 10 MB (413 `archivo_demasiado_grande`, 415 `tipo_de_archivo`).
+
+Tablas `facturas` y `facturas_animales` (migraciones `0034` y `0035`, con reglas e historial de cambios). La base de datos comprueba el formato del NIF, que el total sea la suma y que solo las recibidas tengan animales.
+
+**Archivos adjuntos** (`src/archivos.ts`): en `ARCHIVOS_DIR`, como `{explotación}/{carpeta}/{uuid}.{extensión}`, nunca con el nombre original, que solo se guarda para mostrarlo. La base de datos guarda la ruta relativa. Un archivo sustituido o de una factura borrada se borra cuando se confirma la transacción.
 
 ## Historial de cambios
 

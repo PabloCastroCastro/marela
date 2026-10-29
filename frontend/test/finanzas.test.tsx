@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -90,5 +90,128 @@ describe('régimen fiscal (GH-34)', () => {
     simularApi(estado)
     abrir(finanzas(O_SOUTO.id))
     expect(await screen.findByText('No tienes acceso a Finanzas')).toBeInTheDocument()
+  })
+})
+
+describe('facturas (GH-35)', () => {
+  it('lista las facturas y las filtra por pago y por tipo', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(finanzas())
+    const tabla = await screen.findByRole('table', { name: 'Facturas' })
+    expect(within(tabla).getByText('Piensos do Norte')).toBeInTheDocument()
+    expect(within(tabla).getByText('Carnes Galegas')).toBeInTheDocument()
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /Pago/ }), 'pendiente')
+    await waitFor(() => expect(within(tabla).queryByText('Carnes Galegas')).not.toBeInTheDocument())
+    expect(within(tabla).getByText('Piensos do Norte')).toBeInTheDocument()
+    await usuario.selectOptions(screen.getByRole('combobox', { name: /Pago/ }), 'todas')
+    await usuario.click(screen.getByRole('button', { name: 'Emitidas' }))
+    await waitFor(() =>
+      expect(within(tabla).queryByText('Piensos do Norte')).not.toBeInTheDocument(),
+    )
+  })
+
+  it('registra una factura recibida con dos tipos de IVA, con los totales al momento', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(finanzas())
+    await usuario.click(await screen.findByRole('button', { name: 'Nueva factura' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva factura' })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Número/ }), 'A-77')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Proveedor/ }), 'Veterinaria Deza')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /NIF/ }), 'b15000003')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Concepto/ }), 'Vacunas')
+    await usuario.type(within(hoja).getByRole('textbox', { name: 'Base imponible' }), '100')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Otro tipo de IVA' }))
+    // La segunda línea, al 10 %: el primer tipo que aún no se usa
+    await usuario.type(within(hoja).getByRole('textbox', { name: 'Base imponible 2' }), '50,50')
+    const totales = within(within(hoja).getByLabelText('Totales'))
+    expect(totales.getByText('150,50 €')).toBeInTheDocument()
+    expect(totales.getByText('26,05 €')).toBeInTheDocument()
+    expect(totales.getByText('176,55 €')).toBeInTheDocument()
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByRole('heading', { name: 'Factura A-77' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(`${finanzas()}/facturas/fa3`)
+    expect(estado.facturas.at(-1)).toMatchObject({
+      tipo: 'recibida',
+      nif: 'B15000003',
+      impuesto: 'iva',
+      lineas: [
+        { base: 100, porcentaje: 21, cuota: 21 },
+        { base: 50.5, porcentaje: 10, cuota: 5.05 },
+      ],
+      pagadaEn: null,
+    })
+  })
+
+  it('en una emitida propone el siguiente número y la compensación del REAGP', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(finanzas())
+    await usuario.click(await screen.findByRole('button', { name: 'Nueva factura' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva factura' })
+    await usuario.click(within(hoja).getByRole('button', { name: /Emitida/ }))
+    const fecha = within(hoja).getByLabelText(/^Fecha/, { selector: 'input[type="date"]' })
+    await usuario.clear(fecha)
+    await usuario.type(fecha, '2026-11-02')
+    await waitFor(() =>
+      expect(within(hoja).getByRole('textbox', { name: /Número/ })).toHaveValue('2026-0007'),
+    )
+    expect(within(hoja).getByRole('textbox', { name: /Cliente/ })).toBeInTheDocument()
+    expect(within(hoja).getByRole('button', { name: 'Compensación REAGP' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(within(hoja).getByRole('combobox', { name: 'Compensación' })).toHaveDisplayValue(
+      '10,5 %',
+    )
+    // Las ventas no llevan animales: van en Ventas
+    expect(
+      within(hoja).queryByRole('group', { name: 'Animales comprados' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('muestra en su campo el NIF que no es válido', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(finanzas())
+    await usuario.click(await screen.findByRole('button', { name: 'Nueva factura' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Nueva factura' })
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Número/ }), 'X-1')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Proveedor/ }), 'Ferretería')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /NIF/ }), '12345678A')
+    await usuario.type(within(hoja).getByRole('textbox', { name: /Concepto/ }), 'Tornillos')
+    await usuario.type(within(hoja).getByRole('textbox', { name: 'Base imponible' }), '10')
+    await usuario.click(within(hoja).getByRole('button', { name: 'Guardar' }))
+    expect(await within(hoja).findByText('El NIF no es válido')).toBeInTheDocument()
+    expect(within(hoja).getByRole('textbox', { name: /NIF/ })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    )
+  })
+
+  it('en la ficha se marca como pagada, se adjunta el archivo y se borra', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    const router = abrir(`${finanzas()}/facturas/fa1`)
+    expect(await screen.findByRole('heading', { name: 'Factura P-381' })).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Marcar como pagada' }))
+    expect(await screen.findByRole('button', { name: 'Dejar pendiente' })).toBeInTheDocument()
+    expect(estado.facturas[0]?.pagadaEn).not.toBeNull()
+
+    const pdf = new File(['%PDF-1.4'], 'albaran.pdf', { type: 'application/pdf' })
+    await usuario.upload(screen.getByLabelText('Adjuntar archivo'), pdf)
+    expect(await screen.findByRole('link', { name: /albaran\.pdf/ })).toHaveAttribute(
+      'href',
+      `/api/explotaciones/${A_VEIGA.id}/facturas/fa1/archivo`,
+    )
+
+    await usuario.click(screen.getByRole('button', { name: 'Borrar' }))
+    await usuario.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Borrar' }),
+    )
+    await waitFor(() => expect(router.state.location.pathname).toBe(finanzas()))
+    expect(estado.facturas.map((f) => f.id)).toEqual(['fa2'])
   })
 })
