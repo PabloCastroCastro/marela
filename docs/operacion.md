@@ -7,6 +7,7 @@ Copias de seguridad de producción: cada noche en el servidor y, cada día, una 
 | Copia de la base de datos y de los archivos | `/opt/marela/backups` en el servidor | cada día a las 03:00, y antes de cada despliegue | `scripts/backup.sh pro` |
 | Rotación | el mismo directorio | después de cada copia diaria | `scripts/rotar-copias.sh pro` |
 | Copia fuera del servidor | `%USERPROFILE%\CopiasMarela` en el PC | cada día, en cuanto el PC está encendido | `scripts/traer-copias.ps1` |
+| Restauración | un entorno | cuando haga falta, y de vez en cuando en pruebas para probar las copias | `scripts/restaurar.sh` |
 
 ## 1. Copia diaria en el servidor
 
@@ -117,4 +118,68 @@ Get-Content "$env:USERPROFILE\CopiasMarela\traer-copias.log" -Tail 10
 
 ## 3. Restaurar
 
-La restauración a mano de una copia está en [servidor.md](servidor.md#6-copias-de-seguridad). El script de restauración y el procedimiento si se pierde el servidor llegan con GH-43.
+`scripts/restaurar.sh` sustituye los datos de un entorno por los de una copia. Se ejecuta con el script del entorno que se restaura:
+
+```bash
+/opt/marela/pruebas/scripts/restaurar.sh pruebas COPIA [--subidas DIRECTORIO]
+/opt/marela/pro/scripts/restaurar.sh pro COPIA [--subidas DIRECTORIO] --produccion
+```
+
+- **`COPIA`:** una copia de la base de datos, `/opt/marela/backups/marela-<entorno>-AAAAMMDD-HHMMSS.sql.gz`. Puede ser de cualquier entorno: una de producción se restaura en pruebas para probarla.
+- **`--subidas`:** restaura también los archivos (fotos y adjuntos) desde su copia, `/opt/marela/backups/uploads-<entorno>`. Se añaden al volumen sin borrar nada de él: en la copia incremental están todos.
+- **`--produccion`:** sin él no se restaura producción. Además, hay que escribir «restaurar producción» para confirmarlo.
+
+Qué hace:
+
+1. **Comprueba la copia** antes de tocar nada: que se descomprime y que es un `pg_dump` completo. Si no, termina sin cambiar nada.
+2. **En producción, copia el estado actual** con `backup.sh pro`, para poder volver atrás si se ha elegido mal la copia.
+3. **Restaura la base de datos:** para el backend, borra la base de datos del entorno, la crea vacía y carga la copia en una sola transacción. Si el servidor de PostgreSQL es nuevo, crea antes el rol `marela_app`, que la copia no lleva.
+4. **Copia los archivos** al volumen `uploads`, si se indica.
+5. **Levanta el entorno y lo comprueba:** el backend aplica las migraciones que le falten a la copia (si es de una versión anterior), se comprueba `/api/health` por HTTPS y se cuentan las explotaciones, usuarios, animales y fincas restaurados.
+
+Cada restauración queda apuntada, bien o mal, en `/opt/marela/restauraciones.log`.
+
+Una copia de una versión **posterior** a la del código desplegado no se puede restaurar sin desplegar antes esa versión: al código le faltarían las tablas de las migraciones nuevas. Despliega primero la misma versión o una más nueva.
+
+### Probar las copias en pruebas
+
+Una copia que nunca se ha restaurado no se sabe si sirve. De vez en cuando (por ejemplo, una vez al mes), restaura la última copia de producción en pruebas:
+
+```bash
+ls -t /opt/marela/backups/marela-pro-*.sql.gz | head -1     # la última
+/opt/marela/pruebas/scripts/restaurar.sh pruebas /opt/marela/backups/marela-pro-AAAAMMDD-HHMMSS.sql.gz \
+  --subidas /opt/marela/backups/uploads-pro
+```
+
+Después entra en pruebas (`https://raspberry.tail1234.ts.net:8444`) con tu usuario de producción y comprueba que están tus animales, fincas y facturas, y que se abre algún adjunto.
+
+Pruebas se queda con los datos reales hasta el próximo despliegue, que añade encima los de ejemplo. Para volver a tener solo los de ejemplo:
+
+```bash
+cd /opt/marela/pruebas
+docker compose -p marela-pruebas -f docker-compose.yml -f docker-compose.servidor.yml down -v
+/opt/marela/pruebas/scripts/deploy.sh pruebas
+```
+
+### Si se pierde el servidor
+
+Si se estropea la Raspberry o su tarjeta, las copias que quedan son las del PC, en `%USERPROFILE%\CopiasMarela`. Con un servidor nuevo:
+
+1. **Instálalo** siguiendo [servidor.md](servidor.md), apartados 1 a 4: Docker, Tailscale (con el mismo nombre de servidor, o cambia `URL_PUBLICA`), el clon de producción y su `.env`, y el certificado.
+   - Si tienes guardado el `.env` antiguo, úsalo. Si no, genera contraseñas y secretos nuevos: solo se cierran las sesiones abiertas.
+2. **Despliega** la versión que había, o una más nueva: `/opt/marela/pro/scripts/deploy.sh pro vX.Y.Z`.
+3. **Sube las copias desde el PC**, en PowerShell:
+   ```powershell
+   ssh pablo@raspberry.tail1234.ts.net "mkdir -p /opt/marela/backups"
+   scp -r "$env:USERPROFILE\CopiasMarela\uploads-pro" "$env:USERPROFILE\CopiasMarela\marela-pro-AAAAMMDD-HHMMSS.sql.gz" pablo@raspberry.tail1234.ts.net:/opt/marela/backups/
+   ```
+4. **Restaura** la última copia, con los archivos:
+   ```bash
+   /opt/marela/pro/scripts/restaurar.sh pro /opt/marela/backups/marela-pro-AAAAMMDD-HHMMSS.sql.gz \
+     --subidas /opt/marela/backups/uploads-pro --produccion
+   ```
+5. **Vuelve a instalar** el cron de la copia diaria (apartado 1) y, si el servidor ha cambiado de nombre, la tarea del PC (apartado 2).
+
+Se pierde lo registrado desde la última copia que se trajo el PC: como mucho, un día.
+
+Guarda el `.env` de producción fuera del servidor, en un sitio seguro como un gestor de contraseñas. No va en las copias, porque lleva las contraseñas.
