@@ -10,6 +10,7 @@ import { rutasAnimales } from './rutas/animales.js'
 import { rutasAplicaciones } from './rutas/aplicaciones.js'
 import { rutasApuntes } from './rutas/apuntes.js'
 import { rutasCartografia } from './rutas/cartografia.js'
+import { rutasCenso } from './rutas/censo.js'
 import { rutasEquipos } from './rutas/equipos.js'
 import { rutasExplotaciones } from './rutas/explotaciones.js'
 import { rutasExportaciones } from './rutas/exportaciones.js'
@@ -34,7 +35,7 @@ export const infoOpenApi = {
   openapi: '3.1.0',
   info: {
     title: 'API de Marela',
-    version: '1.0.0',
+    version: '1.1.0',
     description:
       'API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }.',
   },
@@ -80,6 +81,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasTratamientos())
   app.route('/', rutasReproduccion())
   app.route('/', rutasPartos())
+  app.route('/', rutasCenso())
   app.route('/', rutasFincas())
   app.route('/', rutasLabores())
   app.route('/', rutasAplicaciones())

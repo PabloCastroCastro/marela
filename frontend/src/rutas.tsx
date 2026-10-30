@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
 import { PaginaAnimal } from './animales/PaginaAnimal'
 import { PaginaAnimales } from './animales/PaginaAnimales'
+import { PaginaCenso } from './animales/PaginaCenso'
 import { PaginaHistorial } from './animales/PaginaHistorial'
 import { PaginaCambiarContrasena } from './auth/PaginaCambiarContrasena'
 import { PaginaEntrar } from './auth/PaginaEntrar'
@@ -61,6 +62,15 @@ export const rutas: RouteObject[] = [
             element: (
               <SoloModulo modulo="animales">
                 <PaginaAnimales />
+              </SoloModulo>
+            ),
+          },
+          {
+            // Importar el censo en PDF (GH-130): solo el administrador
+            path: 'animales/censo',
+            element: (
+              <SoloModulo modulo="administracion">
+                <PaginaCenso />
               </SoloModulo>
             ),
           },

@@ -141,7 +141,7 @@ Muestra una contraseña temporal, que se pide cambiar en el primer inicio de ses
 /opt/marela/pro/scripts/deploy.sh pro v1.0.0
 ```
 
-Las migraciones no se deshacen: si la versión nueva cambió el esquema, además hay que restaurar la copia de seguridad hecha antes del despliegue.
+Las migraciones no se deshacen: si la versión nueva cambió el esquema, además hay que restaurar la copia de seguridad hecha antes del despliegue ([operacion.md](operacion.md#3-restaurar)).
 
 ## 6. Copias de seguridad
 
@@ -153,16 +153,7 @@ Las migraciones no se deshacen: si la versión nueva cambió el esquema, además
 2. **Archivos** (fotos y adjuntos): copia incremental del volumen `uploads` en `/opt/marela/backups/uploads-<entorno>/`.
 3. **Disco:** avisa (`AVISO`) si quedan menos de 5 GB libres.
 
-`deploy.sh pro` la hace antes de cada despliegue. La copia diaria automática, la rotación de copias antiguas, la copia fuera del servidor y la restauración llegan con GH-42.
-
-Para restaurar a mano una copia en un entorno (se pierden los datos actuales de ese entorno):
-
-```bash
-cd /opt/marela/pruebas
-gunzip -c /opt/marela/backups/marela-pruebas-AAAAMMDD-HHMMSS.sql.gz |
-  docker compose -p marela-pruebas -f docker-compose.yml -f docker-compose.servidor.yml \
-    exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-```
+`deploy.sh pro` la hace antes de cada despliegue. La copia diaria automática, la rotación de las copias antiguas y la copia fuera del servidor, en el PC, están en [operacion.md](operacion.md), igual que la restauración de una copia con `scripts/restaurar.sh` y qué hacer si se pierde el servidor ([apartado 3](operacion.md#3-restaurar)).
 
 ## 7. Comprobaciones
 

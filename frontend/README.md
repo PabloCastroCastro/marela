@@ -93,6 +93,7 @@ Componentes propios en `src/componentes/`, cada uno con su `.module.css`, según
 | `Etiquetas.tsx` | `Insignia`, `Chip`, `Chips` (selección única) y `Tarjeta` |
 | `Tabla.tsx` | Tabla con ordenación desde 40rem; en el móvil, lista de tarjetas. Con `seleccion`, se marcan varias filas: casillas en la tabla y pulsación larga en las tarjetas |
 | `Filtros.tsx` | `BarraFiltros`, `Buscador` (avisa 300 ms después de dejar de escribir) y `FiltroDesplegable` ("Estado: Activos ▾": un desplegable nativo con forma de chip, marcado cuando no está en su valor por defecto) |
+| `ElegirArchivo.tsx` | Botón para elegir un archivo (`aceptar`: los tipos), con el campo de archivo dentro: facturas y apuntes, y el censo en PDF |
 | `BotonFlotante.tsx` | Acción de crear en el móvil, encima de la barra inferior; en pantalla ancha no se muestra |
 | `iconos.ts` | Iconos propios con el estilo de Lucide (`Vaca`) |
 

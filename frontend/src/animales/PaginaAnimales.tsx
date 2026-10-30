@@ -1,4 +1,4 @@
-import { HandCoins, Plus, Syringe, X } from 'lucide-react'
+import { FileUp, HandCoins, Plus, Syringe, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Boton, BotonIcono } from '../componentes/Boton'
@@ -44,6 +44,9 @@ export function PaginaAnimales() {
   const [vendiendo, setVendiendo] = useState(false)
   const vende = explotacion.modulos.includes('finanzas')
   const [cubriendo, setCubriendo] = useState(false)
+  // Importar el censo en PDF (GH-130): solo el administrador
+  const importa = explotacion.modulos.includes('administracion')
+  const importarCenso = () => navegar(`${rutaExplotacion(explotacion.id)}/animales/censo`)
 
   const filtrado = texto !== '' || estado !== 'activo' || sexo !== 'todos'
   const animales = useAnimales(explotacion.id, {
@@ -72,10 +75,21 @@ export function PaginaAnimales() {
     <section className={estilos.pagina}>
       <div className={estilos.titulo}>
         <h1>Animales</h1>
-        <div className={estilos.soloAncho}>
-          <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
-            Añadir animal
-          </Boton>
+        <div className={estilos.acciones}>
+          {importa && (
+            <Boton
+              variante="secundario"
+              icono={<FileUp aria-hidden size={20} />}
+              onClick={importarCenso}
+            >
+              Importar censo
+            </Boton>
+          )}
+          <div className={estilos.soloAncho}>
+            <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
+              Añadir animal
+            </Boton>
+          </div>
         </div>
       </div>
 
@@ -126,11 +140,26 @@ export function PaginaAnimales() {
           <EstadoVacio
             icono={<Vaca size={32} />}
             titulo="Aún no hay animales"
-            descripcion="Da de alta el primero para empezar su ficha."
+            descripcion={
+              importa
+                ? 'Da de alta el primero o importa los del censo en PDF de la Xunta.'
+                : 'Da de alta el primero para empezar su ficha.'
+            }
             accion={
-              <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
-                Añadir animal
-              </Boton>
+              <div className={estilos.acciones}>
+                <Boton icono={<Plus aria-hidden size={20} />} onClick={() => setAnadiendo(true)}>
+                  Añadir animal
+                </Boton>
+                {importa && (
+                  <Boton
+                    variante="secundario"
+                    icono={<FileUp aria-hidden size={20} />}
+                    onClick={importarCenso}
+                  >
+                    Importar censo
+                  </Boton>
+                )}
+              </div>
             }
           />
         )

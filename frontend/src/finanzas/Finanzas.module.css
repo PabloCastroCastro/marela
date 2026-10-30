@@ -290,35 +290,7 @@
   text-align: left;
 }
 
-/* El archivo: elegirlo (un botón con el campo de archivo dentro) y el ya elegido o adjuntado */
-.elegirArchivo {
-  display: inline-flex;
-  align-items: center;
-  justify-self: start;
-  gap: var(--espacio-2);
-  min-height: var(--altura-tactil);
-  padding: 0 var(--espacio-4);
-  border: 1px solid var(--color-borde-fuerte);
-  border-radius: var(--radio-completo);
-  color: var(--color-primario);
-  font-weight: var(--peso-medio);
-  cursor: pointer;
-}
-
-.elegirArchivo:focus-within {
-  outline: 2px solid var(--color-foco);
-  outline-offset: 2px;
-}
-
-.oculto {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
+/* El archivo ya elegido o adjuntado (elegirlo: componentes/ElegirArchivo) */
 .archivoElegido {
   display: flex;
   align-items: center;

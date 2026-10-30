@@ -10,7 +10,8 @@
 # 3. Espacio en disco: avisa si quedan menos de MARELA_MIN_LIBRE_GB (5 por defecto).
 #
 # Lo usa deploy.sh antes de desplegar en producción. Los fallos salen con «ERROR» y los avisos con
-# «AVISO». La copia diaria automática, la rotación y la copia fuera del servidor llegan con GH-42.
+# «AVISO». La copia diaria la hace un cron, seguida de la rotación (rotar-copias.sh), y el PC se trae
+# las copias (traer-copias.ps1): docs/operacion.md.
 
 set -euo pipefail
 
