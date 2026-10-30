@@ -357,10 +357,10 @@ proxy/                       nginx: sirve la PWA y redirige /api al backend
 docker-compose.dev.yml       desarrollo local, con recarga en caliente
 docker-compose.yml           servidor (pruebas y producción)
 docker-compose.servidor.yml  solo en el servidor: certificado HTTPS de Tailscale
-scripts/                     despliegue y copias de seguridad
+scripts/                     despliegue, copias de seguridad y su rotación, copia en el PC
 .env.example                 configuración de Compose
 .github/                     CI, plantillas de issues y de pull requests
-docs/                        documento de diseño y guía del servidor
+docs/                        documento de diseño, guía del servidor y operación
 README.md
 CONTRIBUTING.md
 ```
