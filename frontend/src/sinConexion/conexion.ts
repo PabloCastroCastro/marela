@@ -3,7 +3,8 @@ import { useSyncExternalStore } from 'react'
 
 // Si hay conexión con el servidor (GH-31). navigator.onLine no basta en el campo: con una raya de
 // cobertura dice que sí, pero las peticiones no llegan. Así que cuando una petición falla por la red
-// se marca sin conexión y se prueba cada poco con /api/health hasta que responda.
+// se marca sin conexión y se prueba cada poco con /api/health hasta que responda. También vuelve en
+// cuanto otra petición (un registro, que no espera a la conexión) recibe respuesta del servidor.
 //
 // Es el onlineManager de TanStack Query: sin conexión, las consultas no fallan, se quedan esperando
 // con lo que ya tenían guardado, y se repiten solas al volver.
@@ -11,16 +12,22 @@ import { useSyncExternalStore } from 'react'
 const CADA = 15_000
 
 let sonda: ReturnType<typeof setInterval> | undefined
+let probando = false
 
+// Con el mismo límite que una consulta: con poca cobertura responde, pero tarda
 async function probar() {
+  if (probando || onlineManager.isOnline()) return
+  probando = true
   try {
     const respuesta = await globalThis.fetch('/api/health', {
       cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(LIMITES.consulta),
     })
     if (respuesta.ok) marcarConConexion()
   } catch {
     // Sigue sin conexión
+  } finally {
+    probando = false
   }
 }
 
@@ -35,7 +42,9 @@ export function marcarConConexion() {
   onlineManager.setOnline(true)
 }
 
-// El navegador avisa cuando cambia de red: se comprueba en el momento, sin esperar a la sonda
+// El navegador avisa cuando cambia de red: se comprueba en el momento, sin esperar a la sonda. Y al
+// volver a la aplicación: con la pantalla bloqueada o en otra app, el móvil congela la sonda, y la
+// cobertura puede haber vuelto sin que el navegador avise.
 if (typeof globalThis.addEventListener === 'function') {
   onlineManager.setEventListener((alCambiar) => {
     const conRed = () => void probar()
@@ -43,11 +52,20 @@ if (typeof globalThis.addEventListener === 'function') {
       alCambiar(false)
       marcarSinConexion()
     }
+    const alVolver = () => {
+      if (globalThis.document?.visibilityState !== 'hidden') void probar()
+    }
     globalThis.addEventListener('online', conRed)
     globalThis.addEventListener('offline', sinRed)
+    globalThis.addEventListener('focus', alVolver)
+    globalThis.addEventListener('pageshow', alVolver)
+    globalThis.document?.addEventListener('visibilitychange', alVolver)
     return () => {
       globalThis.removeEventListener('online', conRed)
       globalThis.removeEventListener('offline', sinRed)
+      globalThis.removeEventListener('focus', alVolver)
+      globalThis.removeEventListener('pageshow', alVolver)
+      globalThis.document?.removeEventListener('visibilitychange', alVolver)
     }
   })
 }
@@ -85,7 +103,13 @@ export async function pedir(entrada: RequestInfo | URL, init: RequestInit = {}) 
   const signal =
     propia && typeof AbortSignal.any === 'function' ? AbortSignal.any([propia, limite]) : limite
   try {
-    return await globalThis.fetch(entrada, { ...init, signal })
+    const respuesta = await globalThis.fetch(entrada, { ...init, signal })
+    // Ha respondido el servidor (aunque sea con un error): hay conexión. Un 502, 503 o 504 puede
+    // ser del proxy, sin el servidor detrás: eso lo decide la sonda
+    if (!onlineManager.isOnline() && ![502, 503, 504].includes(respuesta.status)) {
+      marcarConConexion()
+    }
+    return respuesta
   } catch (error) {
     if (propia?.aborted) throw error
     marcarSinConexion()
