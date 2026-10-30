@@ -153,7 +153,7 @@ Las migraciones no se deshacen: si la versión nueva cambió el esquema, además
 2. **Archivos** (fotos y adjuntos): copia incremental del volumen `uploads` en `/opt/marela/backups/uploads-<entorno>/`.
 3. **Disco:** avisa (`AVISO`) si quedan menos de 5 GB libres.
 
-`deploy.sh pro` la hace antes de cada despliegue. La copia diaria automática, la rotación de copias antiguas, la copia fuera del servidor y la restauración llegan con GH-42.
+`deploy.sh pro` la hace antes de cada despliegue. La copia diaria automática, la rotación de las copias antiguas y la copia fuera del servidor, en el PC, están en [operacion.md](operacion.md). La restauración llega con GH-43.
 
 Para restaurar a mano una copia en un entorno (se pierden los datos actuales de ese entorno):
 

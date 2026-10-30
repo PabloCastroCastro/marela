@@ -213,7 +213,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: ShellCheck
-        run: shellcheck -x scripts/*.sh
+        run: shellcheck -x scripts/*.sh scripts/test/*.sh
+      - name: Rotación de las copias
+        run: scripts/test/rotar-copias.test.sh
+      - name: Copia fuera del servidor
+        run: pwsh -NoProfile -File scripts/test/traer-copias.test.ps1
 
   resultado:
     name: Resultado de la CI
