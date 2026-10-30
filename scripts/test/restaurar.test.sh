@@ -34,7 +34,7 @@ URL_PUBLICA=https://localhost:18444
 EOF
 
 compose=(docker compose -p marela-pruebas -f "$dir/docker-compose.yml" -f "$dir/docker-compose.servidor.yml")
-# shellcheck disable=SC2329 # se llama desde el trap
+# shellcheck disable=SC2317,SC2329 # se llama desde el trap
 recoger() {
   "${compose[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
   rm -rf "$raiz"
