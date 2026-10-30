@@ -1956,6 +1956,230 @@
           "motivo"
         ]
       },
+      "VistaPreviaCenso": {
+        "type": "object",
+        "properties": {
+          "rega": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "description": "Fecha del censo"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "nuevos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnimalNuevoCenso"
+            },
+            "description": "Los que se darán de alta"
+          },
+          "existentes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": "string"
+                },
+                "diferencias": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "campo": {
+                        "type": "string",
+                        "enum": [
+                          "sexo",
+                          "raza",
+                          "fechaNacimiento",
+                          "madre"
+                        ]
+                      },
+                      "censo": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "aplicacion": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "campo",
+                      "censo",
+                      "aplicacion"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "diferencias"
+              ]
+            },
+            "description": "Ya en la aplicación: no se tocan; con lo que no coincide"
+          },
+          "ausentes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": "string"
+                },
+                "nombre": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "nombre"
+              ]
+            },
+            "description": "Activos en la aplicación que no están en el censo"
+          }
+        },
+        "required": [
+          "rega",
+          "fecha",
+          "total",
+          "nuevos",
+          "existentes",
+          "ausentes"
+        ]
+      },
+      "AnimalNuevoCenso": {
+        "type": "object",
+        "properties": {
+          "crotal": {
+            "type": "string"
+          },
+          "sexo": {
+            "type": "string",
+            "enum": [
+              "hembra",
+              "macho"
+            ]
+          },
+          "raza": {
+            "type": "string"
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "nacido",
+              "comprado"
+            ]
+          },
+          "fechaEntrada": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "La del censo, si es comprado"
+          },
+          "regaOrigen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "madre": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "crotal": {
+                "type": "string"
+              },
+              "enCenso": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "crotal",
+              "enCenso",
+              "id"
+            ],
+            "description": "La madre que se enlaza: ya en la aplicación (id) o del censo"
+          },
+          "madreTexto": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Madre que no está: su crotal"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "crotal",
+          "sexo",
+          "raza",
+          "fechaNacimiento",
+          "origen",
+          "fechaEntrada",
+          "regaOrigen",
+          "madre",
+          "madreTexto",
+          "observaciones"
+        ]
+      },
+      "ImportacionCenso": {
+        "type": "object",
+        "properties": {
+          "creados": {
+            "type": "integer"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "creados",
+          "fecha"
+        ]
+      },
       "Finca": {
         "type": "object",
         "properties": {
@@ -7961,6 +8185,266 @@
           },
           "409": {
             "description": "Ya está anulado, o algún ternero tiene pesadas, tratamientos, eventos o hijos (ya_anulado, terneros_con_datos)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/censo/vista-previa": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Vista previa de la importación del censo en PDF",
+        "description": "Lee el censo a una fecha de la Xunta y dice qué animales se darían de alta, cuáles ya están (con los datos que no coinciden) y cuáles activos faltan en el censo. No cambia nada.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lo que se importaría",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VistaPreviaCenso"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el archivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "El archivo ocupa más de 10 MB (archivo_demasiado_grande)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "No es un PDF (tipo_de_archivo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No se reconoce el censo, es de otra explotación o le faltan animales (censo_no_reconocido, censo_de_otra_explotacion, censo_incompleto)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/censo/importacion": {
+      "post": {
+        "tags": [
+          "Animales"
+        ],
+        "summary": "Importar los animales del censo en PDF",
+        "description": "Da de alta los animales del censo que no están en la aplicación, todos o ninguno. Los que ya están no se tocan.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cuántos se han dado de alta, y la fecha del censo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacionCenso"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el archivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Un crotal del censo está en otra explotación de la plataforma (crotal_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "El archivo ocupa más de 10 MB (archivo_demasiado_grande)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "No es un PDF (tipo_de_archivo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No se reconoce el censo, es de otra explotación o le faltan animales (censo_no_reconocido, censo_de_otra_explotacion, censo_incompleto)",
             "content": {
               "application/json": {
                 "schema": {

@@ -61,6 +61,12 @@ Resumen de decisiones tomadas hasta ahora. Documento vivo: se irá actualizando.
 ### Alta de animales
 
 - Manual e importación desde Excel/CSV.
+- **Desde el censo en PDF de la Xunta (GH-130):** el administrador sube el censo a una fecha que descarga de la Consellería do Medio Rural, ve una vista previa y da de alta los animales nuevos, todos o ninguno.
+  - Se rechaza si el REGA no es el de la explotación o si el número de animales leídos no coincide con el total del censo.
+  - Solo se añaden los nuevos. Los que ya están no se cambian: la vista previa señala los datos que no coinciden. Los activos que no están en el censo solo se señalan, no se dan de baja.
+  - Un animal nacido en otra explotación entra como comprado, con ese REGA de origen y la fecha del censo como fecha de entrada (el censo no la trae), con una observación para corregirla.
+  - La madre se enlaza si está en el censo o ya en la aplicación; si no, se guarda su crotal como texto.
+  - Razas: Rubia Galega pasa a Rubia Gallega y Conxunto Mestizo a Cruzada; las demás, como vienen.
 
 ### Traslados
 

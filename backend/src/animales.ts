@@ -331,13 +331,18 @@ async function conErroresClaros<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-export async function crearAnimal(tx: Transaccion, datos: DatosAnimal) {
+// Alta sin devolver la ficha: también la usa la importación del censo (GH-130)
+export async function insertarAnimal(tx: Transaccion, datos: DatosAnimal) {
   await comprobarProgenitores(tx, datos)
   const [creado] = await conErroresClaros(() =>
     tx.insert(animales).values(valores(datos)).returning({ id: animales.id }),
   )
   if (!creado) throw new Error('No se pudo crear el animal')
-  return verAnimal(tx, creado.id)
+  return creado.id
+}
+
+export async function crearAnimal(tx: Transaccion, datos: DatosAnimal) {
+  return verAnimal(tx, await insertarAnimal(tx, datos))
 }
 
 export async function editarAnimal(tx: Transaccion, animalId: string, cambios: object) {

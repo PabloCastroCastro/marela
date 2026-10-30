@@ -2223,6 +2223,237 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/explotaciones/{explotacionId}/censo/vista-previa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vista previa de la importación del censo en PDF
+         * @description Lee el censo a una fecha de la Xunta y dice qué animales se darían de alta, cuáles ya están (con los datos que no coinciden) y cuáles activos faltan en el censo. No cambia nada.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        archivo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Lo que se importaría */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VistaPreviaCenso"];
+                    };
+                };
+                /** @description Falta el archivo (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El archivo ocupa más de 10 MB (archivo_demasiado_grande) */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es un PDF (tipo_de_archivo) */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No se reconoce el censo, es de otra explotación o le faltan animales (censo_no_reconocido, censo_de_otra_explotacion, censo_incompleto) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/explotaciones/{explotacionId}/censo/importacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Importar los animales del censo en PDF
+         * @description Da de alta los animales del censo que no están en la aplicación, todos o ninguno. Los que ya están no se tocan.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    explotacionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        archivo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Cuántos se han dado de alta, y la fecha del censo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportacionCenso"];
+                    };
+                };
+                /** @description Falta el archivo (validacion) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin sesión */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Sin acceso a la explotación, o no es su administrador */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No existe la explotación */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Un crotal del censo está en otra explotación de la plataforma (crotal_en_uso) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El archivo ocupa más de 10 MB (archivo_demasiado_grande) */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No es un PDF (tipo_de_archivo) */
+                415: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description No se reconoce el censo, es de otra explotación o le faltan animales (censo_no_reconocido, censo_de_otra_explotacion, censo_incompleto) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/explotaciones/{explotacionId}/fincas": {
         parameters: {
             query?: never;
@@ -8632,6 +8863,67 @@ export interface components {
         DatosAnulacionParto: {
             /** @example Registrado en la vaca equivocada */
             motivo: string;
+        };
+        VistaPreviaCenso: {
+            rega: string;
+            /**
+             * Format: date
+             * @description Fecha del censo
+             */
+            fecha: string;
+            total: number;
+            /** @description Los que se darán de alta */
+            nuevos: components["schemas"]["AnimalNuevoCenso"][];
+            /** @description Ya en la aplicación: no se tocan; con lo que no coincide */
+            existentes: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                diferencias: {
+                    /** @enum {string} */
+                    campo: "sexo" | "raza" | "fechaNacimiento" | "madre";
+                    censo: string | null;
+                    aplicacion: string | null;
+                }[];
+            }[];
+            /** @description Activos en la aplicación que no están en el censo */
+            ausentes: {
+                /** Format: uuid */
+                id: string;
+                crotal: string;
+                nombre: string | null;
+            }[];
+        };
+        AnimalNuevoCenso: {
+            crotal: string;
+            /** @enum {string} */
+            sexo: "hembra" | "macho";
+            raza: string;
+            /** Format: date */
+            fechaNacimiento: string;
+            /** @enum {string} */
+            origen: "nacido" | "comprado";
+            /**
+             * Format: date
+             * @description La del censo, si es comprado
+             */
+            fechaEntrada: string | null;
+            regaOrigen: string | null;
+            /** @description La madre que se enlaza: ya en la aplicación (id) o del censo */
+            madre: {
+                crotal: string;
+                enCenso: boolean;
+                /** Format: uuid */
+                id: string | null;
+            } | null;
+            /** @description Madre que no está: su crotal */
+            madreTexto: string | null;
+            observaciones: string | null;
+        };
+        ImportacionCenso: {
+            creados: number;
+            /** Format: date */
+            fecha: string;
         };
         Finca: {
             /** Format: uuid */

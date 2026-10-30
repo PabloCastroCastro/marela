@@ -15,12 +15,14 @@ import { api, datos, ErrorApi, enviar } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { useConfirmacion } from '../componentes/Confirmacion'
+import { ElegirArchivo } from '../componentes/ElegirArchivo'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, fecha, hoy } from '../formato'
 import {
+  ARCHIVOS_ADMITIDOS,
   CLAVE_FINANZAS,
   type Factura,
   IMPUESTOS,
@@ -35,7 +37,7 @@ import {
 } from './datos'
 import { TarjetaEntradasComida } from './EntradasComida'
 import estilos from './Finanzas.module.css'
-import { ElegirArchivo, FormularioFactura } from './FormularioFactura'
+import { FormularioFactura } from './FormularioFactura'
 import { InsigniaPago } from './ListaFacturas'
 
 // Ficha de una factura (GH-35): sus datos y sus líneas, el pago, el archivo (verlo, cambiarlo o
@@ -278,7 +280,11 @@ export function PaginaFactura() {
               <ExternalLink aria-hidden size={16} />
             </a>
             <div className={estilos.acciones}>
-              <ElegirArchivo alElegir={elegir} texto="Cambiar el archivo" />
+              <ElegirArchivo
+                aceptar={ARCHIVOS_ADMITIDOS}
+                alElegir={elegir}
+                texto="Cambiar el archivo"
+              />
               <Boton
                 variante="texto"
                 className={estilos.peligro}
@@ -300,7 +306,7 @@ export function PaginaFactura() {
           <>
             <p className={estilos.suave}>Sin archivo. Adjunta el PDF o una foto de la factura.</p>
             <div className={estilos.acciones}>
-              <ElegirArchivo alElegir={elegir} />
+              <ElegirArchivo aceptar={ARCHIVOS_ADMITIDOS} alElegir={elegir} />
             </div>
           </>
         )}

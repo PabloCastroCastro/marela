@@ -167,6 +167,13 @@ Rutas del módulo `animales` (administrador y empleado), en `src/rutas/animales.
 - **`PATCH /api/explotaciones/{id}/animales/{animalId}/reposicion`:** `{ apta: false, motivo, fecha?, alcance }` marca una hembra no apta para reposición (GH-110), por una enfermedad que se transmite a la descendencia; `alcance` es `hijas` (no dejarlas para reposición, por defecto) o `descendencia` (afecta también a los hijos). `{ apta: true }` quita la marca. La ficha lleva `noAptaReposicion` (`{ desde, motivo, alcance }` o `null`) y su descendencia afectada, `madreNoAptaReposicion`: las hijas siempre, los hijos si el alcance es `descendencia`. El listado la filtra con `?reposicion=no_apta`. Migración `0029`; los cambios quedan en el historial.
 - **`GET /api/explotaciones/{id}/animales/razas`:** razas para sugerir: las habituales y las que ya usa la explotación.
 
+Importación desde el censo en PDF de la Xunta (GH-130), en `src/rutas/censo.ts` y `src/censo.ts`: solo el administrador (módulo `administracion`). Las dos rutas reciben el PDF en el campo `archivo`, como formulario; la importación lo vuelve a leer, así que no se guarda nada entre las dos.
+
+- **`POST /api/explotaciones/{id}/censo/vista-previa`:** qué se daría de alta (`nuevos`), qué ya está (`existentes`, con las `diferencias` con el censo) y qué activos faltan en el censo (`ausentes`). No cambia nada.
+- **`POST /api/explotaciones/{id}/censo/importacion`:** da de alta los nuevos en una transacción, las madres del censo antes que sus crías. `{ creados, fecha }`.
+- **Errores:** 415 `tipo_de_archivo` si no es un PDF; 422 `censo_no_reconocido` (no se encuentra el REGA, la fecha, la tabla o el total, o una fila no se entiende), `censo_de_otra_explotacion` o `censo_incompleto` (no cuadra con el total); 409 `crotal_en_uso` si un crotal está en otra explotación de la plataforma.
+- **Lectura:** con `unpdf` (pdf.js). Las líneas se reconstruyen por la posición de cada texto en la página, y las celdas de la tabla por la cabecera de columna más cercana: el REGA y los crotales tienen el mismo formato y el texto sin posiciones mezcla etiquetas y valores.
+
 Reglas, comprobadas en la API (con el error en su campo) y en la base de datos:
 
 - **Crotal:** `ES` y 12 dígitos, o el código de otro país y hasta 12 dígitos. Único en toda la plataforma (409 `crotal_en_uso`). Opcional, para los terneros que aún no lo tienen (GH-23); una vez puesto no se puede quitar. Los animales sin crotal van al final de la lista; `?crotal=sin` lista solo esos.
