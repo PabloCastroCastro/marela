@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { ORIGENES_ENTRADA, TIPOS_AJUSTE, TIPOS_MOVIMIENTO } from '../db/schema/index.js'
-import { EsquemaError, validacionFallida } from '../errores.js'
+import { ErrorApi, EsquemaError, validacionFallida } from '../errores.js'
 import {
   borrarMovimiento,
   corregirMovimiento,
@@ -8,7 +8,7 @@ import {
   DatosMovimiento,
   listarMovimientos,
 } from '../movimientos.js'
-import { type EnvExplotacion, enLaExplotacion, permitir } from '../permisos.js'
+import { type EnvExplotacion, enLaExplotacion, permitir, puedeAcceder } from '../permisos.js'
 import { ParametrosAlmacen } from './almacenes.js'
 
 // Entradas, salidas y ajustes de inventario de los almacenes de comida (GH-30). Los registra
@@ -35,6 +35,14 @@ const Movimiento = z
       description: 'Lo que cambió el stock: positiva si sube, negativa si baja',
     }),
     stock: z.number().openapi({ description: 'El stock que dejó en el almacén' }),
+    factura: z
+      .object({ id: z.uuid(), numero: z.string(), tercero: z.string() })
+      .nullable()
+      .optional()
+      .openapi({
+        description:
+          'La factura de una entrada comprada (GH-36). Solo en el listado y para quien accede a Finanzas.',
+      }),
     creadoEn: z.iso.datetime(),
     modificadoEn: z.iso.datetime(),
   })
@@ -48,6 +56,11 @@ const Filtros = z.object({
   desde: z.iso.date().optional().openapi({ description: 'Desde esta fecha, incluida' }),
   hasta: z.iso.date().optional().openapi({ description: 'Hasta esta fecha, incluida' }),
   tipo: z.enum(TIPOS_MOVIMIENTO).optional(),
+  origen: z.enum(ORIGENES_ENTRADA).optional(),
+  factura: z
+    .enum(['con', 'sin'])
+    .optional()
+    .openapi({ description: 'Con factura o sin ella; solo para quien accede a Finanzas' }),
 })
 
 const error = (description: string) => ({
@@ -75,13 +88,14 @@ const listar = createRoute({
   method: 'get',
   path: ruta,
   tags: ['Comida'],
-  summary: 'Movimientos de un almacén, con filtros de fecha y tipo',
+  summary: 'Movimientos de un almacén, con filtros de fecha, tipo, origen y factura',
   security: [{ sesion: [] }],
   middleware: [permitir('comida')] as const,
   request: { params: ParametrosAlmacen, query: Filtros },
   responses: {
     200: json(z.array(Movimiento), 'Del más reciente al más antiguo'),
     ...comunes,
+    403: error('Sin acceso a la comida, o filtra por factura quien no accede a Finanzas'),
   },
 })
 
@@ -103,6 +117,10 @@ const crear = createRoute({
   },
 })
 
+const conFactura = error(
+  'La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura)',
+)
+
 const corregir = createRoute({
   method: 'put',
   path: `${ruta}/{movimientoId}`,
@@ -115,6 +133,7 @@ const corregir = createRoute({
     200: json(Movimiento, 'El movimiento corregido'),
     400: error('Datos no válidos (validacion)'),
     ...comunes,
+    409: conFactura,
   },
 })
 
@@ -127,7 +146,7 @@ const borrar = createRoute({
   security: [{ sesion: [] }],
   middleware: [permitir('comida')] as const,
   request: { params: ParametrosMovimiento },
-  responses: { 200: json(Movimiento, 'El movimiento borrado'), ...comunes },
+  responses: { 200: json(Movimiento, 'El movimiento borrado'), ...comunes, 409: conFactura },
 })
 
 export const rutasMovimientos = () =>
@@ -135,8 +154,12 @@ export const rutasMovimientos = () =>
     .openapi(listar, async (c) => {
       const { almacenId } = c.req.valid('param')
       const filtros = c.req.valid('query')
+      // Las facturas, solo para quien accede a Finanzas
+      const verFacturas = puedeAcceder(c.var.rol, 'finanzas')
+      if (filtros.factura && !verFacturas)
+        throw new ErrorApi(403, 'sin_permiso', 'Solo el administrador ve las facturas')
       return c.json(
-        await enLaExplotacion(c, (tx) => listarMovimientos(tx, almacenId, filtros)),
+        await enLaExplotacion(c, (tx) => listarMovimientos(tx, almacenId, filtros, verFacturas)),
         200,
       )
     })

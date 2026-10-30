@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "API de Marela",
-    "version": "0.8.0",
+    "version": "1.0.0",
     "description": "API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }."
   },
   "components": {
@@ -3408,6 +3408,30 @@
             "type": "number",
             "description": "El stock que dejó en el almacén"
           },
+          "factura": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "tercero": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "numero",
+              "tercero"
+            ],
+            "description": "La factura de una entrada comprada (GH-36). Solo en el listado y para quien accede a Finanzas."
+          },
           "creadoEn": {
             "type": "string",
             "format": "date-time"
@@ -3592,6 +3616,1178 @@
         },
         "required": [
           "activo"
+        ]
+      },
+      "Fiscal": {
+        "type": "object",
+        "properties": {
+          "regimen": {
+            "type": "string",
+            "enum": [
+              "reagp",
+              "general"
+            ],
+            "description": "REAGP (recibo de compensación en las ventas) o régimen general de IVA"
+          },
+          "compensacionReagp": {
+            "type": "number",
+            "description": "Porcentaje de compensación del REAGP"
+          },
+          "tiposIva": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "Tipos de IVA, de mayor a menor"
+          },
+          "configurado": {
+            "type": "boolean",
+            "description": "Si se ha guardado; si no, son los valores por defecto"
+          },
+          "modificadoEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "regimen",
+          "compensacionReagp",
+          "tiposIva",
+          "configurado",
+          "modificadoEn"
+        ]
+      },
+      "DatosFiscales": {
+        "type": "object",
+        "properties": {
+          "regimen": {
+            "type": "string",
+            "enum": [
+              "reagp",
+              "general"
+            ]
+          },
+          "compensacionReagp": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 10.5
+          },
+          "tiposIva": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "minItems": 1,
+            "maxItems": 8,
+            "example": [
+              21,
+              10,
+              4
+            ]
+          }
+        },
+        "required": [
+          "regimen",
+          "compensacionReagp",
+          "tiposIva"
+        ]
+      },
+      "Factura": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "recibida",
+              "emitida"
+            ]
+          },
+          "numero": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "tercero": {
+            "type": "string",
+            "description": "Proveedor (recibidas) o cliente (emitidas)"
+          },
+          "nif": {
+            "type": "string"
+          },
+          "nifExtranjero": {
+            "type": "boolean"
+          },
+          "concepto": {
+            "type": "string"
+          },
+          "impuesto": {
+            "type": "string",
+            "enum": [
+              "iva",
+              "compensacion"
+            ]
+          },
+          "lineas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base": {
+                  "type": "number"
+                },
+                "porcentaje": {
+                  "type": "number"
+                },
+                "cuota": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "base",
+                "porcentaje",
+                "cuota"
+              ]
+            }
+          },
+          "baseImponible": {
+            "type": "number"
+          },
+          "cuota": {
+            "type": "number",
+            "description": "IVA o compensación, la suma de las líneas"
+          },
+          "total": {
+            "type": "number"
+          },
+          "pagadaEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "null si está pendiente"
+          },
+          "archivo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "nombre": {
+                "type": "string"
+              },
+              "tipo": {
+                "type": "string"
+              },
+              "tamano": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "nombre",
+              "tipo",
+              "tamano"
+            ]
+          },
+          "animales": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nombre": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "nombre"
+              ]
+            }
+          },
+          "ventaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "La venta de una emitida (GH-38)"
+          },
+          "entradasComida": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "fecha": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "cantidad": {
+                  "type": "number",
+                  "description": "En la unidad del almacén"
+                },
+                "origen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "compra",
+                    "produccion_propia",
+                    null
+                  ]
+                },
+                "observaciones": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "almacen": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "nombre": {
+                      "type": "string"
+                    },
+                    "unidad": {
+                      "type": "string",
+                      "enum": [
+                        "unidades",
+                        "kg"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "nombre",
+                    "unidad"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "fecha",
+                "cantidad",
+                "origen",
+                "observaciones",
+                "almacen"
+              ]
+            },
+            "description": "Entradas de comida compradas con la factura (GH-36)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "numero",
+          "fecha",
+          "tercero",
+          "nif",
+          "nifExtranjero",
+          "concepto",
+          "impuesto",
+          "lineas",
+          "baseImponible",
+          "cuota",
+          "total",
+          "pagadaEn",
+          "archivo",
+          "animales",
+          "ventaId",
+          "entradasComida",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "SiguienteNumero": {
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "numero"
+        ]
+      },
+      "DatosFactura": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "recibida",
+              "emitida"
+            ]
+          },
+          "numero": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "example": "2026-0007"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "tercero": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "nif": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "example": "B15000007"
+          },
+          "nifExtranjero": {
+            "type": "boolean",
+            "default": false,
+            "description": "NIF de otro país: no se comprueba el formato español"
+          },
+          "concepto": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "impuesto": {
+            "type": "string",
+            "enum": [
+              "iva",
+              "compensacion"
+            ],
+            "default": "iva",
+            "description": "IVA o compensación del REAGP (en las ventas de quien está en ese régimen)"
+          },
+          "lineas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base": {
+                  "type": "number",
+                  "minimum": -9999999999.99,
+                  "maximum": 9999999999.99,
+                  "example": 1000
+                },
+                "porcentaje": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "example": 21
+                },
+                "cuota": {
+                  "type": "number",
+                  "minimum": -9999999999.99,
+                  "maximum": 9999999999.99,
+                  "example": 210
+                }
+              },
+              "required": [
+                "base",
+                "porcentaje",
+                "cuota"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 8
+          },
+          "total": {
+            "type": "number",
+            "minimum": -9999999999.99,
+            "maximum": 9999999999.99,
+            "example": 1210
+          },
+          "pagadaEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Fecha de pago; sin ella, la factura está pendiente"
+          },
+          "animalIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 500,
+            "default": [],
+            "description": "Animales comprados con la factura; solo en las recibidas"
+          }
+        },
+        "required": [
+          "tipo",
+          "numero",
+          "fecha",
+          "tercero",
+          "nif",
+          "concepto",
+          "lineas",
+          "total"
+        ]
+      },
+      "CambioPago": {
+        "type": "object",
+        "properties": {
+          "pagadaEn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "Fecha de pago; null para dejarla pendiente"
+          }
+        },
+        "required": [
+          "pagadaEn"
+        ]
+      },
+      "EntradasFactura": {
+        "type": "object",
+        "properties": {
+          "movimientoIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "movimientoIds"
+        ]
+      },
+      "EntradaComida": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "cantidad": {
+            "type": "number",
+            "description": "En la unidad del almacén"
+          },
+          "origen": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "compra",
+              "produccion_propia",
+              null
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "almacen": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "nombre": {
+                "type": "string"
+              },
+              "unidad": {
+                "type": "string",
+                "enum": [
+                  "unidades",
+                  "kg"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "nombre",
+              "unidad"
+            ]
+          },
+          "factura": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "tercero": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "numero",
+              "tercero"
+            ],
+            "description": "La factura con la que se compró, si la tiene"
+          }
+        },
+        "required": [
+          "id",
+          "fecha",
+          "cantidad",
+          "origen",
+          "observaciones",
+          "almacen",
+          "factura"
+        ]
+      },
+      "Apunte": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ingreso",
+              "gasto"
+            ]
+          },
+          "categoria": {
+            "type": "string",
+            "enum": [
+              "subvencion",
+              "indemnizacion_seguro",
+              "otro_ingreso",
+              "seguro",
+              "veterinario",
+              "combustible",
+              "reparaciones",
+              "suministros",
+              "impuestos",
+              "otro_gasto"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "concepto": {
+            "type": "string"
+          },
+          "importe": {
+            "type": "number",
+            "description": "En euros, siempre positivo; el tipo da el signo"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archivo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "nombre": {
+                "type": "string"
+              },
+              "tipo": {
+                "type": "string"
+              },
+              "tamano": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "nombre",
+              "tipo",
+              "tamano"
+            ]
+          },
+          "anulacion": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "en": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "por": {
+                "type": "string"
+              },
+              "motivo": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "por",
+              "motivo"
+            ],
+            "description": "Si se anuló: no cuenta en los totales"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "tipo",
+          "categoria",
+          "fecha",
+          "concepto",
+          "importe",
+          "observaciones",
+          "archivo",
+          "anulacion",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosApunte": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ingreso",
+              "gasto"
+            ]
+          },
+          "categoria": {
+            "type": "string",
+            "enum": [
+              "subvencion",
+              "indemnizacion_seguro",
+              "otro_ingreso",
+              "seguro",
+              "veterinario",
+              "combustible",
+              "reparaciones",
+              "suministros",
+              "impuestos",
+              "otro_gasto"
+            ]
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "concepto": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "example": "Pago básico de la PAC 2026"
+          },
+          "importe": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 9999999999.99,
+            "example": 3250.4
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "tipo",
+          "categoria",
+          "fecha",
+          "concepto",
+          "importe"
+        ]
+      },
+      "DatosAnulacionApunte": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "Venta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "comprador": {
+            "type": "string"
+          },
+          "modoPrecio": {
+            "type": "string",
+            "enum": [
+              "total",
+              "por_animal",
+              "por_kg"
+            ]
+          },
+          "precio": {
+            "type": "number",
+            "description": "El introducido: el total, por animal o por kg"
+          },
+          "total": {
+            "type": "number",
+            "description": "Sin IVA ni compensación"
+          },
+          "kg": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Los kilos vendidos, si se pesaron todos"
+          },
+          "animales": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "crotal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nombre": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "kg": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "importe": {
+                  "type": "number",
+                  "description": "Lo que le corresponde del total"
+                }
+              },
+              "required": [
+                "id",
+                "crotal",
+                "nombre",
+                "kg",
+                "importe"
+              ]
+            }
+          },
+          "factura": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "numero": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "numero",
+              "total"
+            ]
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modificadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "fecha",
+          "comprador",
+          "modoPrecio",
+          "precio",
+          "total",
+          "kg",
+          "animales",
+          "factura",
+          "observaciones",
+          "creadoEn",
+          "modificadoEn"
+        ]
+      },
+      "DatosVenta": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "comprador": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "animales": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "animalId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "kg": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "exclusiveMinimum": 0,
+                  "maximum": 2000,
+                  "description": "Peso a la venta; queda como pesada de venta en su ficha"
+                }
+              },
+              "required": [
+                "animalId"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "modoPrecio": {
+            "type": "string",
+            "enum": [
+              "total",
+              "por_animal",
+              "por_kg"
+            ],
+            "description": "Si el precio es el total, el de cada animal o el del kg"
+          },
+          "precio": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 9999999999,
+            "description": "Sin IVA ni compensación",
+            "example": 4.35
+          },
+          "facturaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Una factura emitida, si ya la hay"
+          },
+          "observaciones": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "fecha",
+          "comprador",
+          "animales",
+          "modoPrecio",
+          "precio"
+        ]
+      },
+      "CambioFacturaVenta": {
+        "type": "object",
+        "properties": {
+          "facturaId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "null para quitarla"
+          }
+        },
+        "required": [
+          "facturaId"
+        ]
+      },
+      "ResumenFinanzas": {
+        "type": "object",
+        "properties": {
+          "periodo": {
+            "type": "string",
+            "enum": [
+              "mes",
+              "trimestre",
+              "anio"
+            ]
+          },
+          "desde": {
+            "type": "string",
+            "format": "date"
+          },
+          "hasta": {
+            "type": "string",
+            "format": "date"
+          },
+          "filas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "clave": {
+                  "type": "string",
+                  "example": "2026-T4",
+                  "description": "2026-10, 2026-T4 o 2026"
+                },
+                "desde": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "hasta": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "ingresos": {
+                  "type": "object",
+                  "properties": {
+                    "facturas": {
+                      "type": "number",
+                      "description": "Facturas emitidas, con impuestos"
+                    },
+                    "ventas": {
+                      "type": "number",
+                      "description": "Ventas sin factura (las que la tienen, por ella)"
+                    },
+                    "otros": {
+                      "type": "number",
+                      "description": "Otros ingresos vigentes"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "facturas",
+                    "ventas",
+                    "otros",
+                    "total"
+                  ]
+                },
+                "gastos": {
+                  "type": "object",
+                  "properties": {
+                    "facturas": {
+                      "type": "number",
+                      "description": "Facturas recibidas, con impuestos"
+                    },
+                    "otros": {
+                      "type": "number",
+                      "description": "Otros gastos vigentes"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "facturas",
+                    "otros",
+                    "total"
+                  ]
+                },
+                "resultado": {
+                  "type": "number",
+                  "description": "Ingresos menos gastos"
+                }
+              },
+              "required": [
+                "clave",
+                "desde",
+                "hasta",
+                "ingresos",
+                "gastos",
+                "resultado"
+              ]
+            },
+            "description": "Cada periodo entre desde y hasta, también los vacíos"
+          },
+          "total": {
+            "type": "object",
+            "properties": {
+              "ingresos": {
+                "type": "object",
+                "properties": {
+                  "facturas": {
+                    "type": "number",
+                    "description": "Facturas emitidas, con impuestos"
+                  },
+                  "ventas": {
+                    "type": "number",
+                    "description": "Ventas sin factura (las que la tienen, por ella)"
+                  },
+                  "otros": {
+                    "type": "number",
+                    "description": "Otros ingresos vigentes"
+                  },
+                  "total": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "facturas",
+                  "ventas",
+                  "otros",
+                  "total"
+                ]
+              },
+              "gastos": {
+                "type": "object",
+                "properties": {
+                  "facturas": {
+                    "type": "number",
+                    "description": "Facturas recibidas, con impuestos"
+                  },
+                  "otros": {
+                    "type": "number",
+                    "description": "Otros gastos vigentes"
+                  },
+                  "total": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "facturas",
+                  "otros",
+                  "total"
+                ]
+              },
+              "resultado": {
+                "type": "number",
+                "description": "Ingresos menos gastos"
+              }
+            },
+            "required": [
+              "ingresos",
+              "gastos",
+              "resultado"
+            ]
+          },
+          "pendiente": {
+            "type": "object",
+            "properties": {
+              "cobro": {
+                "type": "number"
+              },
+              "pago": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "cobro",
+              "pago"
+            ],
+            "description": "Facturas sin fecha de pago del rango: emitidas y recibidas"
+          }
+        },
+        "required": [
+          "periodo",
+          "desde",
+          "hasta",
+          "filas",
+          "total",
+          "pendiente"
         ]
       },
       "Tarea": {
@@ -8986,7 +10182,7 @@
         "tags": [
           "Comida"
         ],
-        "summary": "Movimientos de un almacén, con filtros de fecha y tipo",
+        "summary": "Movimientos de un almacén, con filtros de fecha, tipo, origen y factura",
         "security": [
           {
             "sesion": []
@@ -9044,6 +10240,32 @@
             "required": false,
             "name": "tipo",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "compra",
+                "produccion_propia"
+              ]
+            },
+            "required": false,
+            "name": "origen",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ],
+              "description": "Con factura o sin ella; solo para quien accede a Finanzas"
+            },
+            "required": false,
+            "description": "Con factura o sin ella; solo para quien accede a Finanzas",
+            "name": "factura",
+            "in": "query"
           }
         ],
         "responses": {
@@ -9071,7 +10293,7 @@
             }
           },
           "403": {
-            "description": "Sin acceso a la explotación o a su comida",
+            "description": "Sin acceso a la comida, o filtra por factura quien no accede a Finanzas",
             "content": {
               "application/json": {
                 "schema": {
@@ -9295,6 +10517,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -9370,6 +10602,16 @@
           },
           "404": {
             "description": "No existe la explotación, el almacén o el movimiento (almacen_no_encontrado, movimiento_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La entrada tiene factura: no deja de ser una compra ni se borra (entrada_con_factura)",
             "content": {
               "application/json": {
                 "schema": {
@@ -9828,6 +11070,3335 @@
           },
           "404": {
             "description": "No existe la explotación o el equipo (equipo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/fiscal": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Régimen fiscal de la explotación",
+        "description": "Mientras no se guarda: REAGP con el 10,5 % y los tipos de IVA 21, 10 y 4 %.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El régimen y sus porcentajes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fiscal"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Cambiar el régimen fiscal y sus porcentajes",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFiscales"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Guardado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fiscal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Facturas, con filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recibida",
+                "emitida"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pendiente",
+                "pagada"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Proveedor o cliente, número o NIF"
+            },
+            "required": false,
+            "description": "Proveedor o cliente, número o NIF",
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más reciente a la más antigua",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Factura"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Registrar una factura",
+        "description": "Comprueba el NIF (salvo los extranjeros), que cada cuota sea su porcentaje de la base (con un céntimo de margen) y que el total sea la suma de las líneas. El archivo se sube después.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFactura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La factura registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Número repetido: de otra emitida, o de otra recibida del proveedor (numero_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/siguiente-numero": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Número que se propone para la siguiente factura emitida",
+        "description": "El siguiente del año con el formato aaaa-nnnn (2026-0007 tras la 2026-0006).",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Fecha de la factura; por defecto, hoy"
+            },
+            "required": false,
+            "description": "Fecha de la factura; por defecto, hoy",
+            "name": "fecha",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El número",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiguienteNumero"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Una factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La factura",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Corregir una factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosFactura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Número repetido: de otra emitida, o de otra recibida del proveedor (numero_en_uso)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Borrar una factura",
+        "description": "Con su archivo y sus enlaces a los animales. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Borrada"
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/pago": {
+      "patch": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Marcar una factura como pagada, o volver a dejarla pendiente",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPago"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/archivo": {
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Adjuntar el archivo de la factura, o cambiarlo",
+        "description": "Un PDF o una foto (JPEG, PNG o WebP) de hasta 10 MB; sustituye al anterior.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura con su archivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el archivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "El archivo ocupa más de 10 MB (archivo_demasiado_grande)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "No es un PDF ni una foto (tipo_de_archivo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Archivo de la factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El PDF o la foto",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, la factura o su archivo (archivo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Quitar el archivo de la factura",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La factura sin archivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/facturas/{facturaId}/entradas-comida": {
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Asociar a una factura recibida sus entradas de comida",
+        "description": "Las entradas compradas que se indican, en lugar de las que tuviera; una lista vacía las quita todas. Una entrada solo es de una factura.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "facturaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntradasFactura"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La factura con sus entradas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factura"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No es recibida, o alguna no es una entrada comprada (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la factura (factura_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Alguna entrada ya es de otra factura (entrada_con_factura)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/entradas-comida": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Entradas de comida de todos los almacenes, con su factura",
+        "description": "De la más reciente a la más antigua. Para asociarlas a una factura (GH-36).",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "compra",
+                "produccion_propia"
+              ]
+            },
+            "required": false,
+            "name": "origen",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ]
+            },
+            "required": false,
+            "name": "factura",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "almacenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Las entradas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntradaComida"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/apuntes": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Otros ingresos y gastos, con filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ingreso",
+                "gasto"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "subvencion",
+                "indemnizacion_seguro",
+                "otro_ingreso",
+                "seguro",
+                "veterinario",
+                "combustible",
+                "reparaciones",
+                "suministros",
+                "impuestos",
+                "otro_gasto"
+              ]
+            },
+            "required": false,
+            "name": "categoria",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "vigente",
+                "anulado"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Concepto u observaciones"
+            },
+            "required": false,
+            "description": "Concepto u observaciones",
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Del más reciente al más antiguo, con los anulados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Apunte"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Registrar un ingreso o un gasto sin factura",
+        "description": "La categoría tiene que ser del tipo. El archivo se sube después.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosApunte"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apunte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/apuntes/{apunteId}": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Un ingreso o gasto",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "apunteId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El ingreso o gasto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apunte"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Corregir un ingreso o gasto",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "apunteId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosApunte"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Corregido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apunte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Está anulado: ya no se cambia (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/apuntes/{apunteId}/anulacion": {
+      "post": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Anular un ingreso o gasto registrado por error",
+        "description": "No se borra: sigue a la vista como anulado, con el motivo, y no cuenta en los totales.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "apunteId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosAnulacionApunte"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Anulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apunte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el motivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Está anulado: ya no se cambia (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/apuntes/{apunteId}/archivo": {
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Adjuntar el archivo de un ingreso o gasto, o cambiarlo",
+        "description": "Un PDF o una foto (JPEG, PNG o WebP) de hasta 10 MB; sustituye al anterior.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "apunteId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Con su archivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apunte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta el archivo (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Está anulado: ya no se cambia (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "El archivo ocupa más de 10 MB (archivo_demasiado_grande)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "No es un PDF ni una foto (tipo_de_archivo)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Archivo de un ingreso o gasto",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "apunteId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El PDF o la foto",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación, el ingreso o gasto o su archivo (archivo_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Quitar el archivo de un ingreso o gasto",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "apunteId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sin archivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apunte"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o el ingreso o gasto (apunte_no_encontrado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Está anulado: ya no se cambia (ya_anulado)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/ventas": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Ventas de animales, con filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ]
+            },
+            "required": false,
+            "name": "factura",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comprador"
+            },
+            "required": false,
+            "description": "Comprador",
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "De la más reciente a la más antigua",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Venta"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Registrar una venta de animales",
+        "description": "En la misma transacción, los animales pasan a vendidos (baja por venta, con la fecha y el comprador) y su peso queda como pesada de venta en su ficha. Se bloquea, sin excepciones, si alguno tiene un periodo de supresión en curso en la fecha de la venta.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosVenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "La venta registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún animal tiene un periodo de supresión en curso (supresion_en_curso: en detalles, cuál y hasta cuándo), o la factura ya es de otra venta (factura_con_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/ventas/{ventaId}": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Una venta",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "La venta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Corregir una venta",
+        "description": "Se deshace y se registra de nuevo con los datos nuevos, también los animales.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosVenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La venta corregida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Algún animal tiene un periodo de supresión en curso (supresion_en_curso: en detalles, cuál y hasta cuándo), o la factura ya es de otra venta (factura_con_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Deshacer una venta",
+        "description": "Los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura, si la tenía, se queda. Queda en el historial.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deshecha"
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/ventas/{ventaId}/factura": {
+      "patch": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Asociar a la venta su factura emitida, o quitarla",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "ventaId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioFacturaVenta"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "La venta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Venta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "La factura no es emitida o no es de la explotación (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación o la venta (venta_no_encontrada)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La factura ya es de otra venta (factura_con_venta)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/informes/resumen": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Resumen de ingresos y gastos por mes, trimestre o año",
+        "description": "Con impuestos y por la fecha de cada factura o movimiento. Ingresos: facturas emitidas, ventas sin factura y otros ingresos; gastos: facturas recibidas y otros gastos. Sin los anulados. Como mucho 10 años.",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mes",
+                "trimestre",
+                "anio"
+              ],
+              "default": "mes"
+            },
+            "required": false,
+            "name": "periodo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "hasta",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El resumen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenFinanzas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fechas no válidas (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/exportaciones/facturas": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Exportar las facturas, con sus filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recibida",
+                "emitida"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pendiente",
+                "pagada"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Proveedor o cliente, número o NIF"
+            },
+            "required": false,
+            "description": "Proveedor o cliente, número o NIF",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xlsx",
+                "csv",
+                "zip"
+              ],
+              "default": "xlsx",
+              "description": "Excel, CSV o .zip con el Excel y los adjuntos"
+            },
+            "required": false,
+            "description": "Excel, CSV o .zip con el Excel y los adjuntos",
+            "name": "formato",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El archivo, para descargar",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Filtros no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/exportaciones/ventas": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Exportar las ventas, con sus filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "con",
+                "sin"
+              ]
+            },
+            "required": false,
+            "name": "factura",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comprador"
+            },
+            "required": false,
+            "description": "Comprador",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xlsx",
+                "csv"
+              ],
+              "default": "xlsx"
+            },
+            "required": false,
+            "name": "formato",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El archivo, para descargar",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Filtros no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/exportaciones/apuntes": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Exportar los otros ingresos y gastos, con sus filtros",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ingreso",
+                "gasto"
+              ]
+            },
+            "required": false,
+            "name": "tipo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "subvencion",
+                "indemnizacion_seguro",
+                "otro_ingreso",
+                "seguro",
+                "veterinario",
+                "combustible",
+                "reparaciones",
+                "suministros",
+                "impuestos",
+                "otro_gasto"
+              ]
+            },
+            "required": false,
+            "name": "categoria",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "vigente",
+                "anulado"
+              ]
+            },
+            "required": false,
+            "name": "estado",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Concepto u observaciones"
+            },
+            "required": false,
+            "description": "Concepto u observaciones",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xlsx",
+                "csv",
+                "zip"
+              ],
+              "default": "xlsx",
+              "description": "Excel, CSV o .zip con el Excel y los adjuntos"
+            },
+            "required": false,
+            "description": "Excel, CSV o .zip con el Excel y los adjuntos",
+            "name": "formato",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El archivo, para descargar",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Filtros no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/explotaciones/{explotacionId}/exportaciones/periodo": {
+      "get": {
+        "tags": [
+          "Finanzas"
+        ],
+        "summary": "Exportar para el gestor todo un periodo: facturas, ventas, otros ingresos y gastos y el resumen",
+        "security": [
+          {
+            "sesion": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "explotacionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "desde",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "hasta",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mes",
+                "trimestre",
+                "anio"
+              ],
+              "default": "mes",
+              "description": "Cómo se agrupa la hoja del resumen"
+            },
+            "required": false,
+            "description": "Cómo se agrupa la hoja del resumen",
+            "name": "periodo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xlsx",
+                "zip"
+              ],
+              "default": "xlsx"
+            },
+            "required": false,
+            "name": "formato",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "El archivo, para descargar",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Filtros no válidos (validacion)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sin acceso a la explotación, o no es su administrador",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe la explotación",
             "content": {
               "application/json": {
                 "schema": {

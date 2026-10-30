@@ -270,6 +270,47 @@ export type TareaSimulada = {
   hecha: { en: string; porId: string } | null
 }
 
+export type FacturaSimulada = {
+  id: string
+  tipo: 'recibida' | 'emitida'
+  numero: string
+  fecha: string
+  tercero: string
+  nif: string
+  nifExtranjero: boolean
+  concepto: string
+  impuesto: 'iva' | 'compensacion'
+  lineas: { base: number; porcentaje: number; cuota: number }[]
+  pagadaEn: string | null
+  archivo: { nombre: string; tipo: string; tamano: number } | null
+  animalIds: string[]
+  // Las entradas de comida compradas con ella (GH-36)
+  movimientoIds?: string[]
+}
+
+export type ApunteSimulado = {
+  id: string
+  tipo: 'ingreso' | 'gasto'
+  categoria: string
+  fecha: string
+  concepto: string
+  importe: number
+  observaciones: string | null
+  archivo: { nombre: string; tipo: string; tamano: number } | null
+  anulacion: { en: string; por: string; motivo: string } | null
+}
+
+export type VentaSimulada = {
+  id: string
+  fecha: string
+  comprador: string
+  modoPrecio: 'total' | 'por_animal' | 'por_kg'
+  precio: number
+  animales: { animalId: string; kg: number | null }[]
+  facturaId: string | null
+  observaciones: string | null
+}
+
 export type EstadoSimulado = {
   usuario: {
     id: string
@@ -297,6 +338,11 @@ export type EstadoSimulado = {
   movimientos: MovimientoSimulado[]
   equipos: EquipoSimulado[]
   tareas: TareaSimulada[]
+  facturas: FacturaSimulada[]
+  apuntes: ApunteSimulado[]
+  ventas: VentaSimulada[]
+  // Régimen fiscal guardado (GH-34); sin él, el de por defecto
+  fiscal?: { regimen: 'reagp' | 'general'; compensacionReagp: number; tiposIva: number[] }
   // Sin cobertura: ninguna petición llega (fetch falla como sin red), o solo las que cumplan esto
   sinRed?: boolean | ((ruta: string, metodo: string) => boolean)
 }
@@ -589,6 +635,76 @@ export function estadoInicial(cambios: Partial<EstadoSimulado> = {}): EstadoSimu
         hecha: { en: '2026-10-01T10:00:00.000Z', porId: 'u1' },
       },
     ],
+    // Una compra de pienso pendiente y una venta cobrada, con su archivo
+    facturas: [
+      {
+        id: 'fa1',
+        tipo: 'recibida',
+        numero: 'P-381',
+        fecha: '2026-10-15',
+        tercero: 'Piensos do Norte',
+        nif: 'B15000003',
+        nifExtranjero: false,
+        concepto: 'Pienso de engorde',
+        impuesto: 'iva',
+        lineas: [{ base: 1000, porcentaje: 10, cuota: 100 }],
+        pagadaEn: null,
+        archivo: null,
+        animalIds: [],
+      },
+      {
+        id: 'fa2',
+        tipo: 'emitida',
+        numero: '2026-0006',
+        fecha: '2026-10-20',
+        tercero: 'Carnes Galegas',
+        nif: '12345678Z',
+        nifExtranjero: false,
+        concepto: 'Venta de terneros',
+        impuesto: 'compensacion',
+        lineas: [{ base: 2000, porcentaje: 10.5, cuota: 210 }],
+        pagadaEn: '2026-10-25',
+        archivo: { nombre: 'venta.pdf', tipo: 'application/pdf', tamano: 120_000 },
+        animalIds: [],
+      },
+    ],
+    ventas: [],
+    // Una ayuda de la PAC, un seguro y un gasto anulado (GH-37)
+    apuntes: [
+      {
+        id: 'ap1',
+        tipo: 'ingreso',
+        categoria: 'subvencion',
+        fecha: '2026-10-20',
+        concepto: 'Pago básico PAC',
+        importe: 3250.4,
+        observaciones: null,
+        archivo: null,
+        anulacion: null,
+      },
+      {
+        id: 'ap2',
+        tipo: 'gasto',
+        categoria: 'seguro',
+        fecha: '2026-10-10',
+        concepto: 'Seguro del tractor',
+        importe: 420,
+        observaciones: null,
+        archivo: null,
+        anulacion: null,
+      },
+      {
+        id: 'ap3',
+        tipo: 'gasto',
+        categoria: 'combustible',
+        fecha: '2026-10-05',
+        concepto: 'Gasóleo repetido',
+        importe: 80,
+        observaciones: null,
+        archivo: null,
+        anulacion: { en: '2026-10-06T10:00:00.000Z', por: 'Ana Varela', motivo: 'Repetido' },
+      },
+    ],
     ...cambios,
   }
 }
@@ -627,6 +743,50 @@ const EQUIPOS = /^\/api\/explotaciones\/[^/]+\/equipos(?:\/([^/]+))?(\/estado)?$
 // Las tareas de mantenimiento, una, su estado de hecha o las personas a quien asignarlas
 const TAREAS = /^\/api\/explotaciones\/([^/]+)\/tareas(?:\/([^/]+))?(\/hecha)?$/
 // Los almacenes de comida, uno o su estado
+// Las facturas, el siguiente número, una, su pago o su archivo
+const FACTURAS =
+  /^\/api\/explotaciones\/([^/]+)\/facturas(?:\/([^/]+))?(?:\/(pago|archivo|entradas-comida))?$/
+// Las entradas de comida de todos los almacenes, con su factura (GH-36)
+// Las ventas (GH-38), una o su factura
+const VENTAS = /^\/api\/explotaciones\/([^/]+)\/ventas(?:\/([^/]+))?(\/factura)?$/
+
+// Como el backend: el total repartido, por animal o por kg
+const importesVenta = (v: VentaSimulada) => {
+  const n = v.animales.length
+  const total = Math.round(v.precio * 100)
+  const centimos =
+    v.modoPrecio === 'total'
+      ? v.animales.map(
+          (_, i) => Math.floor(total / n) + (i < total - Math.floor(total / n) * n ? 1 : 0),
+        )
+      : v.modoPrecio === 'por_animal'
+        ? v.animales.map(() => total)
+        : v.animales.map((a) => Math.round((a.kg ?? 0) * v.precio * 100))
+  return centimos.map((c) => c / 100)
+}
+
+// Los otros ingresos y gastos (GH-37), uno, su anulación o su archivo
+const APUNTES = /^\/api\/explotaciones\/([^/]+)\/apuntes(?:\/([^/]+))?(?:\/(anulacion|archivo))?$/
+const ENTRADAS_COMIDA = /^\/api\/explotaciones\/([^/]+)\/entradas-comida$/
+
+// La factura de una entrada de comida, si la tiene
+const facturaDe = (estado: EstadoSimulado, movimientoId: string) => {
+  const fa = estado.facturas.find((x) => x.movimientoIds?.includes(movimientoId))
+  return fa ? { id: fa.id, numero: fa.numero, tercero: fa.tercero } : null
+}
+
+const entradaDe = (estado: EstadoSimulado, m: MovimientoSimulado) => {
+  const a = estado.almacenes.find((x) => x.id === m.almacenId)
+  return {
+    id: m.id,
+    fecha: m.fecha,
+    cantidad: m.cantidad,
+    origen: m.origen,
+    observaciones: m.observaciones,
+    almacen: { id: m.almacenId, nombre: a?.nombre ?? '', unidad: a?.unidad ?? 'kg' },
+  }
+}
+const LETRAS_DNI = 'TRWAGMYFPDXBNJZSQVHLCKE'
 const ALMACENES = /^\/api\/explotaciones\/([^/]+)\/almacenes(?:\/([^/]+))?(\/estado)?$/
 // Los movimientos de un almacén, el registro o uno
 const MOVIMIENTOS = /^\/api\/explotaciones\/[^/]+\/almacenes\/([^/]+)\/movimientos(?:\/([^/]+))?$/
@@ -671,9 +831,14 @@ export function simularApi(estado: EstadoSimulado) {
     const metodo = peticion.method
     const sinRed = typeof estado.sinRed === 'function' ? estado.sinRed(ruta, metodo) : estado.sinRed
     if (sinRed) throw new TypeError('Failed to fetch')
-    const cuerpo = ['POST', 'PUT', 'PATCH'].includes(metodo)
-      ? await peticion.json().catch(() => ({}))
-      : {}
+    // Un archivo llega como formulario (GH-35)
+    const formulario = peticion.headers.get('content-type')?.startsWith('multipart/form-data')
+      ? await peticion.formData()
+      : null
+    const cuerpo =
+      !formulario && ['POST', 'PUT', 'PATCH'].includes(metodo)
+        ? await peticion.json().catch(() => ({}))
+        : {}
 
     if (ruta === '/api/auth/get-session') {
       return json(estado.conSesion ? { user: estado.usuario, session: {} } : null)
@@ -1030,6 +1195,410 @@ export function simularApi(estado: EstadoSimulado) {
       return json({ ...a, ...sello })
     }
 
+    if (ruta.startsWith('/api/explotaciones/') && ruta.endsWith('/fiscal')) {
+      const e = estado.explotaciones.find((x) => ruta.includes(x.id))
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      if (metodo === 'PUT')
+        estado.fiscal = {
+          regimen: cuerpo.regimen,
+          compensacionReagp: cuerpo.compensacionReagp,
+          tiposIva: [...new Set(cuerpo.tiposIva as number[])].sort((a, b) => b - a),
+        }
+      return json({
+        ...(estado.fiscal ?? { regimen: 'reagp', compensacionReagp: 10.5, tiposIva: [21, 10, 4] }),
+        configurado: Boolean(estado.fiscal),
+        modificadoEn: estado.fiscal ? '2026-10-29T10:00:00.000Z' : null,
+      })
+    }
+
+    if (/^\/api\/explotaciones\/[^/]+\/informes\/resumen$/.test(ruta)) {
+      const q = new URL(peticion.url).searchParams
+      const desde = q.get('desde') ?? ''
+      const hasta = q.get('hasta') ?? ''
+      const anio = desde.slice(0, 4)
+      const cifras = (de: (fecha: string) => boolean) => {
+        const sumar = (xs: number[]) => Math.round(xs.reduce((a, b) => a + b, 0) * 100) / 100
+        const fs = estado.facturas.filter((f) => de(f.fecha))
+        const total = (f: FacturaSimulada) => sumar(f.lineas.map((l) => l.base + l.cuota))
+        const as = estado.apuntes.filter((a) => de(a.fecha) && !a.anulacion)
+        const ingresos = {
+          facturas: sumar(fs.filter((f) => f.tipo === 'emitida').map(total)),
+          ventas: 0,
+          otros: sumar(as.filter((a) => a.tipo === 'ingreso').map((a) => a.importe)),
+          total: 0,
+        }
+        ingresos.total = sumar([ingresos.facturas, ingresos.otros])
+        const gastos = {
+          facturas: sumar(fs.filter((f) => f.tipo === 'recibida').map(total)),
+          otros: sumar(as.filter((a) => a.tipo === 'gasto').map((a) => a.importe)),
+          total: 0,
+        }
+        gastos.total = sumar([gastos.facturas, gastos.otros])
+        return { ingresos, gastos, resultado: sumar([ingresos.total, -gastos.total]) }
+      }
+      const enRango = (f: string) => f >= desde && f <= hasta
+      return json({
+        periodo: 'mes',
+        desde,
+        hasta,
+        filas: Array.from({ length: 12 }, (_, i) => {
+          const mes = `${anio}-${String(i + 1).padStart(2, '0')}`
+          return {
+            clave: mes,
+            desde: `${mes}-01`,
+            hasta: `${mes}-28`,
+            ...cifras((f) => f.startsWith(mes)),
+          }
+        }),
+        total: cifras(enRango),
+        pendiente: { cobro: 0, pago: 1100 },
+      })
+    }
+
+    const deVentas = ruta.match(VENTAS)
+    if (deVentas) {
+      const [, explotacionId, ventaId, conFactura] = deVentas
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const completa = (v: VentaSimulada) => {
+        const importes = importesVenta(v)
+        const fa = estado.facturas.find((x) => x.id === v.facturaId)
+        return {
+          id: v.id,
+          fecha: v.fecha,
+          comprador: v.comprador,
+          modoPrecio: v.modoPrecio,
+          precio: v.precio,
+          total: Math.round(importes.reduce((s, x) => s + x, 0) * 100) / 100,
+          kg: v.animales.every((a) => a.kg !== null)
+            ? v.animales.reduce((s, a) => s + (a.kg ?? 0), 0)
+            : null,
+          animales: v.animales.map((a, i) => {
+            const animal = estado.animales.find((x) => x.id === a.animalId)
+            return {
+              id: a.animalId,
+              crotal: animal?.crotal ?? null,
+              nombre: animal?.nombre ?? null,
+              kg: a.kg,
+              importe: importes[i] ?? 0,
+            }
+          }),
+          factura: fa
+            ? {
+                id: fa.id,
+                numero: fa.numero,
+                total: fa.lineas.reduce((s, l) => s + l.base + l.cuota, 0),
+              }
+            : null,
+          observaciones: v.observaciones,
+          creadoEn: '2026-10-01T10:00:00.000Z',
+          modificadoEn: '2026-10-01T10:00:00.000Z',
+        }
+      }
+      // Los animales vuelven a estar activos, o pasan a vendidos
+      const soltar = (v: VentaSimulada) => {
+        for (const a of v.animales) {
+          const animal = estado.animales.find((x) => x.id === a.animalId)
+          if (animal)
+            Object.assign(animal, {
+              estado: 'activo',
+              tipoBaja: null,
+              fechaBaja: null,
+              causaBaja: null,
+            })
+        }
+      }
+      const vender = (v: VentaSimulada) => {
+        for (const a of v.animales) {
+          const animal = estado.animales.find((x) => x.id === a.animalId)
+          if (animal)
+            Object.assign(animal, {
+              estado: 'vendido',
+              tipoBaja: 'venta',
+              fechaBaja: v.fecha,
+              causaBaja: `Venta a ${v.comprador}`,
+            })
+        }
+      }
+      // Sin excepciones: ningún animal con la supresión en curso
+      const enSupresion = () => {
+        const detalles = (cuerpo.animales as { animalId: string }[]).flatMap((a, i) => {
+          const hasta = estado.tratamientos
+            .filter((t) => t.animalId === a.animalId && !t.anulacion)
+            .map(finSupresion)
+            .filter((f) => f > cuerpo.fecha)
+            .sort()
+            .at(-1)
+          const animal = estado.animales.find((x) => x.id === a.animalId)
+          return hasta
+            ? [
+                {
+                  campo: `animales.${i}.animalId`,
+                  mensaje: `${animal?.crotal} tiene la supresión hasta el ${hasta.split('-').reverse().join('/')}`,
+                  hasta,
+                },
+              ]
+            : []
+        })
+        return detalles.length > 0
+          ? json(
+              {
+                error: {
+                  codigo: 'supresion_en_curso',
+                  mensaje: `No se puede vender: ${detalles.map((d) => d.mensaje).join('; ')}`,
+                  detalles,
+                },
+              },
+              409,
+            )
+          : null
+      }
+      const datosVenta = (id: string): VentaSimulada => ({
+        id,
+        fecha: cuerpo.fecha,
+        comprador: cuerpo.comprador.trim(),
+        modoPrecio: cuerpo.modoPrecio,
+        precio: cuerpo.precio,
+        animales: (cuerpo.animales as { animalId: string; kg?: number | null }[]).map((a) => ({
+          animalId: a.animalId,
+          kg: a.kg ?? null,
+        })),
+        facturaId: cuerpo.facturaId ?? null,
+        observaciones: cuerpo.observaciones?.trim() || null,
+      })
+      if (!ventaId && metodo === 'GET') return json(estado.ventas.map(completa))
+      if (!ventaId) {
+        const bloqueo = enSupresion()
+        if (bloqueo) return bloqueo
+        const nueva = datosVenta(`ve${estado.ventas.length + 1}`)
+        estado.ventas.push(nueva)
+        vender(nueva)
+        return json(completa(nueva), 201)
+      }
+      const v = estado.ventas.find((x) => x.id === ventaId)
+      if (!v) return errorApi(404, 'venta_no_encontrada')
+      if (conFactura) {
+        v.facturaId = cuerpo.facturaId
+        return json(completa(v))
+      }
+      if (metodo === 'GET') return json(completa(v))
+      if (metodo === 'DELETE') {
+        soltar(v)
+        estado.ventas = estado.ventas.filter((x) => x !== v)
+        return new Response(null, { status: 204 })
+      }
+      const bloqueo = enSupresion()
+      if (bloqueo) return bloqueo
+      soltar(v)
+      Object.assign(v, datosVenta(v.id))
+      vender(v)
+      return json(completa(v))
+    }
+
+    const deApuntes = ruta.match(APUNTES)
+    if (deApuntes) {
+      const [, explotacionId, apunteId, accion] = deApuntes
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const completo = (ap: ApunteSimulado) => ({
+        ...ap,
+        creadoEn: '2026-10-01T10:00:00.000Z',
+        modificadoEn: '2026-10-01T10:00:00.000Z',
+      })
+      const datosApunte = () => ({
+        tipo: cuerpo.tipo,
+        categoria: cuerpo.categoria,
+        fecha: cuerpo.fecha,
+        concepto: cuerpo.concepto.trim(),
+        importe: cuerpo.importe,
+        observaciones: cuerpo.observaciones?.trim() || null,
+      })
+      if (!apunteId && metodo === 'GET') {
+        const q = new URL(peticion.url).searchParams
+        return json(
+          estado.apuntes
+            .filter((x) => !q.get('tipo') || x.tipo === q.get('tipo'))
+            .filter((x) => !q.get('categoria') || x.categoria === q.get('categoria'))
+            .filter((x) => q.get('estado') !== 'vigente' || !x.anulacion)
+            .filter((x) => q.get('estado') !== 'anulado' || x.anulacion)
+            .map(completo),
+        )
+      }
+      if (!apunteId) {
+        const nuevo: ApunteSimulado = {
+          id: `ap${estado.apuntes.length + 1}`,
+          archivo: null,
+          anulacion: null,
+          ...datosApunte(),
+        }
+        estado.apuntes.push(nuevo)
+        return json(completo(nuevo), 201)
+      }
+      const ap = estado.apuntes.find((x) => x.id === apunteId)
+      if (!ap) return errorApi(404, 'apunte_no_encontrado')
+      if (metodo === 'GET' && !accion) return json(completo(ap))
+      if (ap.anulacion) return errorApi(409, 'ya_anulado')
+      if (accion === 'anulacion') {
+        ap.anulacion = {
+          en: '2026-10-29T10:00:00.000Z',
+          por: estado.usuario.name,
+          motivo: cuerpo.motivo,
+        }
+        return json(completo(ap))
+      }
+      if (accion === 'archivo') {
+        if (metodo === 'DELETE') ap.archivo = null
+        const archivo = formulario?.get('archivo')
+        if (metodo === 'PUT' && archivo instanceof File)
+          ap.archivo = { nombre: archivo.name, tipo: archivo.type, tamano: archivo.size }
+        return json(completo(ap))
+      }
+      Object.assign(ap, datosApunte())
+      return json(completo(ap))
+    }
+
+    const deEntradas = ruta.match(ENTRADAS_COMIDA)
+    if (deEntradas) {
+      const e = estado.explotaciones.find((x) => x.id === deEntradas[1])
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const q = new URL(peticion.url).searchParams
+      return json(
+        estado.movimientos
+          .filter((m) => m.tipo === 'entrada')
+          .filter((m) => !q.get('origen') || m.origen === q.get('origen'))
+          .map((m) => ({ ...entradaDe(estado, m), factura: facturaDe(estado, m.id) })),
+      )
+    }
+
+    const deFacturas = ruta.match(FACTURAS)
+    if (deFacturas) {
+      const [, explotacionId, facturaId, accion] = deFacturas
+      const e = estado.explotaciones.find((x) => x.id === explotacionId)
+      if (!e) return errorApi(404, 'explotacion_no_encontrada')
+      if (e.rol !== 'administrador') return errorApi(403, 'sin_permiso')
+      const completa = (fa: FacturaSimulada) => {
+        const base = fa.lineas.reduce((s, l) => s + l.base, 0)
+        const cuota = fa.lineas.reduce((s, l) => s + l.cuota, 0)
+        return {
+          ...fa,
+          baseImponible: base,
+          cuota,
+          total: Math.round((base + cuota) * 100) / 100,
+          animales: estado.animales
+            .filter((a) => fa.animalIds.includes(a.id))
+            .map((a) => ({ id: a.id, crotal: a.crotal, nombre: a.nombre })),
+          entradasComida: estado.movimientos
+            .filter((m) => fa.movimientoIds?.includes(m.id))
+            .map((m) => entradaDe(estado, m)),
+          ventaId: estado.ventas.find((v) => v.facturaId === fa.id)?.id ?? null,
+          creadoEn: '2026-10-01T10:00:00.000Z',
+          modificadoEn: '2026-10-01T10:00:00.000Z',
+        }
+      }
+      const q = new URL(peticion.url).searchParams
+      if (facturaId === 'siguiente-numero') {
+        const anio = (q.get('fecha') ?? '2026').slice(0, 4)
+        const ultimo = Math.max(
+          0,
+          ...estado.facturas
+            .filter((x) => x.tipo === 'emitida' && x.numero.startsWith(`${anio}-`))
+            .map((x) => Number(x.numero.slice(5))),
+        )
+        return json({ numero: `${anio}-${String(ultimo + 1).padStart(4, '0')}` })
+      }
+      if (!facturaId && metodo === 'GET') {
+        const texto = q.get('q')?.toLowerCase()
+        return json(
+          estado.facturas
+            .filter((x) => !q.get('tipo') || x.tipo === q.get('tipo'))
+            .filter((x) => q.get('estado') !== 'pendiente' || !x.pagadaEn)
+            .filter((x) => q.get('estado') !== 'pagada' || x.pagadaEn)
+            .filter((x) => !q.get('desde') || x.fecha >= (q.get('desde') ?? ''))
+            .filter((x) => !q.get('hasta') || x.fecha <= (q.get('hasta') ?? ''))
+            .filter(
+              (x) =>
+                !texto || [x.tercero, x.numero, x.nif].some((t) => t.toLowerCase().includes(texto)),
+            )
+            .sort((a, b) => b.fecha.localeCompare(a.fecha))
+            .map(completa),
+        )
+      }
+      const datosFactura = () => {
+        const nif = String(cuerpo.nif)
+          .toUpperCase()
+          .replace(/[\s.-]/g, '')
+        // Solo se comprueba la letra de los DNI
+        const dni = /^\d{8}[A-Z]$/.test(nif)
+        if (!cuerpo.nifExtranjero && dni && LETRAS_DNI[Number(nif.slice(0, 8)) % 23] !== nif[8])
+          return null
+        return {
+          tipo: cuerpo.tipo,
+          numero: cuerpo.numero.trim(),
+          fecha: cuerpo.fecha,
+          tercero: cuerpo.tercero.trim(),
+          nif,
+          nifExtranjero: cuerpo.nifExtranjero ?? false,
+          concepto: cuerpo.concepto.trim(),
+          impuesto: cuerpo.impuesto ?? 'iva',
+          lineas: cuerpo.lineas,
+          pagadaEn: cuerpo.pagadaEn ?? null,
+          animalIds: cuerpo.animalIds ?? [],
+        }
+      }
+      const nifNoValido = () =>
+        errorApi(400, 'validacion', [{ campo: 'nif', mensaje: 'El NIF no es válido' }])
+      if (!facturaId) {
+        const datos = datosFactura()
+        if (!datos) return nifNoValido()
+        if (
+          datos.tipo === 'emitida' &&
+          estado.facturas.some((x) => x.tipo === 'emitida' && x.numero === datos.numero)
+        )
+          return errorApi(409, 'numero_en_uso', [
+            { campo: 'numero', mensaje: 'Ya hay una factura emitida con este número' },
+          ])
+        const nueva: FacturaSimulada = {
+          id: `fa${estado.facturas.length + 1}`,
+          archivo: null,
+          ...datos,
+        }
+        estado.facturas.push(nueva)
+        return json(completa(nueva), 201)
+      }
+      const fa = estado.facturas.find((x) => x.id === facturaId)
+      if (!fa) return errorApi(404, 'factura_no_encontrada')
+      if (accion === 'entradas-comida') {
+        fa.movimientoIds = cuerpo.movimientoIds
+        return json(completa(fa))
+      }
+      if (accion === 'pago') {
+        fa.pagadaEn = cuerpo.pagadaEn
+        return json(completa(fa))
+      }
+      if (accion === 'archivo') {
+        if (metodo === 'DELETE') fa.archivo = null
+        if (metodo === 'PUT') {
+          const archivo = formulario?.get('archivo')
+          if (!(archivo instanceof File)) return errorApi(400, 'validacion')
+          fa.archivo = { nombre: archivo.name, tipo: archivo.type, tamano: archivo.size }
+        }
+        return json(completa(fa))
+      }
+      if (metodo === 'GET') return json(completa(fa))
+      if (metodo === 'DELETE') {
+        estado.facturas = estado.facturas.filter((x) => x !== fa)
+        return new Response(null, { status: 204 })
+      }
+      const datos = datosFactura()
+      if (!datos) return nifNoValido()
+      Object.assign(fa, datos)
+      return json(completa(fa))
+    }
+
     const deTareas = ruta.match(TAREAS)
     if (deTareas) {
       const [, explotacionId, tareaId, hecha] = deTareas
@@ -1186,11 +1755,19 @@ export function simularApi(estado: EstadoSimulado) {
       })
       if (!movimientoId && metodo === 'GET') {
         const q = new URL(peticion.url).searchParams
+        // Las facturas (GH-36), solo para el administrador
+        const verFacturas =
+          estado.explotaciones.find((x) => ruta.includes(x.id))?.rol === 'administrador'
+        if (q.get('factura') && !verFacturas) return errorApi(403, 'sin_permiso')
         return json(
           conStock(estado, almacenId)
             .filter((m) => !q.get('tipo') || m.tipo === q.get('tipo'))
+            .filter((m) => !q.get('origen') || m.origen === q.get('origen'))
+            .filter((m) => q.get('factura') !== 'con' || facturaDe(estado, m.id))
+            .filter((m) => q.get('factura') !== 'sin' || !facturaDe(estado, m.id))
             .filter((m) => !q.get('desde') || m.fecha >= (q.get('desde') ?? ''))
             .filter((m) => !q.get('hasta') || m.fecha <= (q.get('hasta') ?? ''))
+            .map((m) => (verFacturas ? { ...m, factura: facturaDe(estado, m.id) } : m))
             .reverse(),
         )
       }

@@ -15,13 +15,16 @@ import {
   RedireccionInicial,
 } from './explotaciones/PaginaElegirExplotacion'
 import { PaginaEquipo } from './explotaciones/PaginaEquipo'
+import { PaginaApunte } from './finanzas/PaginaApunte'
+import { PaginaFactura } from './finanzas/PaginaFactura'
+import { PaginaFinanzas } from './finanzas/PaginaFinanzas'
+import { PaginaVenta } from './finanzas/PaginaVenta'
 import { PaginaFinca } from './fincas/PaginaFinca'
 import { PaginaFincas } from './fincas/PaginaFincas'
 import { PaginaFichaEquipo } from './mantenimiento/PaginaFichaEquipo'
 import { PaginaMantenimiento } from './mantenimiento/PaginaMantenimiento'
 import { PaginaInicio } from './paginas/PaginaInicio'
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada'
-import { PaginaSeccion } from './paginas/PaginaSeccion'
 import { PaginaPlataforma } from './plataforma/PaginaPlataforma'
 
 // Rutas: /entrar sin sesión; el resto exige sesión. La explotación activa va en la URL
@@ -129,7 +132,31 @@ export const rutas: RouteObject[] = [
             path: 'finanzas',
             element: (
               <SoloModulo modulo="finanzas">
-                <PaginaSeccion titulo="Finanzas" />
+                <PaginaFinanzas />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'finanzas/ventas/:ventaId',
+            element: (
+              <SoloModulo modulo="finanzas">
+                <PaginaVenta />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'finanzas/apuntes/:apunteId',
+            element: (
+              <SoloModulo modulo="finanzas">
+                <PaginaApunte />
+              </SoloModulo>
+            ),
+          },
+          {
+            path: 'finanzas/facturas/:facturaId',
+            element: (
+              <SoloModulo modulo="finanzas">
+                <PaginaFactura />
               </SoloModulo>
             ),
           },

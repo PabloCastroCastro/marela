@@ -140,7 +140,7 @@ Decisiones (GH-23):
 - Cantidad
 - Origen: compra o producción propia
 - Finca de origen, opcional, si es producción propia (puede venir de varias fincas)
-- Factura asociada, si es compra. La asocia el administrador después; el empleado registra la entrada sin factura. No habrá listado de entradas sin factura: el administrador filtra a mano.
+- Factura asociada, si es compra. La asocia el administrador después, desde la ficha de la factura, eligiendo entre las compras sin factura de todos los almacenes (GH-36); una factura paga una o varias entradas. El empleado registra la entrada sin factura y no ve las facturas. En la ficha del almacén, el historial se filtra por origen y, para el administrador, por tener o no factura, y cada compra muestra la suya. Una entrada con factura sigue siendo una compra y no se borra hasta que el administrador la quite de la factura.
 
 ### Salida (ración)
 
@@ -271,6 +271,7 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 
 - Configurable por explotación: Régimen Especial de Agricultura, Ganadería y Pesca (REAGP) o régimen general de IVA.
 - Los porcentajes (compensación REAGP, tipos de IVA) se configuran, no se fijan en el código. Por defecto, la compensación REAGP para ganadería es del 10,5 %.
+- Mientras no se configura, cada explotación está en REAGP con el 10,5 % y los tipos de IVA 21 %, 10 % y 4 %. Se configura en Finanzas, en la tarjeta "Régimen fiscal" (GH-34).
 - En REAGP, las ventas generan un recibo de compensación en lugar de una factura con IVA.
 - La retención de IRPF en las ventas no se registra por ahora; la lleva el gestor fuera de la aplicación.
 
@@ -286,11 +287,20 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 - Estado de pago (pagada / pendiente)
 - Archivo adjunto (PDF o foto)
 - Animales enlazados, si es una compra de animales (excepcional)
+- Detalle (GH-35):
+  - Una línea por tipo de IVA, con su base, su porcentaje y su cuota; en las ventas de quien está en el REAGP, la de la compensación. La cuota y el total se calculan al escribir la base, y la API comprueba que cuadren.
+  - Las emitidas proponen el siguiente número del año (`2026-0007`), que se puede cambiar; no se repite el número de una emitida, ni el de una recibida del mismo proveedor.
+  - El NIF es obligatorio y se comprueba su letra o dígito de control, salvo si se marca como extranjero.
+  - Un archivo por factura (PDF o foto, hasta 10 MB), que se puede cambiar o quitar.
+  - Las facturas se corrigen y se borran; los cambios quedan en el historial. Solo las recibidas enlazan animales: las ventas lo hacen desde Ventas.
 
 ### Otros ingresos y gastos
 
 - Movimientos sin factura: subvenciones PAC, seguros, tickets...
-- Datos: tipo (ingreso o gasto), fecha, concepto, importe, archivo adjunto opcional y observaciones.
+- Datos: tipo (ingreso o gasto), categoría, fecha, concepto, importe, archivo adjunto opcional y observaciones.
+- Categorías fijas, para los informes (GH-37). De ingreso: subvención (PAC u otra), indemnización del seguro y otro ingreso. De gasto: seguro, veterinario, combustible, reparaciones y mantenimiento, suministros, impuestos y tasas, y otro gasto.
+- Se corrigen. Uno registrado por error no se borra: se anula con su motivo, sigue a la vista como anulado y deja de contar en los totales.
+- Finanzas se organiza en pestañas: Facturas, Ventas, Otros ingresos y gastos, Informes y Régimen fiscal.
 
 ### Ventas
 
@@ -299,12 +309,20 @@ Ciclo 6b (GH-111 y GH-112). Primera versión: listas de tareas, sin mantenimient
 - Precio: se introduce el total, el precio por animal o el precio por kg, y el resto se calcula.
 - Si algún animal tiene un periodo de supresión en curso, la venta se bloquea hasta que termine. Bloqueo sin excepciones, también para el administrador.
 - Al registrar la venta, los animales pasan automáticamente a estado "vendido", con fecha y causa de baja.
+- Detalle (GH-38):
+  - Se registra en la pestaña Ventas de Finanzas o, para el administrador, con «Vender» al seleccionar animales en la lista de Animales.
+  - El precio es sin IVA ni compensación. Con el total, se reparte a partes iguales entre los animales; por kg, hay que pesarlos todos. El peso de cada uno queda como su pesada de venta.
+  - La factura es opcional: se elige una emitida o se crea desde la venta con sus datos (cliente, concepto y base), y se puede asociar después.
+  - Se corrige (también los animales) o se deshace entera: los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura se queda.
 
 ### Salidas e informes
 
 - Listados de facturas, otros ingresos y gastos, y ventas con filtros (fechas, proveedor...).
-- Resumen de ingresos y gastos por periodo.
-- Exportación a Excel/CSV para el gestor.
+- Resumen de ingresos y gastos por periodo (GH-39): por meses o trimestres de un año, o por años. Con impuestos (lo que de verdad entra y sale: en el REAGP el IVA de las compras no se recupera y la compensación se cobra) y por la fecha de cada factura o movimiento. Ingresos: facturas emitidas, ventas sin factura (las que la tienen cuentan por ella) y otros ingresos; gastos: facturas recibidas y otros gastos; los anulados no cuentan. Lo pendiente de cobro y de pago, aparte. En la pestaña Informes de Finanzas.
+- Exportación a Excel/CSV para el gestor (GH-40):
+  - Cada listado (facturas, ventas, otros ingresos y gastos), con sus filtros, en Excel, CSV o un .zip con el Excel y los adjuntos.
+  - En Informes, «Exportar para el gestor»: todo el periodo en un Excel con el resumen y una hoja por listado, o en un .zip con los adjuntos.
+  - Fechas e importes en español: en el Excel, fechas e importes de verdad con su formato; el CSV, separado por punto y coma, con coma decimal y BOM, como lo abre Excel en España.
 
 ## Aspectos generales de los datos
 

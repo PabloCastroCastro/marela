@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query'
+import { onlineManager, QueryClient } from '@tanstack/react-query'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
@@ -19,6 +19,7 @@ import {
   LIMITES,
   marcarConConexion,
   marcarSinConexion,
+  pedir,
 } from '../src/sinConexion/conexion'
 import { guardarConsultas, restaurarConsultas } from '../src/sinConexion/persistencia'
 import { A_VEIGA, type EstadoSimulado, estadoInicial, simularApi } from './simulacion'
@@ -548,6 +549,52 @@ describe('cobertura lenta y fichas descargadas', () => {
       expect(hayConexion()).toBe(false)
     } finally {
       Object.assign(LIMITES, antes)
+    }
+  })
+
+  it('vuelve la conexión en cuanto el servidor responde a otra petición, salvo un error del proxy', async () => {
+    act(() => marcarSinConexion())
+    vi.stubGlobal('fetch', async () => new Response('', { status: 502 }))
+    await pedir('/api/health')
+    expect(hayConexion()).toBe(false)
+    simularApi(estado)
+    await pedir(`/api/explotaciones/${A_VEIGA.id}/animales/a3/pesos`, { method: 'POST' })
+    expect(hayConexion()).toBe(true)
+  })
+
+  // Los oyentes de los eventos del navegador solo están mientras alguien sigue la conexión, como el
+  // indicador de la cabecera en la aplicación
+  it('al volver a la aplicación se comprueba la conexión, sin esperar a la sonda', async () => {
+    const dejar = onlineManager.subscribe(() => {})
+    try {
+      simularApi(estado)
+      act(() => marcarSinConexion())
+      act(() => {
+        globalThis.dispatchEvent(new Event('focus'))
+      })
+      await waitFor(() => expect(hayConexion()).toBe(true))
+    } finally {
+      dejar()
+    }
+  })
+
+  it('la sonda espera lo mismo que una consulta: con poca cobertura, la respuesta tarda', async () => {
+    const dejar = onlineManager.subscribe(() => {})
+    vi.useFakeTimers()
+    try {
+      act(() => marcarSinConexion())
+      vi.stubGlobal(
+        'fetch',
+        () =>
+          new Promise<Response>((resolver) => setTimeout(() => resolver(new Response('{}')), 8000)),
+      )
+      act(() => {
+        globalThis.dispatchEvent(new Event('focus'))
+      })
+      await act(() => vi.advanceTimersByTimeAsync(8000))
+      expect(hayConexion()).toBe(true)
+    } finally {
+      dejar()
     }
   })
 

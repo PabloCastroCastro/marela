@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest'
+import { File as FileDeNode } from 'node:buffer'
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeEach } from 'vitest'
 import { descartar, verCola } from '../src/sinConexion/cola'
@@ -19,6 +20,13 @@ afterEach(() => {
 beforeEach(() => {
   marcarConConexion()
 })
+
+// jsdom trae su FormData y su File, que el Request de Node no entiende (enviaría "[object FormData]"):
+// se usan los de Node, que se comportan como los del navegador al subir un archivo
+const { constructor: FormDataDeNode } = await new Response('--x--\r\n', {
+  headers: { 'content-type': 'multipart/form-data; boundary=x' },
+}).formData()
+Object.assign(globalThis, { File: FileDeNode, FormData: FormDataDeNode })
 
 // jsdom no implementa los diálogos modales: versión mínima para los tests (abre y cierra)
 if (typeof HTMLDialogElement !== 'undefined' && !HTMLDialogElement.prototype.showModal) {

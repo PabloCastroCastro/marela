@@ -192,6 +192,20 @@
   gap: var(--espacio-3);
 }
 
+/* Origen y factura (GH-36) */
+.desplegables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+/* La factura de una compra, para el administrador (GH-36) */
+.enlaceFactura {
+  color: var(--color-primario);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
 .fechas {
   display: grid;
   grid-template-columns: 1fr 1fr;

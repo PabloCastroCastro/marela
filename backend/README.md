@@ -36,6 +36,7 @@ Es un proyecto independiente: tiene sus propias dependencias y no importa códig
 | `BETTER_AUTH_SECRET` | | Obligatoria. Clave de al menos 32 caracteres con la que se firman las sesiones, distinta en cada entorno (`openssl rand -base64 32`) |
 | `URL_PUBLICA` | | Obligatoria. Dirección desde la que se abre la aplicación (`https://servidor.tailnet.ts.net:8444`). Solo se aceptan peticiones de autenticación desde ella |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` o `silent` |
+| `ARCHIVOS_DIR` | `uploads` | Carpeta de los archivos adjuntos (facturas y, más adelante, fotos), relativa al directorio del backend. En Compose, `/app/uploads`, el volumen `uploads`; en los tests, una carpeta temporal |
 | `TEST_DATABASE_URL` | | Base de datos de los tests; debe terminar en `_test`. Si no está, se usa `DATABASE_URL` |
 | `CHOKIDAR_USEPOLLING` | `false` | `true` para que `npm run dev` detecte cambios por sondeo (código montado desde Windows). En Compose se activa con `RECARGA_POLLING` |
 
@@ -295,13 +296,13 @@ Una explotación nueva recibe en su misma transacción los almacenes por defecto
 
 Entradas, salidas y ajustes de inventario, en `src/rutas/movimientos.ts` (módulo `comida`, también el empleado):
 
-- **`GET /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** del más reciente al más antiguo, con filtros `desde`, `hasta` (fechas incluidas) y `tipo`. Cada uno lleva `diferencia` (lo que cambió el stock) y `stock` (el que dejó).
+- **`GET /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** del más reciente al más antiguo, con filtros `desde`, `hasta` (fechas incluidas), `tipo` y `origen`, y para quien accede a Finanzas `factura` (`con` o `sin`; si no, 403). Cada uno lleva `diferencia` (lo que cambió el stock) y `stock` (el que dejó) y, para quien accede a Finanzas, `factura` (`{ id, numero, tercero }` o `null`).
 - **`POST /api/explotaciones/{id}/almacenes/{almacenId}/movimientos`:** `{ tipo, fecha, cantidad, origen?, fincaId?, ajuste?, motivo?, observaciones? }` en un almacén activo (si no, 409 `almacen_desactivado`).
   - `entrada`: con `origen` (`compra` o `produccion_propia`) y, si es producción propia, `fincaId` opcional.
   - `salida`: solo fecha y cantidad.
   - `ajuste`: `recuento` (`cantidad` es lo contado; puede ser 0) o `merma` (`cantidad` es lo perdido), con `motivo`.
-- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo corrige.
-- **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo.
+- **`PUT /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo corrige. Una entrada con factura sigue siendo una compra (409 `entrada_con_factura`).
+- **`DELETE /api/explotaciones/{id}/almacenes/{almacenId}/movimientos/{movimientoId}`:** lo borra y lo devuelve, para poder deshacerlo. Una entrada con factura no se borra hasta que el administrador la quite de la factura (409 `entrada_con_factura`).
 
 **Stock:** lo calcula PostgreSQL (migración `0028`). `movimientos_con_stock(almacen)` recorre los movimientos por fecha y, el mismo día, por orden de registro: las entradas suman, las salidas y mermas restan, y un recuento fija el stock en lo contado. `stock_almacen(almacen)` es el que deja el último, o 0. Puede ser negativo: se guarda igual, y la pantalla lo avisa y lo marca en rojo. Las cantidades van en la unidad del almacén, con dos decimales. Cada tipo lleva sus datos y no los de los demás (check `movimientos_comida_datos`); el almacén y la finca son de la explotación (claves foráneas compuestas). Los cambios quedan en el historial.
 
@@ -329,6 +330,81 @@ El nombre no se repite en la explotación (409 `nombre_en_uso`).
 - **`DELETE /api/explotaciones/{id}/tareas/{tareaId}`:** la borra y la devuelve, para poder deshacerlo.
 
 Cualquiera del equipo crea, corrige, marca y borra tareas; solo el administrador elige o cambia a quién está asignada (403 `sin_permiso` en `asignadaAId`). La persona asignada y quien la hace son de la explotación (trigger `tareas_comprobar`). Migraciones `0030` (tablas) y `0031` (reglas e historial de cambios).
+
+## Finanzas
+
+Solo el administrador (módulo `finanzas`).
+
+**Régimen fiscal** (GH-34), en `src/rutas/fiscal.ts`:
+
+- **`GET /api/explotaciones/{id}/fiscal`:** `{ regimen, compensacionReagp, tiposIva, configurado, modificadoEn }`. Mientras no se guarda (`configurado: false`), REAGP con el 10,5 % y los tipos de IVA 21, 10 y 4 %.
+- **`PUT /api/explotaciones/{id}/fiscal`:** `{ regimen, compensacionReagp, tiposIva }`. `regimen` es `reagp` o `general`; los porcentajes, de 0 a 100 con dos decimales; los tipos de IVA, de 1 a 8, sin repetir, se guardan de mayor a menor.
+
+Una fila por explotación en `configuracion_fiscal` (migraciones `0032` y `0033`, con historial de cambios).
+
+**Facturas** (GH-35), en `src/rutas/facturas.ts`:
+
+- **`GET /api/explotaciones/{id}/facturas`:** de la más reciente a la más antigua. Filtros `tipo` (`recibida` o `emitida`), `estado` (`pendiente` o `pagada`), `desde`, `hasta` y `q` (proveedor o cliente, número o NIF).
+- **`GET /api/explotaciones/{id}/facturas/siguiente-numero?fecha=`:** el número que se propone para una emitida, el siguiente del año con el formato `aaaa-nnnn` (`2026-0007` tras la `2026-0006`).
+- **`GET`, `PUT` y `DELETE /api/explotaciones/{id}/facturas/{facturaId}`:** ver, corregir y borrar (con su archivo; 204).
+- **`POST /api/explotaciones/{id}/facturas`:** `{ tipo, numero, fecha, tercero, nif, nifExtranjero, concepto, impuesto, lineas: [{ base, porcentaje, cuota }], total, pagadaEn?, animalIds? }`.
+  - El NIF se guarda en mayúsculas y sin espacios ni guiones, y se comprueba su letra o dígito de control (DNI, NIE, K, L, M y entidades, en `src/nif.ts`), salvo con `nifExtranjero`.
+  - `impuesto` es `iva` o `compensacion` (el REAGP en las ventas). Cada `cuota` debe ser su porcentaje de la base, con un céntimo de margen por el redondeo del proveedor, y `total` la suma de bases y cuotas.
+  - Las emitidas no repiten número en la explotación, ni las recibidas de un mismo NIF (409 `numero_en_uso`).
+  - `animalIds`, los animales comprados: solo en las recibidas (las ventas los enlazan desde Ventas, GH-38).
+- **`PATCH /api/explotaciones/{id}/facturas/{facturaId}/pago`:** `{ pagadaEn }`, la fecha de pago o `null` para dejarla pendiente.
+- **`PUT`, `GET` y `DELETE /api/explotaciones/{id}/facturas/{facturaId}/archivo`:** el archivo adjunto, uno por factura. Se sube como `multipart/form-data` (campo `archivo`) y sustituye al anterior: un PDF o una foto JPEG, PNG o WebP, reconocidos por su contenido, de hasta 10 MB (413 `archivo_demasiado_grande`, 415 `tipo_de_archivo`).
+
+**Entradas de comida de las facturas** (GH-36):
+
+- **`GET /api/explotaciones/{id}/entradas-comida`:** las entradas de todos los almacenes, de la más reciente a la más antigua, con su almacén y su factura. Filtros `origen`, `factura` (`con` o `sin`), `almacenId`, `desde` y `hasta`.
+- **`PUT /api/explotaciones/{id}/facturas/{facturaId}/entradas-comida`:** `{ movimientoIds }`, las entradas compradas de una factura recibida, en lugar de las que tuviera. Una entrada solo es de una factura (409 `entrada_con_factura`). La factura las devuelve en `entradasComida`.
+
+Tabla `facturas_movimientos_comida` (migraciones `0036` y `0037`): solo facturas recibidas y entradas compradas, una entrada con factura no deja de ser una compra ni se borra, y una factura con entradas no pasa a emitida. Al borrar la factura, sus entradas se quedan sin factura.
+
+Tablas `facturas` y `facturas_animales` (migraciones `0034` y `0035`, con reglas e historial de cambios). La base de datos comprueba el formato del NIF, que el total sea la suma y que solo las recibidas tengan animales.
+
+**Ventas de animales** (GH-38), en `src/rutas/ventas.ts`:
+
+- **`GET /api/explotaciones/{id}/ventas`:** de la más reciente a la más antigua. Filtros `desde`, `hasta`, `factura` (`con` o `sin`) y `q` (comprador).
+- **`POST /api/explotaciones/{id}/ventas`:** `{ fecha, comprador, animales: [{ animalId, kg? }], modoPrecio, precio, facturaId?, observaciones? }`. En la misma transacción:
+  - Cada animal pasa a `vendido` (baja `venta`, con la fecha y «Venta a …» de causa) y su peso queda como pesada de venta.
+  - `modoPrecio` es `total` (se reparte a partes iguales; los céntimos que sobran, a los primeros), `por_animal` o `por_kg` (el peso de todos, obligatorio). El precio, sin IVA ni compensación.
+  - Se bloquea, sin excepciones, si algún animal tiene un tratamiento sin anular cuya supresión termina después de la fecha de la venta: 409 `supresion_en_curso`, con `{ campo, mensaje, animalId, hasta }` de cada uno en `detalles`.
+  - Los animales, activos y ya en la explotación en la fecha. Si alguno ya tiene una pesada de venta y se indica su peso, 400 en `animales.n.kg`.
+- **`GET`, `PUT /api/explotaciones/{id}/ventas/{ventaId}`:** la corrige deshaciéndola y registrándola de nuevo, también con otros animales.
+- **`PATCH /api/explotaciones/{id}/ventas/{ventaId}/factura`:** `{ facturaId }` (o `null`): una factura emitida, de una sola venta (409 `factura_con_venta`). La factura muestra su venta en `ventaId`.
+- **`DELETE /api/explotaciones/{id}/ventas/{ventaId}`:** la deshace: los animales vuelven a estar activos y se quitan sus pesadas de venta. La factura se queda.
+
+Tablas `ventas` y `ventas_animales` (migraciones `0040` y `0041`, con historial de cambios). La base de datos comprueba que la factura sea emitida (y que no deje de serlo), que un animal se venda una sola vez y que esté de baja por venta. Al borrar la factura, la venta se queda sin ella.
+
+**Informes** (GH-39), en `src/rutas/informes.ts`:
+
+- **`GET /api/explotaciones/{id}/informes/resumen?periodo=&desde=&hasta=`:** ingresos y gastos por `mes`, `trimestre` o `anio`, cada periodo del rango aunque esté vacío (como mucho 10 años), con el total y lo pendiente de cobro y de pago (facturas sin fecha de pago).
+  - Con impuestos y por la fecha de cada factura o movimiento (devengo).
+  - Ingresos: facturas emitidas (su total), ventas sin factura (las que la tienen cuentan por ella) y otros ingresos. Gastos: facturas recibidas y otros gastos. Los anulados no cuentan.
+
+Los listados de facturas, ventas y otros ingresos y gastos se filtran también por `desde` y `hasta`.
+
+**Exportación para el gestor** (GH-40), en `src/rutas/exportaciones.ts` y `src/exportacion.ts` (con `exceljs` y `archiver`):
+
+- **`GET /api/explotaciones/{id}/exportaciones/{facturas|ventas|apuntes}?formato=xlsx|csv|zip&…`:** el listado con los mismos filtros que su `GET`, para descargar (`Content-Disposition: attachment`, `facturas_2026-07-01_2026-09-30.xlsx`). Las ventas, sin `zip` (no tienen adjuntos).
+- **`GET /api/explotaciones/{id}/exportaciones/periodo?desde=&hasta=&periodo=&formato=xlsx|zip`:** todo el periodo en un Excel con las hojas Resumen, Facturas, Ventas y Otros ingresos y gastos.
+- **Formatos:**
+  - Excel: cabecera fija, fechas e importes de verdad (`dd/mm/yyyy`, `#,##0.00 €`).
+  - CSV: como lo abre Excel en España, con punto y coma, coma decimal, fechas `dd/mm/aaaa` y BOM UTF-8.
+  - `.zip`: el Excel y los adjuntos de las facturas (`facturas/`) y de los otros ingresos y gastos (`otros-ingresos-y-gastos/`), con nombres legibles (`2026-10-15 P-381 Piensos do Norte.pdf`); el Excel dice qué archivo es de cada fila. Se genera en streaming; un adjunto que falte en el disco se salta y se registra.
+
+**Otros ingresos y gastos** (GH-37), en `src/rutas/apuntes.ts`:
+
+- **`GET /api/explotaciones/{id}/apuntes`:** del más reciente al más antiguo, con los anulados. Filtros `tipo` (`ingreso` o `gasto`), `categoria`, `estado` (`vigente` o `anulado`), `desde`, `hasta` y `q` (concepto u observaciones).
+- **`POST` y `GET`, `PUT /api/explotaciones/{id}/apuntes[/{apunteId}]`:** `{ tipo, categoria, fecha, concepto, importe, observaciones? }`. El importe, positivo y al céntimo; la categoría, del tipo: de ingreso `subvencion`, `indemnizacion_seguro` y `otro_ingreso`; de gasto `seguro`, `veterinario`, `combustible`, `reparaciones`, `suministros`, `impuestos` y `otro_gasto`.
+- **`POST /api/explotaciones/{id}/apuntes/{apunteId}/anulacion`:** `{ motivo }`. No se borran: uno anulado sigue en el listado con `anulacion: { en, por, motivo }`, ya no se cambia (409 `ya_anulado`) y no cuenta en los totales.
+- **`PUT`, `GET` y `DELETE /api/explotaciones/{id}/apuntes/{apunteId}/archivo`:** el archivo adjunto opcional, como en las facturas.
+
+Tabla `apuntes` (migraciones `0038` y `0039`, con historial de cambios). La base de datos comprueba que la categoría sea del tipo, el importe y la anulación.
+
+**Archivos adjuntos** (`src/archivos.ts`, y las piezas de sus rutas en `src/rutas/archivos.ts`): en `ARCHIVOS_DIR`, como `{explotación}/{carpeta}/{uuid}.{extensión}`, nunca con el nombre original, que solo se guarda para mostrarlo. La base de datos guarda la ruta relativa. Un archivo sustituido o de una factura borrada se borra cuando se confirma la transacción.
 
 ## Historial de cambios
 

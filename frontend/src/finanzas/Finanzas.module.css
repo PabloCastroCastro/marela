@@ -1,0 +1,536 @@
+.pagina {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+/* Lo de dentro no ensancha la página: una tabla ancha se desplaza en su tarjeta */
+.pagina > *,
+.tarjeta > * {
+  min-width: 0;
+}
+
+.suave {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.tarjeta {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.cabeceraTarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+}
+
+.tituloTarjeta {
+  font-size: var(--texto-lg);
+}
+
+.datos {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+}
+
+.dato {
+  display: grid;
+  gap: 2px;
+}
+
+.dato dt {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.dato dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Formulario del régimen fiscal (GH-34) */
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.grupo {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.grupo legend {
+  margin-bottom: var(--espacio-1);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+/* Cada tipo de IVA, como una pastilla con su botón de quitar */
+.tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tipos li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  padding-left: var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-completo);
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+.quitar {
+  color: var(--color-texto-suave);
+}
+
+.nuevoTipo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-2);
+}
+
+.nuevoTipo > :first-child {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.error {
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}
+
+/* Facturas (GH-35) */
+
+.titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.cabeceraFicha {
+  display: grid;
+  gap: var(--espacio-1);
+}
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  justify-self: start;
+  min-height: var(--altura-tactil);
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.acciones,
+.insignias {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.peligro {
+  color: var(--color-peligro);
+}
+
+.descripcion {
+  white-space: pre-line;
+}
+
+.numero {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.etiqueta {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+/* Dos campos en una fila cuando caben (fecha y número; pagada y fecha de pago) */
+.fila {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+/* El NIF y, debajo, la casilla de extranjero */
+.nif {
+  display: grid;
+  gap: var(--espacio-1);
+}
+
+@media (min-width: 30rem) {
+  .fila {
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+  }
+}
+
+/* Cada línea: base, tipo, cuota y quitar; en el móvil, la base a lo ancho */
+.lineas {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lineas li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: end;
+  gap: var(--espacio-2);
+  padding-bottom: var(--espacio-3);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.lineas li > :first-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 30rem) {
+  .lineas li {
+    grid-template-columns: 2fr 1fr auto auto;
+  }
+
+  .lineas li > :first-child {
+    grid-column: auto;
+  }
+}
+
+.anadir {
+  justify-self: start;
+}
+
+.cuota {
+  display: grid;
+  justify-items: end;
+  min-height: var(--altura-tactil);
+  align-content: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.totales {
+  display: grid;
+  gap: var(--espacio-1);
+  margin: 0;
+}
+
+.totales div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espacio-3);
+}
+
+.totales dt {
+  color: var(--color-texto-suave);
+}
+
+.totales dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.totales .total {
+  padding-top: var(--espacio-2);
+  border-top: 1px solid var(--color-borde-fuerte);
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-medio);
+}
+
+.totales .total dt {
+  color: var(--color-texto);
+}
+
+.tablaLineas {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tablaLineas th,
+.tablaLineas td {
+  padding: var(--espacio-2) 0;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: right;
+}
+
+.tablaLineas th {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.tablaLineas th:first-child,
+.tablaLineas td:first-child {
+  text-align: left;
+}
+
+/* El archivo: elegirlo (un botón con el campo de archivo dentro) y el ya elegido o adjuntado */
+.elegirArchivo {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--espacio-2);
+  min-height: var(--altura-tactil);
+  padding: 0 var(--espacio-4);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-completo);
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+  cursor: pointer;
+}
+
+.elegirArchivo:focus-within {
+  outline: 2px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.archivoElegido {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  overflow-wrap: anywhere;
+}
+
+.enlaceArchivo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  overflow-wrap: anywhere;
+  justify-self: start;
+  min-height: var(--altura-tactil);
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+}
+
+/* Animales comprados y los encontrados al buscar */
+.animales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.animales li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-1);
+  padding-left: var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-completo);
+  font-weight: var(--peso-medio);
+}
+
+.encontrados,
+.enlaces {
+  display: grid;
+  gap: var(--espacio-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.enlaces a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--altura-tactil);
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+}
+
+/* Las entradas de comida para elegir (GH-36) */
+.casillas {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.casillas li {
+  display: grid;
+  padding: var(--espacio-1) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.casillas li > span {
+  padding-left: calc(48px + var(--espacio-2));
+}
+
+/* Otros ingresos y gastos (GH-37): el importe con su signo y su color */
+.importe {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-medio);
+  white-space: nowrap;
+}
+
+.ingreso {
+  color: var(--color-exito);
+}
+
+.gasto {
+  color: var(--color-peligro);
+}
+
+.anulado {
+  color: var(--color-texto-suave);
+  text-decoration: line-through;
+}
+
+/* Los animales de una venta (GH-38): el animal, su peso, su importe y quitar */
+.vendidos {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vendidos li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: end;
+  gap: var(--espacio-2);
+  padding-bottom: var(--espacio-2);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.nombreVendido {
+  grid-column: 1 / -1;
+  font-weight: var(--peso-medio);
+}
+
+.pesoVendido {
+  min-width: 0;
+}
+
+.errorVendido {
+  grid-column: 1 / -1;
+  color: var(--color-peligro);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+/* Informes (GH-39): el periodo y el año, y las cifras del periodo */
+.controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+}
+
+.anio {
+  min-width: 8rem;
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--espacio-3);
+  margin: 0;
+}
+
+.cifras div {
+  display: grid;
+  gap: 2px;
+  padding: var(--espacio-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-m);
+}
+
+/* El nombre (dt) y la cifra (dd) */
+.cifras div > :first-child {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+.cifras div > :last-child {
+  margin: 0;
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Desde y hasta en los listados */
+.fechas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espacio-3);
+  max-width: 28rem;
+}
+
+/* La tabla del resumen, con muchas columnas, se desplaza de lado si no cabe. Dentro de su caja, la
+   cabecera fija va arriba del todo (no bajo la de la aplicación). */
+.desplazable {
+  overflow-x: auto;
+}
+
+.desplazable :global(th) {
+  top: 0;
+}
+
+/* Exportar (GH-40): cada formato, un enlace de descarga grande */
+.descargas {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.descarga {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  min-height: var(--altura-tactil);
+  padding: var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-m);
+  color: var(--color-primario);
+  text-decoration: none;
+}
+
+.textoDescarga {
+  display: grid;
+  gap: 2px;
+}
+
+.tituloDescarga {
+  color: var(--color-texto);
+  font-weight: var(--peso-medio);
+}
