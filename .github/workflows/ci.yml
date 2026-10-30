@@ -25,6 +25,7 @@ jobs:
       proxy: ${{ steps.filtro.outputs.proxy }}
       scripts: ${{ steps.filtro.outputs.scripts }}
       humo: ${{ steps.filtro.outputs.humo }}
+      restauracion: ${{ steps.filtro.outputs.restauracion }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -46,6 +47,13 @@ jobs:
               - '.github/workflows/ci.yml'
             scripts:
               - 'scripts/**'
+              - '.github/workflows/ci.yml'
+            # La copia y la restauración dependen de los scripts, de Compose y de la base de datos
+            restauracion:
+              - 'scripts/**'
+              - 'docker-compose.yml'
+              - 'docker-compose.servidor.yml'
+              - 'backend/drizzle/**'
               - '.github/workflows/ci.yml'
             humo:
               - 'backend/**'
@@ -219,9 +227,20 @@ jobs:
       - name: Copia fuera del servidor
         run: pwsh -NoProfile -File scripts/test/traer-copias.test.ps1
 
+  restauracion:
+    name: Copia y restauración
+    needs: cambios
+    if: needs.cambios.outputs.restauracion == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Copia con backup.sh y restauración en un servidor vacío
+        run: scripts/test/restaurar.test.sh
+
   resultado:
     name: Resultado de la CI
-    needs: [cambios, backend, frontend, proxy, scripts, humo]
+    needs: [cambios, backend, frontend, proxy, scripts, restauracion, humo]
     # Comprobación única para la protección de ramas: falla si algún trabajo falló o se canceló
     if: always()
     runs-on: ubuntu-latest
