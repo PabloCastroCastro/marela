@@ -46,7 +46,7 @@ function empiezaPor(bytes: Uint8Array, firma: number[]) {
 const directorio = () => resolve(config.directorioArchivos)
 
 // La ruta absoluta de una relativa, sin salir del directorio de archivos
-function rutaAbsoluta(ruta: string) {
+export function rutaArchivo(ruta: string) {
   const absoluta = resolve(directorio(), ruta)
   const dentro = relative(directorio(), absoluta)
   if (!dentro || dentro.startsWith('..') || isAbsolute(dentro)) {
@@ -76,7 +76,7 @@ export async function guardarArchivo(explotacionId: string, carpeta: string, arc
     throw new ErrorApi(415, 'tipo_de_archivo', mensaje, [{ campo: 'archivo', mensaje }])
   }
   const ruta = `${explotacionId}/${carpeta}/${randomUUID()}.${tipo.extension}`
-  const absoluta = rutaAbsoluta(ruta)
+  const absoluta = rutaArchivo(ruta)
   await mkdir(dirname(absoluta), { recursive: true })
   await writeFile(absoluta, contenido, { flag: 'wx' })
   return {
@@ -87,13 +87,13 @@ export async function guardarArchivo(explotacionId: string, carpeta: string, arc
   }
 }
 
-export const leerArchivo = (ruta: string) => readFile(rutaAbsoluta(ruta))
+export const leerArchivo = (ruta: string) => readFile(rutaArchivo(ruta))
 
 // Si no se puede borrar, se registra y se sigue: un archivo que sobra no rompe nada
 export async function borrarArchivo(ruta: string | null | undefined) {
   if (!ruta) return
   try {
-    await rm(rutaAbsoluta(ruta), { force: true })
+    await rm(rutaArchivo(ruta), { force: true })
   } catch (err) {
     logger.warn({ err, ruta }, 'No se ha podido borrar el archivo')
   }

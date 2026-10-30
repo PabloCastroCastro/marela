@@ -48,7 +48,7 @@ const ParametrosVenta = Parametros.extend({
   ventaId: z.uuid().openapi({ param: { name: 'ventaId', in: 'path' } }),
 })
 
-const Filtros = z.object({
+export const ConsultaVentas = z.object({
   desde: z.iso.date().optional(),
   hasta: z.iso.date().optional(),
   factura: z.enum(['con', 'sin']).optional(),
@@ -86,7 +86,7 @@ const listar = createRoute({
   summary: 'Ventas de animales, con filtros',
   security: [{ sesion: [] }],
   middleware: [permitir('finanzas')] as const,
-  request: { params: Parametros, query: Filtros },
+  request: { params: Parametros, query: ConsultaVentas },
   responses: { 200: json(z.array(Venta), 'De la más reciente a la más antigua'), ...comunes },
 })
 

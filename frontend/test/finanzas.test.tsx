@@ -552,3 +552,43 @@ describe('informes (GH-39)', () => {
     expect(within(tabla).getByText('Carnes Galegas')).toBeInTheDocument()
   })
 })
+
+describe('exportación para el gestor (GH-40)', () => {
+  it('cada listado se exporta con sus filtros, en Excel, CSV o con los adjuntos', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(finanzas())
+    await screen.findByRole('table', { name: 'Facturas' })
+    await usuario.click(screen.getByRole('button', { name: 'Recibidas' }))
+    await usuario.click(screen.getByRole('button', { name: 'Exportar' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Exportar' })
+    const base = `/api/explotaciones/${A_VEIGA.id}/exportaciones/facturas`
+    expect(within(hoja).getByRole('link', { name: /Excel \(\.xlsx\)/ })).toHaveAttribute(
+      'href',
+      `${base}?formato=xlsx&tipo=recibida`,
+    )
+    expect(within(hoja).getByRole('link', { name: /CSV/ })).toHaveAttribute(
+      'href',
+      `${base}?formato=csv&tipo=recibida`,
+    )
+    expect(within(hoja).getByRole('link', { name: /adjuntos/ })).toHaveAttribute(
+      'href',
+      `${base}?formato=zip&tipo=recibida`,
+    )
+  })
+
+  it('en Informes, todo el periodo del año elegido', async () => {
+    simularApi(estado)
+    const usuario = userEvent.setup()
+    abrir(`${finanzas()}?vista=informes`)
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: /Año/ }), '2025')
+    await usuario.click(screen.getByRole('button', { name: 'Exportar para el gestor' }))
+    const hoja = await screen.findByRole('dialog', { name: 'Exportar para el gestor' })
+    expect(within(hoja).getByText(/01\/01\/2025 a 31\/12\/2025/)).toBeInTheDocument()
+    expect(within(hoja).getByRole('link', { name: /adjuntos/ })).toHaveAttribute(
+      'href',
+      `/api/explotaciones/${A_VEIGA.id}/exportaciones/periodo?formato=zip&periodo=mes&desde=2025-01-01&hasta=2025-12-31`,
+    )
+    expect(within(hoja).queryByRole('link', { name: /CSV/ })).not.toBeInTheDocument()
+  })
+})

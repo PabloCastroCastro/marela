@@ -10,6 +10,7 @@ import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, fecha, kilos } from '../formato'
 import { useVentas } from './datos'
+import { BotonExportar } from './Exportar'
 import { type Fechas, FiltroFechas, rangoFechas } from './FiltroFechas'
 import estilos from './Finanzas.module.css'
 import { FormularioVenta } from './FormularioVenta'
@@ -25,11 +26,12 @@ export function ListaVentas() {
   const [factura, setFactura] = useState<FiltroFactura>('todas')
   const [creando, setCreando] = useState(false)
   const [fechas, setFechas] = useState<Fechas>({ desde: '', hasta: '' })
-  const ventas = useVentas(explotacion.id, {
+  const filtros = {
     q: texto || undefined,
     factura: factura === 'todas' ? undefined : factura,
     ...rangoFechas(fechas),
-  })
+  }
+  const ventas = useVentas(explotacion.id, filtros)
   const ficha = (id: string) => `${rutaExplotacion(explotacion.id)}/finanzas/ventas/${id}`
 
   return (
@@ -38,14 +40,22 @@ export function ListaVentas() {
         <h2 id="finanzas-ventas" className={estilos.tituloTarjeta}>
           Ventas de animales
         </h2>
-        <Boton
-          variante="secundario"
-          tamano="compacto"
-          icono={<Plus aria-hidden size={18} />}
-          onClick={() => setCreando(true)}
-        >
-          Nueva venta
-        </Boton>
+        <div className={estilos.acciones}>
+          <BotonExportar
+            listado="ventas"
+            filtros={filtros}
+            formatos={['xlsx', 'csv']}
+            descripcion="Las ventas que se ven, con los filtros y las fechas que tengas puestos."
+          />
+          <Boton
+            variante="secundario"
+            tamano="compacto"
+            icono={<Plus aria-hidden size={18} />}
+            onClick={() => setCreando(true)}
+          >
+            Nueva venta
+          </Boton>
+        </div>
       </div>
 
       <BarraFiltros buscador={<Buscador etiqueta="Buscar por comprador" alCambiar={setTexto} />}>

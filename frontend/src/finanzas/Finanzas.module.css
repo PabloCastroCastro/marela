@@ -503,3 +503,34 @@
 .desplazable :global(th) {
   top: 0;
 }
+
+/* Exportar (GH-40): cada formato, un enlace de descarga grande */
+.descargas {
+  display: grid;
+  gap: var(--espacio-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.descarga {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  min-height: var(--altura-tactil);
+  padding: var(--espacio-3);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-m);
+  color: var(--color-primario);
+  text-decoration: none;
+}
+
+.textoDescarga {
+  display: grid;
+  gap: 2px;
+}
+
+.tituloDescarga {
+  color: var(--color-texto);
+  font-weight: var(--peso-medio);
+}

@@ -100,6 +100,16 @@ export function periodosEntre(desde: string, hasta: string, periodo: Periodo) {
   return lista
 }
 
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+// "oct 2026", "4.º trim. 2026", "2026"
+export const nombrePeriodo = (clave: string) => {
+  const [anio, parte] = clave.split('-')
+  if (!parte) return anio ?? clave
+  if (parte.startsWith('T')) return `${parte.slice(1)}.º trim. ${anio}`
+  return `${MESES[Number(parte) - 1] ?? parte} ${anio}`
+}
+
 const centimos = (n: number) => Math.round(n * 100)
 
 export async function resumen(tx: Transaccion, filtros: FiltrosResumen) {

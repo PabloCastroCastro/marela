@@ -93,7 +93,7 @@ const ParametrosFactura = Parametros.extend({
   facturaId: z.uuid().openapi({ param: { name: 'facturaId', in: 'path' } }),
 })
 
-const Filtros = z.object({
+export const ConsultaFacturas = z.object({
   tipo: z.enum(TIPOS_FACTURA).optional(),
   estado: z.enum(['pendiente', 'pagada']).optional(),
   desde: z.iso.date().optional(),
@@ -130,7 +130,7 @@ const listar = createRoute({
   summary: 'Facturas, con filtros',
   security: [{ sesion: [] }],
   middleware: [permitir('finanzas')] as const,
-  request: { params: Parametros, query: Filtros },
+  request: { params: Parametros, query: ConsultaFacturas },
   responses: {
     200: json(z.array(Factura), 'De la más reciente a la más antigua'),
     ...comunes,

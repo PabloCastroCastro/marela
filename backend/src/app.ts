@@ -12,6 +12,7 @@ import { rutasApuntes } from './rutas/apuntes.js'
 import { rutasCartografia } from './rutas/cartografia.js'
 import { rutasEquipos } from './rutas/equipos.js'
 import { rutasExplotaciones } from './rutas/explotaciones.js'
+import { rutasExportaciones } from './rutas/exportaciones.js'
 import { rutasFacturas } from './rutas/facturas.js'
 import { rutasFincas } from './rutas/fincas.js'
 import { rutasFiscal } from './rutas/fiscal.js'
@@ -91,6 +92,7 @@ export function crearApp(dependencias: Partial<Dependencias> = {}) {
   app.route('/', rutasApuntes())
   app.route('/', rutasVentas())
   app.route('/', rutasInformes())
+  app.route('/', rutasExportaciones())
   app.route('/', rutasTareas())
   app.route('/', rutasCartografia())
   app.route('/', rutasPlataforma())

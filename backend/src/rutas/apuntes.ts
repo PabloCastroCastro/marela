@@ -53,7 +53,7 @@ const ParametrosApunte = Parametros.extend({
   apunteId: z.uuid().openapi({ param: { name: 'apunteId', in: 'path' } }),
 })
 
-const Filtros = z.object({
+export const ConsultaApuntes = z.object({
   tipo: z.enum(TIPOS_APUNTE).optional(),
   categoria: z.enum(CATEGORIAS_APUNTE).optional(),
   estado: z.enum(['vigente', 'anulado']).optional(),
@@ -91,7 +91,7 @@ const listar = createRoute({
   summary: 'Otros ingresos y gastos, con filtros',
   security: [{ sesion: [] }],
   middleware: [permitir('finanzas')] as const,
-  request: { params: Parametros, query: Filtros },
+  request: { params: Parametros, query: ConsultaApuntes },
   responses: {
     200: json(z.array(Apunte), 'Del más reciente al más antiguo, con los anulados'),
     ...comunes,

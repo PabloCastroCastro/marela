@@ -10,6 +10,7 @@ import { rutaExplotacion } from '../explotaciones/datos'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { euros, fecha } from '../formato'
 import { type Factura, TIPOS_FACTURA, type TipoFactura, useFacturas } from './datos'
+import { BotonExportar } from './Exportar'
 import { type Fechas, FiltroFechas, rangoFechas } from './FiltroFechas'
 import estilos from './Finanzas.module.css'
 import { FormularioFactura } from './FormularioFactura'
@@ -34,12 +35,13 @@ export function ListaFacturas() {
   const [pago, setPago] = useState<FiltroPago>('todas')
   const [creando, setCreando] = useState(false)
   const [fechas, setFechas] = useState<Fechas>({ desde: '', hasta: '' })
-  const facturas = useFacturas(explotacion.id, {
+  const filtros = {
     q: texto || undefined,
     tipo: tipo === 'todas' ? undefined : tipo,
     estado: pago === 'todas' ? undefined : pago,
     ...rangoFechas(fechas),
-  })
+  }
+  const facturas = useFacturas(explotacion.id, filtros)
   const filtrado =
     texto !== '' ||
     tipo !== 'todas' ||
@@ -54,14 +56,22 @@ export function ListaFacturas() {
         <h2 id="finanzas-facturas" className={estilos.tituloTarjeta}>
           Facturas
         </h2>
-        <Boton
-          variante="secundario"
-          tamano="compacto"
-          icono={<Plus aria-hidden size={18} />}
-          onClick={() => setCreando(true)}
-        >
-          Nueva factura
-        </Boton>
+        <div className={estilos.acciones}>
+          <BotonExportar
+            listado="facturas"
+            filtros={filtros}
+            formatos={['xlsx', 'csv', 'zip']}
+            descripcion="Las facturas que se ven, con los filtros y las fechas que tengas puestos."
+          />
+          <Boton
+            variante="secundario"
+            tamano="compacto"
+            icono={<Plus aria-hidden size={18} />}
+            onClick={() => setCreando(true)}
+          >
+            Nueva factura
+          </Boton>
+        </div>
       </div>
 
       <BarraFiltros
