@@ -23,12 +23,17 @@ function ssh {
   if ($global:sinRed) { $global:LASTEXITCODE = 255; return }
   bash -c $args[-1]
 }
+# Como el de verdad, falla con un argumento que no es una opción ni un origen del servidor
 function scp {
   $destino = $args[-1]
-  foreach ($a in $args) {
-    if ($a -is [string] -and $a.StartsWith('srv:')) { Copy-Item -LiteralPath $a.Substring(4) -Destination $destino }
-  }
   $global:LASTEXITCODE = 0
+  for ($i = 0; $i -lt $args.Count - 1; $i++) {
+    $a = $args[$i]
+    if ($a -eq '-o') { $i++ }
+    elseif ($a -in '-p', '-q') { }
+    elseif ($a -is [string] -and $a.StartsWith('srv:')) { Copy-Item -LiteralPath $a.Substring(4) -Destination $destino }
+    else { $global:LASTEXITCODE = 1 }
+  }
 }
 
 function Copia([datetime] $fecha) { "marela-pro-$($fecha.ToString('yyyyMMdd-HHmmss')).sql.gz" }
@@ -59,6 +64,13 @@ try {
   Comprobar ((Get-Content (Join-Path $pc 'uploads-pro/e1/a.jpg')) -eq 'foto completa') 'no ha vuelto a traer la foto a medias'
   Comprobar (Test-Path (Join-Path $pc 'uploads-pro/e1/b.pdf')) 'no ha traído la factura'
   Comprobar (Test-Path (Join-Path $pc 'uploads-pro/e1/borrada.jpg')) 'ha borrado un archivo que ya no está en el servidor'
+
+  # Un solo archivo nuevo, lo normal cada día
+  $nueva = Copia $ahora.AddMinutes(-5)
+  Set-Content (Join-Path $servidor $nueva) "copia $nueva"
+  Comprobar ((Traer) -eq 0) 'con un solo archivo nuevo debería terminar con 0'
+  Comprobar (Test-Path (Join-Path $pc $nueva)) 'no ha traído el único archivo nuevo'
+  Remove-Item (Join-Path $servidor $nueva)
 
   # Sin copia en las últimas 26 horas: aviso
   Remove-Item (Join-Path $servidor $enServidor[0]), (Join-Path $servidor $enServidor[1])
