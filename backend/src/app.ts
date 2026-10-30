@@ -34,7 +34,7 @@ export const infoOpenApi = {
   openapi: '3.1.0',
   info: {
     title: 'API de Marela',
-    version: '0.8.0',
+    version: '1.0.0',
     description:
       'API REST de Marela. Todas las rutas cuelgan de /api. Errores con el formato { error: { codigo, mensaje, detalles? } }.',
   },
