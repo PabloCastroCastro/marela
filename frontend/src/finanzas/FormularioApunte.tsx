@@ -5,12 +5,14 @@ import { api, datos, erroresPorCampo } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
+import { ElegirArchivo } from '../componentes/ElegirArchivo'
 import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { hoy } from '../formato'
 import {
   type Apunte,
+  ARCHIVOS_ADMITIDOS,
   CATEGORIAS,
   type CategoriaApunte,
   CLAVE_FINANZAS,
@@ -23,7 +25,6 @@ import {
   tamano,
 } from './datos'
 import estilos from './Finanzas.module.css'
-import { ElegirArchivo } from './FormularioFactura'
 
 const texto = (n: number) => String(n).replace('.', ',')
 
@@ -229,7 +230,7 @@ export function FormularioApunte({
                 />
               </div>
             ) : (
-              <ElegirArchivo alElegir={elegirArchivo} />
+              <ElegirArchivo aceptar={ARCHIVOS_ADMITIDOS} alElegir={elegirArchivo} />
             )}
             {errores.archivo && (
               <p className={estilos.error} role="alert">

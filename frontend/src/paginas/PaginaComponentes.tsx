@@ -6,6 +6,7 @@ import { BotonFlotante } from '../componentes/BotonFlotante'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
 import { Casilla } from '../componentes/Casilla'
 import { useConfirmacion } from '../componentes/Confirmacion'
+import { ElegirArchivo } from '../componentes/ElegirArchivo'
 import { Cargando, Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Chips, Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { BarraFiltros, Buscador, FiltroDesplegable } from '../componentes/Filtros'
@@ -216,6 +217,7 @@ export function PaginaComponentes() {
             <Casilla etiqueta="Algunas marcadas" indeterminada readOnly />
             <Casilla etiqueta="Desactivada" disabled />
           </div>
+          <ElegirArchivo aceptar="application/pdf" alElegir={() => {}} />
         </div>
       </section>
 

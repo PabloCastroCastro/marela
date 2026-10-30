@@ -7,6 +7,7 @@ import { useAvisos } from '../componentes/Avisos'
 import { Boton, BotonIcono } from '../componentes/Boton'
 import { AreaTexto, Campo, CampoFecha, Selector } from '../componentes/Campo'
 import { Casilla } from '../componentes/Casilla'
+import { ElegirArchivo } from '../componentes/ElegirArchivo'
 import { Chips } from '../componentes/Etiquetas'
 import { HojaInferior } from '../componentes/HojaInferior'
 import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
@@ -434,7 +435,7 @@ export function FormularioFactura({
                 />
               </div>
             ) : (
-              <ElegirArchivo alElegir={elegirArchivo} />
+              <ElegirArchivo aceptar={ARCHIVOS_ADMITIDOS} alElegir={elegirArchivo} />
             )}
             {errores.archivo && (
               <p className={estilos.error} role="alert">
@@ -445,31 +446,6 @@ export function FormularioFactura({
         )}
       </form>
     </HojaInferior>
-  )
-}
-
-// Botón para elegir un PDF o una foto (en el móvil, también hacerla con la cámara)
-export function ElegirArchivo({
-  alElegir,
-  texto = 'Adjuntar archivo',
-}: {
-  alElegir: (archivo: File | undefined) => void
-  texto?: string
-}) {
-  return (
-    <label className={estilos.elegirArchivo}>
-      <input
-        type="file"
-        accept={ARCHIVOS_ADMITIDOS}
-        className={estilos.oculto}
-        onChange={(e) => {
-          alElegir(e.target.files?.[0])
-          e.target.value = ''
-        }}
-      />
-      <Paperclip aria-hidden size={18} />
-      {texto}
-    </label>
   )
 }
 

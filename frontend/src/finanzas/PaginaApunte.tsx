@@ -7,6 +7,7 @@ import { api, datos, ErrorApi } from '../api/cliente'
 import { useAvisos } from '../componentes/Avisos'
 import { Boton } from '../componentes/Boton'
 import { useConfirmacion } from '../componentes/Confirmacion'
+import { ElegirArchivo } from '../componentes/ElegirArchivo'
 import { Esqueleto, EstadoError, EstadoVacio } from '../componentes/Estados'
 import { Insignia, Tarjeta } from '../componentes/Etiquetas'
 import { rutaExplotacion } from '../explotaciones/datos'
@@ -14,6 +15,7 @@ import { useExplotacionActual } from '../explotaciones/ExplotacionActual'
 import { fecha } from '../formato'
 import {
   type Apunte,
+  ARCHIVOS_ADMITIDOS,
   CATEGORIA,
   CLAVE_FINANZAS,
   subirArchivoApunte,
@@ -25,7 +27,6 @@ import {
 } from './datos'
 import estilos from './Finanzas.module.css'
 import { FormularioApunte } from './FormularioApunte'
-import { ElegirArchivo } from './FormularioFactura'
 import { ImporteApunte } from './ListaApuntes'
 
 // Ficha de un ingreso o gasto sin factura (GH-37): sus datos y su archivo. Se corrige o, si se
@@ -185,7 +186,11 @@ export function PaginaApunte() {
             </a>
             {vigente && (
               <div className={estilos.acciones}>
-                <ElegirArchivo alElegir={elegir} texto="Cambiar el archivo" />
+                <ElegirArchivo
+                  aceptar={ARCHIVOS_ADMITIDOS}
+                  alElegir={elegir}
+                  texto="Cambiar el archivo"
+                />
                 <Boton
                   variante="texto"
                   className={estilos.peligro}
@@ -209,7 +214,7 @@ export function PaginaApunte() {
             <p className={estilos.suave}>Sin archivo.</p>
             {vigente && (
               <div className={estilos.acciones}>
-                <ElegirArchivo alElegir={elegir} />
+                <ElegirArchivo aceptar={ARCHIVOS_ADMITIDOS} alElegir={elegir} />
               </div>
             )}
           </>

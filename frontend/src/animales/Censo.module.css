@@ -1,0 +1,120 @@
+/* Importar el censo en PDF (GH-130) */
+
+.pagina {
+  display: grid;
+  gap: var(--espacio-4);
+  max-width: var(--ancho-contenido);
+}
+
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  justify-self: start;
+  min-height: var(--altura-tactil);
+  color: var(--color-primario);
+  font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+
+.explicacion {
+  color: var(--color-texto-suave);
+}
+
+.suave {
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+/* Mensajes con icono: el error al leer o importar, y la nota de los comprados */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-peligro-suave);
+  color: var(--color-peligro);
+  font-weight: var(--peso-medio);
+}
+
+.nota {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+  padding: var(--espacio-3);
+  border-radius: var(--radio-s);
+  background: var(--color-informacion-suave);
+  color: var(--color-informacion);
+  font-size: var(--texto-sm);
+}
+
+.error svg,
+.nota svg {
+  flex-shrink: 0;
+}
+
+.resumen {
+  display: grid;
+  gap: var(--espacio-4);
+}
+
+.cabecera {
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+.titulo {
+  margin-bottom: var(--espacio-2);
+  font-size: var(--texto-lg);
+}
+
+.lista {
+  display: grid;
+}
+
+.elemento {
+  display: grid;
+  gap: var(--espacio-1);
+  padding: var(--espacio-3) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.crotal {
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+a.crotal {
+  justify-self: start;
+  color: var(--color-primario);
+}
+
+.diferencias {
+  padding-left: var(--espacio-5);
+  list-style: disc;
+  color: var(--color-texto-suave);
+  font-size: var(--texto-sm);
+}
+
+/* En el móvil, el botón de importar queda fijo abajo, al alcance del pulgar */
+.acciones {
+  position: sticky;
+  bottom: calc(var(--altura-navegacion) + env(safe-area-inset-bottom) + var(--espacio-3));
+  padding: var(--espacio-2) 0;
+  background: var(--color-fondo);
+}
+
+@media (min-width: 64rem) {
+  .acciones {
+    bottom: var(--espacio-3);
+  }
+}
