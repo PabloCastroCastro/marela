@@ -62,7 +62,8 @@ foreach ($grupo in ($faltan | Group-Object { Split-Path $_ -Parent })) {
   New-Item -ItemType Directory -Force $carpeta | Out-Null
   # De 50 en 50, para no pasar del límite de la línea de comandos
   for ($i = 0; $i -lt $grupo.Count; $i += 50) {
-    $origenes = $grupo.Group[$i..([Math]::Min($i + 49, $grupo.Count - 1))] | ForEach-Object { "${Servidor}:$Remoto/$_" }
+    # @(): con un solo archivo sería una cadena, y @origenes la pasaría letra a letra
+    $origenes = @($grupo.Group[$i..([Math]::Min($i + 49, $grupo.Count - 1))] | ForEach-Object { "${Servidor}:$Remoto/$_" })
     & scp @opciones -p -q @origenes $carpeta
     if ($LASTEXITCODE -ne 0) { Fallo "No se han podido traer los archivos de $($grupo.Name)" }
   }
